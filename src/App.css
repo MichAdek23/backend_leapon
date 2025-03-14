@@ -3,6 +3,17 @@
 @tailwind utilities;
 /* nifes-mentorship-program */
 
+.sidebar {
+  width: 1;
+  height: 100vh;
+  overflow-y: scroll; 
+  scrollbar-width: none; 
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none; 
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

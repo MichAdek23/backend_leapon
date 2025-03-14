@@ -1,11 +1,11 @@
 import React from 'react';
 
-function LandingPage() {
+function Setting() {
     return (
         <div>
-             
+            Setting
         </div>
     );
 }
 
-export default LandingPage;
+export default Setting;

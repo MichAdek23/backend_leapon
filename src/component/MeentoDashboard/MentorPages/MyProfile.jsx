@@ -1,11 +1,11 @@
 import React from 'react';
 
-function LandingPage() {
+function MyProfile() {
     return (
         <div>
-             
+            Profile
         </div>
     );
 }
 
-export default LandingPage;
+export default MyProfile;
