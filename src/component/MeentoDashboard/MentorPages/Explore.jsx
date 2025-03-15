@@ -5,7 +5,7 @@ import { GlobalContext } from "@/component/GlobalStore/GlobalState";
 import axios from "axios";
 
 function Explore() {
-  const { upDatePage, handleToggleState, setSelectedMentee, AddMentees, acceptedMentees } = useContext(GlobalContext);
+  const { upDatePage, handleToggleState, setSelectedMentee, AddMentees, acceptedMentees  } = useContext(GlobalContext);
   const [mentees, setMentees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [inputSearch, setInputSearch] = useState("");
@@ -66,20 +66,20 @@ function Explore() {
         <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
           <div className="flex flex-col gap-4">
             <h1 className="text-[32px] font-medium">Mentees</h1>
-            <p className="text-lg font-bold">Accept Mentee </p>
+            <p className="text-base font-meduim text-slate-600">Accept Mentee </p>
           </div>
 
           <div className="flex justify-center gap-4">
             <img
               onClick={() => upDatePage("Message")}
               src="/image/messageIcon.png"
-              className="md:w-12 h-9 md:h-12"
+              className="md:w-12 h-9 md:h-12 cursor-pointer"
               alt=""
             />
             <img
               onClick={() => upDatePage("Setting")}
               src="/image/settingIcon.png"
-              className="md:w-12 h-9 md:h-12"
+              className="md:w-12 h-9 md:h-12 cursor-pointer"
               alt=""
             />
           </div>

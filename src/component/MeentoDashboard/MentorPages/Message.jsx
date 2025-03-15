@@ -15,27 +15,28 @@ function Message() {
     );
 
     return (
-        <div>
+        <div >
             <header className="flex p-3 md:p-0 justify-between items-center">
                 <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
                     <div className="flex flex-col gap-4">
                         <h1 className="text-[32px] font-medium">Message</h1>
-                        <p className="text-lg font-bold">
+                        <p className="text-base font-meduim text-slate-600">
                             Easy Communication with eveyone{" "}
                         </p>
                     </div>
+
 
                     <div className="flex justify-center gap-4">
                         <img
                             onClick={() => upDatePage("Message")}
                             src="/image/messageIcon.png"
-                            className="md:w-12 h-9 md:h-12"
+                            className="md:w-12 h-9 md:h-12 cursor-pointer"
                             alt=""
                         />
                         <img
                             onClick={() => upDatePage("Setting")}
                             src="/image/settingIcon.png"
-                            className="md:w-12 h-9 md:h-12"
+                            className="md:w-12 h-9 md:h-12 cursor-pointer"
                             alt=""
                         />
                     </div>
@@ -48,7 +49,7 @@ function Message() {
                 </div>
             </header>
 
-            <main className=" w-full  border-4 h-screen md:h-[80vh] mt-20 rounded-3xl bg-white flex flex-col md:flex-row">
+            <main className=" w-full  border-4 h-screen md:h-[80vh] mt-20 overflow-y-hidden  rounded-3xl bg-white flex flex-col md:flex-row">
                 <div className=" h-full  sidebar  w-full md:w-1/3 ">
                     <div className="h-20  p-4">
                         <div className="  w-11/12 h-14 rounded-xl ps-3 border-2 flex ">
@@ -120,8 +121,8 @@ function Message() {
                             <div className=" h-12 w-full  rounded-xl  border-2 bottom-3 px-3 flex items-center">
                                 <input type="text" className=" outline-none ps-4  w-11/12 h-full" placeholder="Type a message" />
 
-                                <button className=" rotate-180">
-                                    <FontAwesomeIcon icon={faPaperPlane} />
+                                <button className=" rotate-45 cursor-pointer ">
+                                    <FontAwesomeIcon className=" text-slate-600" icon={faPaperPlane} />
                                 </button>
                             </div>
                         </div>

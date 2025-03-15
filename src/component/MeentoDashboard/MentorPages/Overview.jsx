@@ -13,24 +13,24 @@ function Overview() {
   const [loading, setLoading] = useState(false);
 
 
-     useEffect(() => {
-        const fetchMentee = async () => {
-          setLoading(true);
-          try {
-            const res = await axios.get("https://reqres.in/api/users");
-            console.log(res.data); 
-            setMentees(res.data.data); 
-          } catch (error) {
-            console.error("Error fetching mentees:", error);
-          } finally {
-            setLoading(false); 
-          }
-        };
-    
-        fetchMentee();
-      }, []);
+  useEffect(() => {
+    const fetchMentee = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get("https://reqres.in/api/users");
+        console.log(res.data);
+        setMentees(res.data.data);
+      } catch (error) {
+        console.error("Error fetching mentees:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-   const { upDatePage, handleToggleState } = useContext(GlobalContext)
+    fetchMentee();
+  }, []);
+
+  const { upDatePage, handleToggleState } = useContext(GlobalContext)
   const Title = [
     "#1 Tips for Success",
     "#2 Tips for Success",
@@ -68,21 +68,32 @@ function Overview() {
       {/* Header Section */}
       <header className="flex justify-between  ">
         <div className=" flex flex-col  w-full lg:flex-row justify-start  items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
-        <div className="flex flex-col  gap-4">
-          <h1 className="text-[32px] font-medium">Welcome</h1>
-          <p className="text-sm font-normal">You have no upcoming sessions</p>
+          <div className="flex flex-col  gap-4">
+            <h1 className="text-[32px] font-medium">Welcome</h1>
+            <p className="text-base font-meduim text-slate-600">You have no upcoming sessions</p>
+          </div>
+
+
+          <div className="flex justify-center gap-4">
+            <img
+              onClick={() => upDatePage("Message")}
+              src="/image/messageIcon.png"
+              className="md:w-12 h-9 md:h-12 cursor-pointer"
+              alt=""
+            />
+            <img
+              onClick={() => upDatePage("Setting")}
+              src="/image/settingIcon.png"
+              className="md:w-12 h-9 md:h-12 cursor-pointer"
+              alt=""
+            />
+          </div>
         </div>
 
-        <div className="flex justify-center  gap-4">
-          <img onClick={()=> upDatePage('Message')} src="/image/messageIcon.png" className=" md:w-12 h-9 md:h-12" alt="" />
-          <img onClick={()=> upDatePage('Setting')} src="/image/settingIcon.png" className="md:w-12 h-9 md:h-12" alt="" />
-        </div>
-        </div>
-      
 
         <div onClick={handleToggleState} className=" block lg:hidden mt-3 ">
           <button>
-            <FontAwesomeIcon icon={faBars}/>
+            <FontAwesomeIcon icon={faBars} />
           </button>
         </div>
       </header>
@@ -123,7 +134,7 @@ function Overview() {
           </div>
         </div>
 
-    
+
         <div className="bg-white shadow-2xl  rounded-lg md:w-[40%] lg:w-[33%]">
           <Calendar
             mode="single"
@@ -133,37 +144,37 @@ function Overview() {
           />
         </div>
 
-     
+
         <div className="bg-white p-5 shadow-2xl rounded-lg md:w-[40%] lg:w-[33%] flex flex-col justify-between">
           <div>
             <div className="flex justify-between ">
-            <div>
-            <h1 className=" md:text-lg font-medium text-gray-600">{Title[index]}</h1>
-            </div>
-                  
-          <div className="flex gap-3">
-            <button
-              onClick={prevMessage}
-              className="h-[30px] w-[30px] flex justify-center items-center bg-slate-200 rounded-full"
-            >
-              <FontAwesomeIcon icon={faArrowLeft} />
-            </button>
+              <div>
+                <h1 className=" md:text-lg font-medium text-gray-600">{Title[index]}</h1>
+              </div>
 
-            <button
-              onClick={nextMessage}
-              className="h-[30px] w-[30px] flex justify-center items-center bg-slate-200 rounded-full"
-            >
-              <FontAwesomeIcon icon={faLongArrowRight} />
-            </button>
-          </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={prevMessage}
+                  className="h-[30px] w-[30px] flex justify-center items-center bg-slate-200 rounded-full"
+                >
+                  <FontAwesomeIcon icon={faArrowLeft} />
+                </button>
+
+                <button
+                  onClick={nextMessage}
+                  className="h-[30px] w-[30px] flex justify-center items-center bg-slate-200 rounded-full"
+                >
+                  <FontAwesomeIcon icon={faLongArrowRight} />
+                </button>
+              </div>
             </div>
-           
-            
+
+
             <h2 className="text-xl font-semibold mt-2">{Heading[index]}</h2>
             <p className=" text-sm md:text-lg text-gray-500 mt-2">{Message[index]}</p>
           </div>
 
-    
+
         </div>
       </section>
 
@@ -173,20 +184,20 @@ function Overview() {
 
 
         <div className=" flex justify-between">
-            <h1 className="  text-base md:text-[22px] font-medium text-customDarkBlue">Your top matches </h1>
-            <button onClick={()=> upDatePage('Explore')} className=" p-2 md:p-0 h-10 rounded-xl md:w-40 text-white bg-customOrange  flex justify-center items-center">Explore Mentors</button>
+          <h1 className="  text-base md:text-[22px] font-medium text-customDarkBlue">Your top matches </h1>
+          <button onClick={() => upDatePage('Explore')} className=" p-2 md:p-0 h-10 rounded-xl md:w-40 text-white bg-customOrange  flex justify-center items-center">Explore Mentors</button>
         </div>
       </section>
-          
 
-      <section className ="  rounded-lg   grid  grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-y-5 gap-x-5  mt-12 ">
+
+      <section className="  rounded-lg   grid  grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-y-5 gap-x-5  mt-12 ">
         {loading ? (
           <div>Loading...</div>
         ) : (
           mentees.map((mentee) => (
             <div
-            onClick={()=> upDatePage("Explore")}
-              key={mentee.id} 
+              onClick={() => upDatePage("Explore")}
+              key={mentee.id}
               className="border-2 rounded-lg  overflow-hidden cursor-pointer w-[99%] h-[420px] bg-white"
             >
               <div className="h-3/5">
@@ -227,9 +238,9 @@ function Overview() {
           ))
         )}
       </section>
-         <div></div>
-         <div></div>
-      </section>
+      <div></div>
+      <div></div>
+    </section>
 
 
   );

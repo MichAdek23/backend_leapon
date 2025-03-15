@@ -1,5 +1,7 @@
 import React, { useContext } from 'react'
 import { GlobalContext } from '../GlobalStore/GlobalState';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 
 function NavBarDashboard() {
 
@@ -26,7 +28,7 @@ function NavBarDashboard() {
         </div>
         <div onClick={() => upDatePage('Booking')} className={`${activeComponent === 'Booking' ? 'text-customOrange' : 'text-gray-500'} flex gap-4 cursor-pointer font-medium items-center`}>
           <span><img src="/image/BookingIcon.png" className='h-7' alt="" /></span>
-          Booking
+          Mentees
         </div>
       </div>
 
@@ -40,6 +42,9 @@ function NavBarDashboard() {
 
           <div onClick={() => upDatePage('Setting')} className={`${activeComponent === 'Setting' ? 'text-customOrange' : 'text-gray-500'}  flex  gap-4  cursor-pointer font-medium items-center`}>
             <span><img src="/image/navBarSettingIcon.png" className=' h-7' alt="" /></span> Settings
+          </div>      
+          <div  className={` flex  gap-4  cursor-pointer font-medium items-center`}>
+            <span> <FontAwesomeIcon icon={faDeleteLeft }/> </span> Log Out
           </div>
         </div>
       </div>

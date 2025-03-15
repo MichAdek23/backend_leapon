@@ -27,11 +27,13 @@ function GlobalState({ children }) {
         return JSON.parse(storedComponent);
       } catch (error) {
         console.error("Error parsing stored component:", error);
-        return "Overview"; // Default to Overview if parsing fails
+        return "Overview"; 
       }
     }
     return "Overview"; 
   });
+
+
 
   const [toggleState, setToggleState] = useState(false);
 
@@ -57,6 +59,8 @@ function GlobalState({ children }) {
       return [];
     }
   });
+
+  console.log(acceptedMentees)
 
   const handleToggleState = () => {
     setToggleState(!toggleState);
