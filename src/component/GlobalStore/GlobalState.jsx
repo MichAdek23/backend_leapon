@@ -7,7 +7,6 @@ import MyProfile from "../MeentoDashboard/MentorPages/MyProfile";
 import Setting from "../MeentoDashboard/MentorPages/Setting";
 import ProfileId from "../MeentoDashboard/MentorPages/profileId";
 
-
 export const GlobalContext = createContext();
 
 const components = {
@@ -20,58 +19,68 @@ const components = {
   ProfileId 
 };
 
-
-
-
 function GlobalState({ children }) {
-  const [activeComponent, setActiveComponent] = useState(()=>{
-   
+  const [activeComponent, setActiveComponent] = useState(() => {
     const storedComponent = localStorage.getItem('components');
     if (storedComponent && storedComponent !== "undefined") {
-      return JSON.parse(storedComponent);
+      try {
+        return JSON.parse(storedComponent);
+      } catch (error) {
+        console.error("Error parsing stored component:", error);
+        return "Overview"; // Default to Overview if parsing fails
+      }
     }
     return "Overview"; 
   });
- const [toggleState, setToggleState] = useState(false)
 
-const [selectedMentee, setSelectedMentee] = useState(()=>{
-      const storedMentee = localStorage.getItem('mentee')
-      return storedMentee ? JSON.parse(storedMentee) : null
-}) 
+  const [toggleState, setToggleState] = useState(false);
 
-const [acceptedMentees, setAcceptedMentees] = useState(()=>{
-       const AcceptedMentee = localStorage.getItem('Add')
-       return AcceptedMentee ? JSON.parse(AcceptedMentee) : []
-})
+  const [selectedMentee, setSelectedMentee] = useState(() => {
+    const storedMentee = localStorage.getItem('mentee');
+    if (storedMentee) {
+      try {
+        return JSON.parse(storedMentee);
+      } catch (error) {
+        console.error("Error parsing stored mentee:", error);
+        return null;
+      }
+    }
+    return null;
+  });
 
-console.log(selectedMentee)
-  const handleToggleState = ()=> {
-      setToggleState(!toggleState)
-  }
+  const [acceptedMentees, setAcceptedMentees] = useState(() => {
+    const AcceptedMentee = localStorage.getItem('Add');
+    try {
+      return AcceptedMentee ? JSON.parse(AcceptedMentee) : [];
+    } catch (error) {
+      console.error("Error parsing accepted mentees:", error);
+      return [];
+    }
+  });
 
-  const upDatePage = (ComponentName) => {
-    localStorage.setItem('components', JSON.stringify(ComponentName))
-    setActiveComponent(ComponentName);
-    setToggleState(false)
+  const handleToggleState = () => {
+    setToggleState(!toggleState);
   };
 
-
+  const upDatePage = (ComponentName) => {
+    localStorage.setItem('components', JSON.stringify(ComponentName));
+    setActiveComponent(ComponentName);
+    setToggleState(false);
+  };
 
   const AddMentees = (mentee) => {
     const isAlreadyAdded = acceptedMentees.some((item) => item.id === mentee.id);
-    
     if (!isAlreadyAdded) {
       const updatedList = [...acceptedMentees, mentee];
       setAcceptedMentees(updatedList);
       localStorage.setItem("Add", JSON.stringify(updatedList));
     }
   };
-  
 
-  const ActiveComponent = components[activeComponent] || Overview; 
+  const ActiveComponent = components[activeComponent] || Overview;
 
   return (
-    <GlobalContext.Provider value={{ ActiveComponent, acceptedMentees, AddMentees, upDatePage, activeComponent, handleToggleState, toggleState, setSelectedMentee, selectedMentee  }}>
+    <GlobalContext.Provider value={{ ActiveComponent, acceptedMentees, AddMentees, upDatePage, activeComponent, handleToggleState, toggleState, setSelectedMentee, selectedMentee }}>
       {children}
     </GlobalContext.Provider>
   );
