@@ -17,7 +17,7 @@ function MentorDashBoard() {
 
     return (
          <main className='flex sidebar h-full'>
-            <div className={` ${toggleState ? ' translate-x-0' : 'translate-x-full'} transition-transform duration-300 fixed z-50 top-0 bg-white w-full`}>
+            <div className={` ${toggleState ? ' translate-x-0' : 'translate-x-full'} transition-transform duration-300 fixed h-screen z-50 top-0 bg-white w-full`}>
                 <NavRes/>
             </div>
             <section  className=' hidden lg:block  h-screen w-[18%]'>
