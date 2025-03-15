@@ -7,8 +7,9 @@ import LandingPage from './component/Landing page/LandingPage';
 function App() {
   return (
       <Routes>
-        <Route path='/MentorDashBoard' element={<MentorDashBoard />} />
+        <Route path='/mentorDashBoard' element={<MentorDashBoard />} />
         <Route path='/' element={<LandingPage/>} />
+
       </Routes>
   );
 }

@@ -18,6 +18,8 @@ function SignUp() {
 
   const formData = watch();
 
+  console.log(formData)
+
 
   useEffect(() => {
     localStorage.setItem('loginFormData', JSON.stringify(formData));
@@ -143,8 +145,10 @@ function SignUp() {
            {/* terms and condition */}
 
 
-           <div className=' mt-6 flex gap-4'>
-              <input type="checkbox" name="" id="" />
+           <div className=' mt-6 flex items-center gap-4'>
+              <input type="checkbox" 
+               {...register('terms', { required: 'You must accept the terms and conditions' })}
+                className=' accent-customOrange   text-white cursor-pointer w-4 h-4' name="" id="" />
             <p className=' text-sm font-medium  text-slate-400'>By creating an account means you agree to the <b className=' text-slate-900'>Terms <br />
             & Conditions</b>  and our <b className=' text-slate-900'>Privacy Policy</b> </p>
            </div>
@@ -152,15 +156,13 @@ function SignUp() {
 
             {/* Submit Button */}
             <div className="mt-4">
-              <button type="submit" className="text-white bg-customOrange w-full h-14 rounded-lg cursor-pointer">
+              <button type="submit" className="text-white bg-customOrange  w-full h-14 rounded-lg cursor-pointer">
                 Sign up
               </button>
             </div>
           </form>
 
-
-
-            <p className=' mt-[30px]  text-center text-sm font-medium text-customDarkBlue'>Already have an account? Log In <span className=' text-customOrange'><Link>Login</Link></span></p>
+          <p className=' mt-[30px]  text-center text-sm font-medium text-customDarkBlue'>Already have an account? Log In <span className=' text-customOrange'><Link>Login</Link></span></p>
         
 
        
