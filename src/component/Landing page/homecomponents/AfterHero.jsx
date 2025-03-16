@@ -5,14 +5,12 @@ import { asset } from '../../../assets/assets'
 const AfterHero = () => {
   return (
     <div>
-      <div>
-        <img className='mt-24' src={asset.section} alt="" />
+      <div className='relative'>
+        <img className='mt-24 h-15' src={asset.section} alt="" />
+        <div className='absolute top-7'>Your Mentor, Your Future Connect, Grow, Achieve Your Vision, Our Mission</div>
       </div>
-      <div>Your Mentor, Your Future</div>
-      <div>Connect, Grow, Achieve</div>
-      <div>Your Vision, Our Mission</div>
     </div>
   )
-}
+};
 
 export default AfterHero

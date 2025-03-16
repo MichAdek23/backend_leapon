@@ -1,14 +1,14 @@
-import GlobalState from './component/GlobalStore/GlobalState'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
-import { BrowserRouter } from 'react-router-dom'
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import App from './App.jsx';
+import { BrowserRouter } from 'react-router-dom';
+import GlobalState from './component/GlobalStore/GlobalState';
+
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
-    <GlobalState>
+  <GlobalState>
       <App />
-    </GlobalState>
+  </GlobalState>
   </BrowserRouter>
-
-)
+);
