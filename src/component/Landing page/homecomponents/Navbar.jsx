@@ -12,8 +12,13 @@ const Navbar = () => {
         <NavLink to="/mentor">Mentor</NavLink>
       </ul>
       <ul className='flex items-center justify-between gap-x-5'>
-        <button to="/register" className='border border-orange-600 px-3 py-1 rounded-xl text-orange-600 '>Get started</button>
-        <button className='border border-orange-600 px-3 py-1 rounded-xl bg-orange-600 text-orange-100'>Sign in</button>
+        <NavLink to='/SignUp' >
+        <button  className='border border-orange-600 px-3 py-1 rounded-xl text-orange-600 '>Get started</button>
+        </NavLink>
+       <NavLink to="/Login">
+       <button className='border border-orange-600 px-3 py-1 rounded-xl bg-orange-600 text-orange-100'>Sign in</button>
+       </NavLink>
+
       </ul>
       </div>
       <hr className='mb-16'/>
