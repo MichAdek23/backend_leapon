@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 function ModeOfSignUp() {
   const navigate = useNavigate();
-  const [selectedRole, setSelectedRole] = useState(null); // State to track the selected role
+  const [selectedRole, setSelectedRole] = useState(null); 
 
   const {
     register,
@@ -41,6 +41,7 @@ function ModeOfSignUp() {
   const onSubmit = (data) => {
     console.log('Form Data:', data);
     navigate('/Login'); 
+    console.log(selectedRole)
   };
 
   return (

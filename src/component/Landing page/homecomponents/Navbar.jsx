@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { asset } from '../../../assets/assets'
 import { AlignRight } from 'lucide-react';
 import { X } from 'lucide-react';
 
 const Navbar = () => {
+    const navigate = useNavigate()
 
     const [showMobileMenu, setShowMobileMenu] = useState(false);
 
@@ -25,13 +26,11 @@ const Navbar = () => {
           <div className=" flex justify-between items-center py-4 px-8 bg-transparent">
             <ul className=" md:flex items-center justify-between font-bold gap-7 text-orange-600">
               <img src={asset.logo} alt="" className='pr-10'/>
-                <NavLink to="/mentee" className='hidden sm:block'>Mentee</NavLink>
-                <NavLink to="/mentor" className='hidden sm:block'>Mentor</NavLink>
             </ul>
 
               <div className='flex items-center justify-between gap-x-5'>
-              <button className="hidden text-orange-500 md:block border  border-orange-500  px-8 py-2 rounded-full">Get Started</button>
-              <button className="hidden text-orange-50 md:block bg-orange-500 px-8 py-2 rounded-full">Login</button>
+              <button onClick={()=>  navigate('./SignUp')} className="hidden text-orange-500 md:block border  border-orange-500  px-8 py-2 rounded-full">Get Started</button>
+              <button onClick={()=>  navigate('./Login')}  className="hidden text-orange-50 md:block bg-orange-500 px-8 py-2 rounded-full">Login</button>
               </div>
               <AlignRight onClick={()=> setShowMobileMenu(true)} className='md:hidden w-12 h-10 text-orange-600 cursor-pointer' />
           </div>
@@ -45,10 +44,8 @@ const Navbar = () => {
                 </div>
                 
           <ul className='md:flex items-center justify-between gap-x-5 px-5 md:px-0'>
-            <NavLink to="/mentee" className="block mb-2 text-orange-500 font-bold">Mentee</NavLink>
-            <NavLink to="/mentor" className="block mb-2 text-orange-500 font-bold mb-2">Mentor</NavLink>
-            <button to="/register" onClick={()=> setShowMobileMenu(false)}  className='block border border-orange-600 px-3 py-1 rounded-xl text-orange-600 mb-5'>Get started</button>
-            <button onClick={()=> setShowMobileMenu(false)}  className='block border border-orange-600 px-7 py-1 rounded-xl bg-orange-600 text-orange-100'>Sign in</button>
+            <button onClick={()=> navigate("/SignUp" )}  className='block border border-orange-600 px-3 py-1 rounded-xl text-orange-600 mb-5'>Get started</button>
+            <button  onClick={()=> navigate("/Login")}  className='block border border-orange-600 px-7 py-1 rounded-xl bg-orange-600 text-orange-100'>Sign in</button>
           </ul>
            </div>
            <hr className='border border-gray-100 w-full'/>
