@@ -1,4 +1,4 @@
-import React, { createContext, useState } from "react";
+import React, { createContext,  useState } from "react";
 import Overview from "../MeentoDashboard/MentorPages/Overview";
 import Explore from "../MeentoDashboard/MentorPages/Explore";
 import Message from "../MeentoDashboard/MentorPages/Message";
@@ -33,7 +33,14 @@ function GlobalState({ children }) {
     return "Overview"; 
   });
 
+  const [otpshow , setOtpShow] = useState(false)
 
+
+  const ShowResetConfirmation = ()=>{
+       setOtpShow(!otpshow)
+  }
+
+  
 
   const [toggleState, setToggleState] = useState(false);
 
@@ -84,7 +91,7 @@ function GlobalState({ children }) {
   const ActiveComponent = components[activeComponent] || Overview;
 
   return (
-    <GlobalContext.Provider value={{ ActiveComponent, acceptedMentees, AddMentees, upDatePage, activeComponent, handleToggleState, toggleState, setSelectedMentee, selectedMentee }}>
+    <GlobalContext.Provider value={{ ActiveComponent, acceptedMentees, AddMentees, upDatePage, ShowResetConfirmation , otpshow , setOtpShow, activeComponent, handleToggleState, toggleState, setSelectedMentee, selectedMentee }}>
       {children}
     </GlobalContext.Provider>
   );
