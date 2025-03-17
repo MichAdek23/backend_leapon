@@ -1,5 +1,6 @@
 import React from 'react'
 import { asset } from '../../../assets/assets'
+import { Search } from 'lucide-react';
 
 const Hero = () => {
   return (
@@ -18,7 +19,7 @@ const Hero = () => {
             Mentorship
         </h1>
         <p className='mb-5 mt-4 p-3 text-sm'>Experience life-changing mentorship, your path to <br/> extraordinary growth starts here.</p>
-        <p className='border rounded-xl py-3'>what do you want to get better at</p>
+        <p className='border rounded-xl py-3  flex items-center justify-center'> <Search className=''/> what do you want to get better at</p>
       </div>
       <div>
           <ul className='grid grid-cols-2 gap-2'>

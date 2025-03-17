@@ -4,7 +4,7 @@ import { CircleDotDashed } from 'lucide-react';
 
 const AfterHero = () => {
   return (
-    <div className=''>
+    <div className='-z-0'>
       <div className='relative '>
         <img className='mt-24 h-15' src={asset.section} alt="" />
         <div className='absolute top-7 flex items-center justify-center text-2xl  px-20 text-yellow-50 font-bold'> 
