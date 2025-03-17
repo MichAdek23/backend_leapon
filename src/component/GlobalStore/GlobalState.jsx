@@ -6,10 +6,7 @@ import Booking from "../MeentoDashboard/MentorPages/Booking";
 import MyProfile from "../MeentoDashboard/MentorPages/MyProfile";
 import Setting from "../MeentoDashboard/MentorPages/Setting";
 import ProfileId from "../MeentoDashboard/MentorPages/profileId";
-import StepOne from "../UserAuth/Mentee-Form/stepOne";
-import StepTwo from "../UserAuth/Mentee-Form/StepTwo";
-import StepThree from "../UserAuth/Mentee-Form/StepThree";
-import StepFour from "../UserAuth/Mentee-Form/StepFour";
+
 
 export const GlobalContext = createContext();
 
@@ -71,28 +68,19 @@ function GlobalState({ children }) {
     }
   });
 
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [currentIndex, setCurrentIndex] = useState(1);
+    
   const steps = [1,2,3,4]
  
   const handleIncreament = ()=>{
      setCurrentIndex((index)=> (index + 1 ) % steps.length)
   }
 
-  const DisplaySteps = ()=>{
-      if (currentIndex === 1) {
-         return <StepOne/>
-      } else if (currentIndex === 2) {
-         return <StepTwo/>
-      } else if ( currentIndex === 3) {
-         return <StepThree/>
-      } else if (currentIndex === 4) {
-        return <StepFour/>
-      }
-  }
+  
+  const handleDecreament = ()=>{
+    setCurrentIndex((index)=> (index - 1 ) % steps.length)
+ }
  
-  console.log(currentIndex)
-
-  console.log(acceptedMentees)
 
   const handleToggleState = () => {
     setToggleState(!toggleState);
@@ -116,7 +104,7 @@ function GlobalState({ children }) {
   const ActiveComponent = components[activeComponent] || Overview;
 
   return (
-    <GlobalContext.Provider value={{ ActiveComponent, handleIncreament , currentIndex, DisplaySteps , acceptedMentees, AddMentees, upDatePage, ShowResetConfirmation , otpshow , setOtpShow, activeComponent, handleToggleState, toggleState, setSelectedMentee, selectedMentee }}>
+    <GlobalContext.Provider value={{ ActiveComponent, handleDecreament, handleIncreament , currentIndex,  acceptedMentees, AddMentees, upDatePage, ShowResetConfirmation , otpshow , setOtpShow, activeComponent, handleToggleState, toggleState, setSelectedMentee, selectedMentee }}>
       {children}
     </GlobalContext.Provider>
   );

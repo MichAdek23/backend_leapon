@@ -2,12 +2,29 @@
 import { GlobalContext } from '@/component/GlobalStore/GlobalState';
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import StepOne from './stepOne';
+import StepTwo from './StepTwo';
+import StepThree from './StepThree';
+import StepFour from './StepFour';
+
 
 function MenteeForm() {
   const navigate = useNavigate();
- const {  DisplaySteps , } = useContext(GlobalContext)
+ const {  currentIndex} = useContext(GlobalContext)
 
 
+
+  const DisplaySteps = ()=>{
+    if (currentIndex == 1) {
+      return <StepOne/>
+   } else if (currentIndex == 2) {
+      return  <StepTwo/>
+   } else if ( currentIndex == 3) {
+      return <StepThree/>
+   } else if (currentIndex == 4) {
+     return <StepFour/>
+   }
+  }
 
    
 
@@ -24,12 +41,18 @@ function MenteeForm() {
 
 
 
-      <div className="flex items-center w-full lg:w-2/5 justify-center">
+      <div className="flex w-full lg:w-2/5 ">
+         {/* <button className=' w-5 h-5 bg-slate-400 rounded-full '>
+            <FontAwesomeIcon className=' text-2xl' icon={faArrowLeft}/>
+         </button> */}
+
+         <div className=' w-full flex mt-4 lg:mt-24 justify-center '>            
          {
            DisplaySteps() 
          }
       </div>
-
+       
+       </div>
    
     </section>
   );

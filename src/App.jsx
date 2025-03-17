@@ -9,6 +9,7 @@ import ResetPassWord from './component/UserAuth/resetPassword/resetPassword';
 import GetOtp from './component/UserAuth/resetPassword/GetOtp';
 import ChangePassword from './component/UserAuth/ChangePassword/ChangePassword';
 import ModeOfSignUp from './component/UserAuth/ModeOfRegistring/ModeOfRegistring';
+import MenteeForm from './component/UserAuth/Mentee-Form/Mentee-Form';
 
 
 
@@ -27,6 +28,7 @@ function App() {
        <Route path='/GetOtp' element={<GetOtp/>}/>
        <Route path='/ChangePassword' element={<ChangePassword/>}/>
        <Route path='/ModeOfRegistring' element={<ModeOfSignUp/>}/>
+       <Route path='/MenteeForm' element={<MenteeForm/>}/> 
       </Routes>
     </>
   )

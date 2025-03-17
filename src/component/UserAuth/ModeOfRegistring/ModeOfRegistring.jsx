@@ -37,10 +37,15 @@ function ModeOfSignUp() {
     setValue('role', role); 
   };
 
+  console.log(selectedRole)
+
 
   const onSubmit = (data) => {
     console.log('Form Data:', data);
-    navigate('/Login'); 
+      if (selectedRole === 'mentee') {
+         navigate('/MenteeForm')
+         return;
+      }
     console.log(selectedRole)
   };
 
