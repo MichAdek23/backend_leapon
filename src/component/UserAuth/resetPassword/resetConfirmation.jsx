@@ -6,7 +6,13 @@ import { useNavigate } from 'react-router-dom';
 
 function ResetConfirmation() {
     const navigate = useNavigate('/GetOtp')
-      const { otpshow, } = useContext(GlobalContext); 
+      const { otpshow, setOtpShow} = useContext(GlobalContext); 
+
+
+      const HandleNavigate = ()=>{
+        setOtpShow(!otpshow)
+        navigate('/GetOtp') 
+      }
 
 
     return (
@@ -18,7 +24,7 @@ function ResetConfirmation() {
                 <p className='lg:text-lg font-medium'>Reset OTP sent</p>
             </div>
             <div>
-              <button onClick={()=>  navigate('/GetOtp') } className=' w-10 h-10 rounded-full bg-slate-400  cursor-pointer'>
+              <button onClick={HandleNavigate} className=' w-10 h-10 rounded-full bg-slate-400  cursor-pointer'>
                 <FontAwesomeIcon className=' text-lg text-white' icon={faTimes}/>
               </button>
             </div>
