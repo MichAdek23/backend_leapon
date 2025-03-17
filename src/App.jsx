@@ -8,6 +8,8 @@ import LandingPage from './component/Landing page/homecomponents/LandingPage';
 import ResetPassWord from './component/UserAuth/resetPassword/resetPassword';
 import GetOtp from './component/UserAuth/resetPassword/GetOtp';
 import ChangePassword from './component/UserAuth/ChangePassword/ChangePassword';
+import ModeOfSignUp from './component/UserAuth/ModeOfRegistring/ModeOfRegistring';
+
 
 
 
@@ -24,6 +26,7 @@ function App() {
         <Route path='/forgot-password' element={<ResetPassWord/>}/>  
        <Route path='/GetOtp' element={<GetOtp/>}/>
        <Route path='/ChangePassword' element={<ChangePassword/>}/>
+       <Route path='/ModeOfRegistring' element={<ModeOfSignUp/>}/>
       </Routes>
     </>
   )

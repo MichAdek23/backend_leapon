@@ -4,9 +4,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import ResetConfirmation from './resetConfirmation';
 import { GlobalContext } from '@/component/GlobalStore/GlobalState';
+import { useNavigate } from 'react-router-dom';
 
 function ResetPassWord() {
-
+  const navigate = useNavigate()
   const { otpshow, ShowResetConfirmation } = useContext(GlobalContext); // Properly use GlobalContext
 
   const {
@@ -19,12 +20,12 @@ function ResetPassWord() {
 
   const formData = watch();
 
-  // Save form data to localStorage whenever it changes
+ 
   useEffect(() => {
     localStorage.setItem('loginFormData', JSON.stringify(formData));
   }, [formData]);
 
-  // Load saved form data from localStorage on component mount
+
   useEffect(() => {
     const savedFormData = localStorage.getItem('loginFormData');
     if (savedFormData) {
@@ -56,15 +57,15 @@ function ResetPassWord() {
           className="h-full w-full object-cover"
           alt=""
         />
-        <div className="absolute top-4">
-          <img src="/image/LogoAyth.png" className="w-64" alt="Logo" />
+        <div onClick={()=> navigate('/')} className="absolute top-4">
+          <img src="/image/LogoAyth.png" className=" w-40" alt="" />
         </div>
       </div>
 
       {/* Right Side Form */}
       <div className="flex items-center w-full lg:w-2/5 justify-center">
         <div className="w-full px-6 lg:px-0 md:w-[400px]">
-          <h1 className="text-[40px] text-customDarkBlue">Reset Password</h1>
+          <h1 className="text-2xl font-bold lg:text-[40px]  text-customDarkBlue">Reset Password</h1>
           <p className="text-slate-400 text-sm mt-2">
             Welcome back! Please enter your details
           </p>

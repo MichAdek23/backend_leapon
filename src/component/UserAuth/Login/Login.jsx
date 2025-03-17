@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faLock, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Login() {
   const [passwordType, setPasswordType] = useState(false);
+  const navigate = useNavigate()
   const {
     register,
     handleSubmit,
@@ -45,14 +46,14 @@ function Login() {
     <section className="relative flex h-full">
       <div className="hidden lg:block h-full w-3/5">
         <img src="/image/people-office-work-day-1.png" className="h-full w-full object-cover" alt="" />
-        <div className="absolute top-4">
-          <img src="/image/LogoAyth.png" className="w-64" alt="" />
+        <div onClick={()=> navigate('/')} className="absolute top-4">
+          <img src="/image/LogoAyth.png" className=" w-40" alt="" />
         </div>
       </div>
 
       <div className="flex items-center w-full lg:w-2/5 justify-center">
         <div className="w-full px-6 lg:px-0 md:w-[400px]">
-          <h1 className="text-[40px] text-customDarkBlue">Sign in</h1>
+          <h1 className="text-2xl font-bold lg:text-[40px] text-customDarkBlue">Sign in</h1>
           <p className="text-slate-400 text-sm mt-2">Welcome back! Please enter your details</p>
 
           <form className="mt-5" onSubmit={handleSubmit(onSubmit)}>

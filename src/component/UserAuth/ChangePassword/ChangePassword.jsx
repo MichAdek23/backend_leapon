@@ -63,15 +63,15 @@ function ChangePassword() {
       {/* Left Side Image */}
       <div className="hidden lg:block h-full w-3/5">
         <img src="/image/people-office-work-day-1.png" className="h-full w-full object-cover" alt="" />
-        <div className="absolute top-4">
-          <img src="/image/LogoAyth.png" className="w-64" alt="" />
+        <div onClick={()=> navigate('/')} className="absolute top-4">
+          <img src="/image/LogoAyth.png" className=" w-40" alt="" />
         </div>
       </div>
 
       {/* Right Side Form */}
       <div className="flex items-center w-full lg:w-2/5 justify-center">
         <div className="w-full px-6 lg:px-0 md:w-[400px]">
-          <h1 className="text-[40px] text-customDarkBlue">Change Password</h1>
+          <h1 className=" text-2xl font-bold lg:text-[40px] text-customDarkBlue">Change Password</h1>
           <p className="text-slate-400 text-sm mt-2">Welcome back! Please enter your details</p>
 
           <form className="mt-5" onSubmit={handleSubmit(onSubmit)}>
