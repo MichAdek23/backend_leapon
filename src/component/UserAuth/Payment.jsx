@@ -57,23 +57,22 @@ function Payment() {
                     <div className='flex justify-between mt-8'>
                         <h1 className='text-slate-500'>Price/Amount</h1>
                         <p className='text-slate-800 font-semibold'>
-                            <del>₦5,000</del> ₦500
+                            ₦5,000
                         </p>
                     </div>
 
                     <div className='flex justify-between mt-8'>
                         <h1 className='text-slate-500'>Use 90% Discount code</h1>
                         <p className='text-slate-800 font-semibold'>
-                        ₦500
+                        <del> ₦5,000</del> ₦500
                         </p>
                     </div>
 
 
                   
                     <button
-                        onClick={() => initializePayment(onSuccess, onClose)}
-                        className='mt-4 w-full h-10 lg:h-14 rounded-lg cursor-pointer text-white bg-customOrange'
-                    >
+        onClick={() => initializePayment(onSuccess, onClose)}
+                        className='mt-4 w-full h-10 lg:h-14 rounded-lg cursor-pointer text-white bg-customOrange'>
                         Continue to Payment
                     </button>
                 </div>

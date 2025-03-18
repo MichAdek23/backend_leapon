@@ -45,7 +45,7 @@ function Login() {
   return (
     <section className="relative flex h-full">
       <div className="hidden lg:block h-full w-3/5">
-        <img src="/image/people-office-work-day-1.png" className="h-full w-full object-cover" alt="" />
+        <img src="src\assets\image\young-people-working-from-modern-place 1.png" className="h-full w-full object-cover" alt="" />
         <div onClick={()=> navigate('/')} className="absolute top-4">
           <img src="/image/LogoAyth.png" className=" w-40" alt="" />
         </div>
