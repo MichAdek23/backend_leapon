@@ -56,7 +56,7 @@ function StepFour() {
                 />
                
                 <p className='absolute -top-3 left-4 bg-white px-2 text-base font-bold text-slate-400'>
-                    Select Gender
+                    Tell us about your Self
                 </p>
             </div>
 

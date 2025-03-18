@@ -101,7 +101,7 @@ function Overview() {
       {/* Main Content */}
       <section className="mt-11 flex flex-wrap lg:flex-nowrap gap-5 justify-center">
         {/* Profile Strength Section */}
-        <div className="py-4 px-2 md:px-4 lg:px-5 rounded-lg bg-white shadow-2xl  w-[27%]">
+        <div className="py-4 px-2 md:px-4 lg:px-5 rounded-lg bg-white shadow-2xl  lg:w-[33%]">
           <div className="flex justify-between">
             <h1 className=" md:text-lg lg:text-2xl font-medium">Your profile strength</h1>
 
@@ -238,8 +238,7 @@ function Overview() {
           ))
         )}
       </section>
-      <div></div>
-      <div></div>
+
     </section>
 
 
