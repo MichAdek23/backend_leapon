@@ -44,7 +44,10 @@ function ModeOfSignUp() {
     console.log('Form Data:', data);
       if (selectedRole === 'mentee') {
          navigate('/MenteeForm')
-         return;
+     
+      } else{
+         navigate('/MentorForm')
+      
       }
     console.log(selectedRole)
   };

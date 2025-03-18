@@ -11,6 +11,7 @@ import ChangePassword from './component/UserAuth/ChangePassword/ChangePassword';
 import ModeOfSignUp from './component/UserAuth/ModeOfRegistring/ModeOfRegistring';
 import MenteeForm from './component/UserAuth/Mentee-Form/Mentee-Form';
 import Payment from './component/UserAuth/Payment';
+import MentorForm from './component/UserAuth/Mentor-form/Mentor-Form';
 
 
 
@@ -30,6 +31,7 @@ function App() {
        <Route path='/ChangePassword' element={<ChangePassword/>}/>
        <Route path='/ModeOfRegistring' element={<ModeOfSignUp/>}/>
        <Route path='/MenteeForm' element={<MenteeForm/>}/> 
+       <Route path='MentorForm' element={<MentorForm/>}/>
        <Route path='/payMent' element={<Payment/>}/>
       </Routes>
     </>
