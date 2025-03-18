@@ -39,7 +39,7 @@ function StepTwo() {
   };
 
   return (
-    <div className="lg:w-[400px]">
+    <div className=" w-[300px] lg:w-[400px]">
       {/* Back Button */}
       <div onClick={handleDecreament}>
         <button className="w-10 flex justify-center items-center text-slate-200 h-10 bg-slate-400 rounded-full">
