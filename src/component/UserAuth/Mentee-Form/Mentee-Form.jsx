@@ -8,6 +8,7 @@ import StepThree from './StepThree';
 import StepFour from './StepFour';
 
 
+
 function MenteeForm() {
   const navigate = useNavigate();
  const {  currentIndex} = useContext(GlobalContext)
@@ -22,9 +23,11 @@ function MenteeForm() {
    } else if ( currentIndex == 3) {
       return <StepThree/>
    } else if (currentIndex == 4) {
-     return <StepFour/>
+     return  <StepFour/>
    }
   }
+
+
 
    
 
@@ -46,7 +49,7 @@ function MenteeForm() {
             <FontAwesomeIcon className=' text-2xl' icon={faArrowLeft}/>
          </button> */}
 
-         <div className=' w-full flex mt-4 lg:mt-24 justify-center '>            
+         <div className=' w-full flex mt-14 justify-center '>            
          {
            DisplaySteps() 
          }

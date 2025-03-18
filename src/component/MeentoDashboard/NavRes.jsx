@@ -32,7 +32,7 @@ function NavRes() {
         </div>
         <div onClick={() => upDatePage('Booking')} className={`${activeComponent === 'Booking' ? 'text-customOrange' : 'text-gray-500'} flex gap-4 cursor-pointer font-medium items-center`}>
           <span><img src="/image/BookingIcon.png" className='h-7' alt="" /></span>
-          Booking
+          Bookings
         </div>
       </div>
 

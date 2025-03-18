@@ -7,7 +7,7 @@ function ModeOfSignUp() {
   const [selectedRole, setSelectedRole] = useState(null); 
 
   const {
-    register,
+  
     handleSubmit,
     watch,
     setValue,
@@ -87,6 +87,7 @@ function ModeOfSignUp() {
                   <img src="/image/iconmode.png" className="w-9" alt="" />
                   <p className="text-base font-medium">Join as Mentor</p>
                 </div>
+
                 <input
                   type="checkbox"
                   checked={selectedRole === 'mentor'}
