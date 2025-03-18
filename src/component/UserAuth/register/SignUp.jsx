@@ -172,7 +172,7 @@ function SignUp() {
           </form>
 
           <p className="mt-[30px] text-center text-sm font-medium text-customDarkBlue">
-            Already have an account? Log In{' '}
+            Already have an account?
             <span className="text-customOrange">
               <Link to={'/Login'}>Login</Link>
             </span>

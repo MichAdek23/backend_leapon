@@ -18,8 +18,11 @@ function Payment() {
 
     // Handle payment success
     const onSuccess = (reference) => {
-        console.log('Payment successful!', reference);  
-        navigate('/Login');
+        alert('Payment successful!', reference); 
+        if (reference) {
+            navigate('/')
+        } 
+        
     };
 
     // Handle payment failure
