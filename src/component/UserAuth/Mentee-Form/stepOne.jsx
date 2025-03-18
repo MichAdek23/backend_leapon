@@ -1,45 +1,68 @@
 import { GlobalContext } from '@/component/GlobalStore/GlobalState';
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function StepOne() {
-    const { handleIncreament } = useContext(GlobalContext)
+  const { handleIncreament } = useContext(GlobalContext);
+  const [imageUrl, setImageUrl] = useState('');
 
-    
-    return (
-        <div className=' w-[300px] lg:w-[400px]'>     
-              <p className=' text-base  text-center font-medium mt-3 lg:mt-6'>STEP 1 of 4</p>
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageUrl(URL.createObjectURL(file));
+    }
+  };
 
-              <progress className=' bg-customOrange h-2' value="30" max="100" ></progress>
+  return (
+    <div className='text-center lg:text-start w-[300px] lg:w-[400px]'>
+      <p className='text-base font-medium mt-3 lg:mt-6'>STEP 1 of 4</p>
 
-              <h1 className=' mt-7 text-[36px] font-medium'>Complete Profile Details</h1>
+      {/* Progress Bar */}
+      <progress className="progress-bar h-2" value="30" max="100"></progress>
 
-               <div>
-                 <p className=' mt-5 text-lg font-medium text-cyan-600'>Upload profile photo*</p>
+      <h1 className='mt-7 text-xl lg:text-[36px] font-medium'>Complete Profile Details</h1>
 
-                 <div className=' flex flex-col lg:flex-row items-center mt-5 gap-3'>
-                    <div className=' h-[75px] w-[75px] rounded-full flex justify-center items-center bg-slate-600 text-4xl font-medium text-blue-950'>E</div>
-                    <div>
-                      <input type="file" name="image" className=' bg-transparent' placeholder='Select a file' id="" />
-                       
-                        <p>Make sure the file is below 12mb</p>
-                    </div>
-                 </div>
-               </div>
+      {/* Upload Image */}
+      <div>
+        <p className='mt-5 text-lg font-medium text-cyan-600'>Upload profile photo*</p>
 
-               <div className=' mt-7  relative  w-full border-2 border-slate-300  p-4 rounded-lg '>
-                  <select className=' bg-slate-200 outline-none text-lg text-gray-500 font-medium w-full ' name="" id="">
-                    <option  value="" className=''>Select One</option>
-                    <option value="">Male</option>
-                    <option value="">Female</option>
-                  </select>
-
-                  <p className=' absolute  bottom-12 bg-white  text-base font-bold text-slate-400'>Select Gender</p>
-               </div>
-
-            <button onClick={handleIncreament} className=' mt-4 w-full h-14 rounded-lg cursor-pointer text-white bg-customOrange'>Continue</button>
-       
+        <div className='flex flex-col lg:flex-row items-center mt-5 gap-3'>
+          <div className='h-[75px] w-[75px] rounded-full flex justify-center items-center bg-slate-600 font-medium text-blue-950'>
+            {imageUrl ? <img src={imageUrl} className='h-full w-full rounded-full' alt="Profile" /> : <p className='text-4xl'>E</p>}
+          </div>
+          <div>
+            <input type="file" name="image" className='bg-transparent' onChange={handleImageUpload} accept="image/*" />
+            <p>Make sure the file is below 12MB</p>
+          </div>
         </div>
-    );
+      </div>
+
+      {/* Select Gender */}
+      <div className='relative border-2 rounded-lg mt-6 border-gray-300'>
+        <Select>
+          <SelectTrigger className=" w-[300px] lg:w-[400px] h-12 lg:h-[60px] border-0">
+            <SelectValue className="text-lg text-slate-500" placeholder="Select One" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Male">Male</SelectItem>
+            <SelectItem value="Female">Female</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className='absolute left-3 bottom-10 lg:bottom-12 bg-white text-base font-bold text-slate-400'>Select Gender</p>
+      </div>
+
+      {/* Continue Button */}
+      <button onClick={handleIncreament} className='mt-4 w-full h-11 lg:h-14 rounded-lg cursor-pointer text-white bg-customOrange'>
+        Continue
+      </button>
+    </div>
+  );
 }
 
 export default StepOne;

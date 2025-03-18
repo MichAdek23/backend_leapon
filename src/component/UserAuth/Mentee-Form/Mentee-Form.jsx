@@ -36,7 +36,7 @@ function MenteeForm() {
     <section className="relative flex h-full">
       
       <div className="hidden lg:block h-full w-3/5">
-        <img src="/image/young-people-working-from-modern-place 1.png" className="h-full w-full object-cover" alt="" />
+        <img src="src\assets\image\young-people-working-from-modern-place 1.png" className="h-full w-full object-cover" alt="" />
         <div onClick={() => navigate('/')} className="absolute top-4">
           <img src="/image/LogoAyth.png" className="w-40" alt="" />
         </div>
@@ -44,10 +44,10 @@ function MenteeForm() {
 
 
 
-      <div className="flex w-full lg:w-2/5 ">
-         {/* <button className=' w-5 h-5 bg-slate-400 rounded-full '>
-            <FontAwesomeIcon className=' text-2xl' icon={faArrowLeft}/>
-         </button> */}
+      <div className="flex flex-col lg:flex-row w-full lg:w-2/5 ">
+      <div onClick={() => navigate('/')} className=" block lg:hidden bg-black py-2 px-2">
+                    <img src="src\assets\image\LogoAyth.png" className="w-40" alt="" />
+     </div>
 
          <div className=' w-full flex mt-14 justify-center '>            
          {

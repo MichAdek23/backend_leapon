@@ -52,14 +52,17 @@ function SignUp() {
     <section className="relative flex h-full">
    
       <div className="hidden lg:block h-full w-3/5">
-        <img src="/image/young-people-working-from-modern-place 1.png" className="h-full w-full object-cover" alt="" />
+        <img src="src\assets\image\young-people-working-from-modern-place 1.png" className="h-full w-full object-cover" alt="" />
         <div onClick={() => navigate('/')} className="absolute top-4">
           <img src="/image/LogoAyth.png" className="w-40" alt="" />
         </div>
       </div>
 
       {/* Right Side Form */}
-      <div className="flex items-center w-full lg:w-2/5 justify-center">
+      <div className="flex  flex-col lg:flex-row  items-center w-full lg:w-2/5 justify-center">
+      <div onClick={() => navigate('/')} className=" block lg:hidden bg-black py-2 px-2">
+                    <img src="src\assets\image\LogoAyth.png" className="w-40" alt="" />
+     </div>
         <div className="w-full px-6 lg:px-0 md:w-[400px]">
           <h1 className="text-2xl font-bold lg:text-[40px] text-customDarkBlue">Sign Up</h1>
           <p className="text-slate-400 text-sm mt-2">Let’s Create an Account for you</p>
@@ -162,7 +165,7 @@ function SignUp() {
 
             
             <div className="mt-4">
-              <button type="submit" className="text-white bg-customOrange w-full h-14 rounded-lg cursor-pointer">
+              <button type="submit" className="text-white bg-customOrange w-full h-11 lg:h-14 rounded-lg cursor-pointer">
                 Sign up
               </button>
             </div>

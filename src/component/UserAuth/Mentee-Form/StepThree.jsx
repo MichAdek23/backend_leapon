@@ -46,7 +46,7 @@ function StepThree() {
   };
 
   return (
-    <div className="lg:w-[400px]">
+    <div className=" text-center lg:text-start w-[300px] lg:w-[400px]">
       {/* Back Button */}
       <div onClick={handleDecreament}>
         <button className="w-10 flex justify-center items-center text-slate-200 h-10 bg-slate-400 rounded-full">
@@ -61,7 +61,7 @@ function StepThree() {
       <progress className="bg-customOrange h-2" value="80" max="100"></progress>
 
       {/* Form Title */}
-      <h1 className="mt-7 text-[36px] font-medium">Select areas of Interest</h1>
+      <h1 className="mt-7 text-xl lg:text-[36px] font-medium">Select areas of Interest</h1>
 
       {/* Form */}
       <form className="mt-5 flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
@@ -133,7 +133,7 @@ function StepThree() {
         {/* Continue Button */}
         <button
           type="submit"
-          className="mt-4 w-full h-14 rounded-lg cursor-pointer text-white bg-customOrange"
+          className="mt-4 w-full h-11 lg:h-14 rounded-lg cursor-pointer text-white bg-customOrange"
         >
           Continue
         </button>

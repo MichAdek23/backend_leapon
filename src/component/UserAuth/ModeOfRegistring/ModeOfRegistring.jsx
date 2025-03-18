@@ -60,17 +60,20 @@ function ModeOfSignUp() {
       </div>
 
       {/* Right Side Form */}
-      <div className="flex items-center w-full lg:w-2/5 justify-center">
+      <div className="flex flex-col lg:flex-row  items-center w-full lg:w-2/5 justify-center">
+      <div onClick={() => navigate('/')} className=" block lg:hidden bg-black py-2 px-2">
+                    <img src="src\assets\image\LogoAyth.png" className="w-40" alt="" />
+     </div>
         <div className="w-full px-6 lg:px-0 md:w-[400px]">
-          <h1 className="text-2xl font-bold lg:text-[30px] text-customDarkBlue">Welcome to Mentorship</h1>
+          <h1 className=" text-xl  md:text-2xl font-bold lg:text-[30px] text-customDarkBlue">Welcome to Mentorship</h1>
 
           <form className="mt-5" onSubmit={handleSubmit(onSubmit)}>
             {/* Role Selection */}
             <div className="flex flex-col gap-4 mt-4">
           
-              <div className="flex justify-between border-2 rounded-lg p-4 items-center">
+              <div className="flex justify-between border-2 rounded-lg p-2 lg:p-4 items-center">
                 <div className="flex items-center gap-4">
-                  <img src="/image/iconmode.png" className="w-9" alt="" />
+                  <img src="src\assets\image\iconmode.png" className="w-9" alt="" />
                   <p className="text-base font-medium">Join as Mentee</p>
                 </div>
                 <input
@@ -82,9 +85,9 @@ function ModeOfSignUp() {
               </div>
 
             
-              <div className="flex justify-between border-2 rounded-lg p-4 items-center gap-2">
+              <div className="flex justify-between border-2 rounded-lg p-2 lg:p-4 items-center gap-2">
                 <div className="flex items-center gap-4">
-                  <img src="/image/iconmode.png" className="w-9" alt="" />
+                  <img src="src\assets\image\iconmode.png" className="w-9" alt="" />
                   <p className="text-base font-medium">Join as Mentor</p>
                 </div>
 
@@ -100,7 +103,7 @@ function ModeOfSignUp() {
 
             {/* Submit Button */}
             <div className="mt-4">
-              <button type="submit" className="text-white bg-customOrange w-full h-14 rounded-lg cursor-pointer">
+              <button type="submit" className="text-white bg-customOrange w-full h-11 lg:h-14 rounded-lg cursor-pointer">
                 Continue
               </button>
             </div>
