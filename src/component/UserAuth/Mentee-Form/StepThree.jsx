@@ -25,19 +25,18 @@ function StepThree() {
     localStorage.setItem('loginFormData', JSON.stringify(detailsForm));
   }, [detailsForm]);
 
-  // Load saved form data from localStorage on component mount
   useEffect(() => {
     const savedFormData = localStorage.getItem('loginFormData');
     if (savedFormData) {
       const parsedFormData = JSON.parse(savedFormData);
       setValue('selectedInterest', parsedFormData.selectedInterest);
-      setSelectedInterest(parsedFormData.selectedInterest); 
+      setSelectedInterest(parsedFormData.selectedInterest); // Sync the state with the form value
     }
   }, [setValue]);
 
   // Handle checkbox change
   const handleCheckboxChange = (interest) => {
-    setSelectedInterest(interest); // Update the selected interest
+    setSelectedInterest(interest); 
     setValue('selectedInterest', interest); // Update the form value
   };
 

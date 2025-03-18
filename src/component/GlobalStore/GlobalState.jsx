@@ -70,7 +70,7 @@ function GlobalState({ children }) {
 
   const [currentIndex, setCurrentIndex] = useState(1);
     
-  const steps = [1,2,3,4]
+  const steps = [1,2,3,4,3]
  
   const handleIncreament = ()=>{
      setCurrentIndex((index)=> (index + 1 ) % steps.length)

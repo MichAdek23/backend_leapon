@@ -27,8 +27,8 @@ function StepOne() {
                </div>
 
                <div className=' mt-7  relative  w-full border-2 border-slate-300  p-4 rounded-lg '>
-                  <select className=' text-base text-slate-400 font-medium w-full ' name="" id="">
-                    <option  value="">Select One</option>
+                  <select className=' bg-slate-200 outline-none text-lg text-gray-500 font-medium w-full ' name="" id="">
+                    <option  value="" className=''>Select One</option>
                     <option value="">Male</option>
                     <option value="">Female</option>
                   </select>

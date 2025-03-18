@@ -102,7 +102,7 @@ function StepTwo() {
                 placeholder="E.G LinkedIn URL"
               />
               <p className="absolute -top-7 left-2 bg-white px-1 text-base font-bold text-slate-400">
-                LinkedIn URL
+               Social Media Links
               </p>
             </div>
           </div>

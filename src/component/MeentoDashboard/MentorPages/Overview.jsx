@@ -185,7 +185,7 @@ function Overview() {
 
         <div className=" flex justify-between">
           <h1 className="  text-base md:text-[22px] font-medium text-customDarkBlue">Your top matches </h1>
-          <button onClick={() => upDatePage('Explore')} className=" p-2 md:p-0 h-10 rounded-xl md:w-40 text-white bg-customOrange  flex justify-center items-center">Explore Mentors</button>
+          <button onClick={() => upDatePage('Explore')} className=" p-2 md:p-0 h-10 rounded-xl md:w-40 text-white bg-customOrange  flex justify-center items-center">Explore Mentees</button>
         </div>
       </section>
 
