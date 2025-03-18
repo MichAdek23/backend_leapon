@@ -65,7 +65,7 @@ function ModeOfSignUp() {
       {/* Right Side Form */}
       <div className="flex flex-col lg:flex-row  items-center w-full lg:w-2/5 justify-center">
       <div onClick={() => navigate('/')} className=" block lg:hidden bg-black py-2 px-2">
-                    <img src="src\assets\image\LogoAyth.png" className="w-40" alt="" />
+                    <img src="/image/LogoAyth.png" className="w-40" alt="" />
      </div>
         <div className="w-full px-6 lg:px-0 md:w-[400px]">
           <h1 className=" text-xl  md:text-2xl font-bold lg:text-[30px] text-customDarkBlue">Welcome to Mentorship</h1>
@@ -76,7 +76,7 @@ function ModeOfSignUp() {
           
               <div className="flex justify-between border-2 rounded-lg p-2 lg:p-4 items-center">
                 <div className="flex items-center gap-4">
-                  <img src="src\assets\image\iconmode.png" className="w-9" alt="" />
+                  <img src="/image/iconmode.png" className="w-9" alt="" />
                   <p className="text-base font-medium">Join as Mentee</p>
                 </div>
                 <input
@@ -90,7 +90,7 @@ function ModeOfSignUp() {
             
               <div className="flex justify-between border-2 rounded-lg p-2 lg:p-4 items-center gap-2">
                 <div className="flex items-center gap-4">
-                  <img src="src\assets\image\iconmode.png" className="w-9" alt="" />
+                  <img src="/image/iconmode.png" className="w-9" alt="" />
                   <p className="text-base font-medium">Join as Mentor</p>
                 </div>
 
