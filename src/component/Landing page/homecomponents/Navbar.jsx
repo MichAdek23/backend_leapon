@@ -37,7 +37,7 @@ const Navbar = () => {
 
           {/* --mobile menu-- */}
 
-            <div className={`md:hidden ${showMobileMenu ? 'fixed w-[50vh] z-10' : 'h-0 w-0'} 
+            <div className={`md:hidden ${showMobileMenu ? 'fixed w-[50vw] z-10' : 'h-0 w-0'} 
                             right-0 top-0 bottom-0 overflow-hidden bg-orange-50 transition-all`}>
                 <div className='flex justify-end p-6 cursor-pointer'>  
                 <X onClick={()=> setShowMobileMenu(false)} className=' w-12 h-10 text-orange-600 cursor-pointer' alt="" />
