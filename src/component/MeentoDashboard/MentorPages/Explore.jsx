@@ -83,12 +83,14 @@ function Explore() {
               src="/image/messageIcon.png"
               className="md:w-12 h-9 md:h-12 cursor-pointer"
               alt="Message Icon"
+              loading="lazy"
             />
             <img
               onClick={() => upDatePage("Setting")}
               src="/image/settingIcon.png"
               className="md:w-12 h-9 md:h-12 cursor-pointer"
               alt="Setting Icon"
+              loading="lazy"
             />
           </div>
         </div>
@@ -134,6 +136,7 @@ function Explore() {
                 src={mentee.avatar}
                 className="h-full w-full object-cover"
                 alt={mentee.first_name}
+                loading="lazy"
               />
             </div>
             <div className="h-1/2 md:h-2/5 p-6">

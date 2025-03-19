@@ -21,12 +21,14 @@ function MyProfile() {
                             src="/image/messageIcon.png"
                             className="md:w-12 h-9 md:h-12 cursor-pointer"
                             alt=""
+                            loading="lazy"
                         />
                         <img
                             onClick={() => upDatePage("Setting")}
                             src="/image/settingIcon.png"
                             className="md:w-12 h-9 md:h-12 cursor-pointer"
                             alt=""
+                            loading="lazy"
                         />
                     </div>
                 </div>
@@ -43,7 +45,7 @@ function MyProfile() {
             <section>
                 <div>
                  <div className=' h-[162px]'>
-                    <img src="image/img.png" className=' w-full h-full object-cover' alt="" />
+                    <img src="image/img.png" loading="lazy" className=' w-full h-full object-cover' alt="" />
                  </div>
                   <div></div>
                 </div>

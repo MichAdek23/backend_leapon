@@ -45,15 +45,15 @@ function Login() {
   return (
     <section className="relative flex h-full">
       <div className="hidden lg:block h-full w-3/5">
-        <img src="/image/young-people-working-from-modern-place 1.png" className="h-full w-full object-cover" alt="" />
+        <img src="/image/young-people-working-from-modern-place 1.png" loading="lazy" className="h-full w-full object-cover" alt="" />
         <div onClick={()=> navigate('/')} className="absolute top-4">
-          <img src="/image/LogoAyth.png" className=" w-40" alt="" />
+          <img src="/image/LogoAyth.png" loading="lazy" className=" w-40" alt="" />
         </div>
       </div>
 
       <div className="flex flex-col items-center w-full lg:w-2/5 justify-center">
       <div onClick={() => navigate('/')} className=" block lg:hidden bg-black py-2 px-2">
-                    <img src="/image/LogoAyth.png" className="w-40" alt="" />
+                    <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
                 </div>
 
         <div className="w-full px-6 lg:px-0 md:w-[400px]">

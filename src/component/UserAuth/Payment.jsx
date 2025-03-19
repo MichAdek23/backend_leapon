@@ -39,15 +39,16 @@ function Payment() {
                     src="/image/young-people-working-from-modern-place 1.png"
                     className="h-full w-full object-cover"
                     alt=""
+                    loading="lazy"
                 />
                 <div onClick={() => navigate('/')} className="absolute top-4">
-                    <img src="/image/LogoAyth.png" className="w-40" alt="" />
+                    <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
                 </div>
             </div>
 
             <div className='flex flex-col h-full  w-11/12 lg:w-2/5 justify-center items-center'>
             <div onClick={() => navigate('/')} className=" block lg:hidden bg-black py-2 px-2">
-                    <img src="/image/LogoAyth.png" className="w-40" alt="" />
+                    <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
                 </div>
 
                 <div className='w-[300px] lg:w-[400px]'>

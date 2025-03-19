@@ -121,7 +121,7 @@ function Message() {
           <header className="flex p-4 border-b-2 justify-between items-center">
             <div className="flex gap-4 items-center">
               <div className="h-11 w-11">
-                <img src="/image/img.png" className="h-full w-full" alt="Profile" />
+                <img src="/image/img.png" className="h-full w-full" loading="lazy" alt="Profile" />
               </div>
               <div>
                 <p>Olaide Bamisebi</p>

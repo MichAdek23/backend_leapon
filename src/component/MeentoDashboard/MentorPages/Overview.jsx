@@ -80,12 +80,14 @@ function Overview() {
               src="/image/messageIcon.png"
               className="md:w-12 h-9 md:h-12 cursor-pointer"
               alt=""
+              loading="lazy"
             />
             <img
               onClick={() => upDatePage("Setting")}
               src="/image/settingIcon.png"
               className="md:w-12 h-9 md:h-12 cursor-pointer"
               alt=""
+              loading="lazy"
             />
           </div>
         </div>
@@ -205,6 +207,7 @@ function Overview() {
                   src={mentee.avatar} // Use the avatar from the API
                   className="h-full w-full object-cover"
                   alt={mentee.first_name}
+                  loading="lazy"
                 />
               </div>
               <div className="h-2/5 flex flex-col gap-2 p-6">

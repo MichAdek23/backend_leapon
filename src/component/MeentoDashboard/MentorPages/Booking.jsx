@@ -45,12 +45,14 @@ function Booking() {
               src="/image/messageIcon.png"
               className="md:w-12 h-9 md:h-12 cursor-pointer"
               alt="Message Icon"
+              loading="lazy"
             />
             <img
               onClick={() => upDatePage('Setting')}
               src="/image/settingIcon.png"
               className="md:w-12 h-9 md:h-12 cursor-pointer"
               alt="Setting Icon"
+              loading="lazy"
             />
           </div>
         </div>
