@@ -26,7 +26,7 @@ function Message() {
     return <div className="text-center text-red-500 py-6">Error: {error.message}</div>;
   }
 
-  // Filter mentees based on input value
+ 
   const filterMentee = acceptedMentees.filter((mentee) =>
     inputValue
       ? mentee.first_name.toLowerCase().includes(inputValue.toLowerCase()) ||
@@ -37,7 +37,7 @@ function Message() {
   return (
     <div>
       {/* Header Section */}
-      <header className="flex p-3 md:p-0 justify-between items-center">
+      <header className="flex p-3 md:p-0 justify-between ">
         <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
           <div className="flex flex-col gap-4">
             <h1 className="text-[32px] font-medium">Message</h1>
@@ -116,7 +116,7 @@ function Message() {
           </div>
         </div>
 
-        {/* Chat Area */}
+       
         <div className="h-full border relative w-[73.3333%] border-s-4">
           <header className="flex p-4 border-b-2 justify-between items-center">
             <div className="flex gap-4 items-center">

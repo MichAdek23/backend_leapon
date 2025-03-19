@@ -17,16 +17,16 @@ function Pending() {
           <div className="flex items-center gap-4">
             {/* Mentee Avatar */}
             <img
-              src={pending.avatar || '/default-avatar.png'} // Fallback for missing avatar
+              src={pending.avatar || '/default-avatar.png'}
               alt={`${pending.first_name}'s avatar`} 
               className="h-24 w-24 rounded-full"
             />
 
             <div>
               <h1 className="text-slate-500">
-                Mentorship Session with {pending.first_name || 'Unknown'} {/* Fallback for missing name */}
+                Mentorship Session with {pending.first_name || 'Unknown'} 
               </h1>
-              <p className="text-slate-400">Wed, 31 July 2025</p> {/* Replace with dynamic date if needed */}
+              <p className="text-slate-400">Wed, 31 July 2025,</p> 
             </div>
           </div>
 

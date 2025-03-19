@@ -84,6 +84,7 @@ function GlobalState({ children }) {
 
   const handleToggleState = () => {
     setToggleState(!toggleState);
+    // hhhhhdh
   };
 
   const upDatePage = (ComponentName) => {
