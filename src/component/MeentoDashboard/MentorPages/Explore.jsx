@@ -5,9 +5,11 @@ import { GlobalContext } from "@/component/GlobalStore/GlobalState";
 import axios from "axios";
 
 function Explore() {
-  const { upDatePage, handleToggleState, setSelectedMentee, AddMentees, acceptedMentees  } = useContext(GlobalContext);
+  const { upDatePage, handleToggleState, setSelectedMentee, AddMentees, acceptedMentees } =
+    useContext(GlobalContext);
   const [mentees, setMentees] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [inputSearch, setInputSearch] = useState("");
   const [applySearch, setApplySearch] = useState(false);
 
@@ -20,6 +22,7 @@ function Explore() {
         setMentees(res.data.data);
       } catch (error) {
         console.error("Error fetching mentees:", error);
+        setError(error);
       } finally {
         setLoading(false);
       }
@@ -28,17 +31,18 @@ function Explore() {
     fetchMentee();
   }, []);
 
-  const filteredData = mentees.filter((item) => 
-    !acceptedMentees.some((mentee) => mentee.id === item.id)
-  ).filter((item) =>
-    applySearch
-      ? inputSearch
-        ? item.first_name.toLowerCase().includes(inputSearch.toLowerCase()) ||
-          item.last_name.toLowerCase().includes(inputSearch.toLowerCase()) ||
-          item.email.toLowerCase().includes(inputSearch.toLowerCase())
+  // Filter mentees based on search input and acceptedMentees
+  const filteredData = mentees
+    .filter((item) => !acceptedMentees.some((mentee) => mentee.id === item.id))
+    .filter((item) =>
+      applySearch
+        ? inputSearch
+          ? item.first_name.toLowerCase().includes(inputSearch.toLowerCase()) ||
+            item.last_name.toLowerCase().includes(inputSearch.toLowerCase()) ||
+            item.email.toLowerCase().includes(inputSearch.toLowerCase())
+          : true
         : true
-      : true
-  );
+    );
 
   const handleSearch = () => {
     setApplySearch(true);
@@ -55,6 +59,10 @@ function Explore() {
     return <div>Loading...</div>;
   }
 
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
   if (!mentees || mentees.length === 0) {
     return <div className="text-4xl flex justify-center items-center h-96">No mentees available</div>;
   }
@@ -66,7 +74,7 @@ function Explore() {
         <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
           <div className="flex flex-col gap-4">
             <h1 className="text-[32px] font-medium">Mentees</h1>
-            <p className="text-base font-meduim text-slate-600">Accept Mentee </p>
+            <p className="text-base font-medium text-slate-600">Accept Mentee</p>
           </div>
 
           <div className="flex justify-center gap-4">
@@ -74,19 +82,19 @@ function Explore() {
               onClick={() => upDatePage("Message")}
               src="/image/messageIcon.png"
               className="md:w-12 h-9 md:h-12 cursor-pointer"
-              alt=""
+              alt="Message Icon"
             />
             <img
               onClick={() => upDatePage("Setting")}
               src="/image/settingIcon.png"
               className="md:w-12 h-9 md:h-12 cursor-pointer"
-              alt=""
+              alt="Setting Icon"
             />
           </div>
         </div>
 
         <div onClick={handleToggleState} className="block lg:hidden mt-3">
-          <button>
+          <button aria-label="Toggle menu">
             <FontAwesomeIcon icon={faBars} />
           </button>
         </div>
@@ -105,9 +113,10 @@ function Explore() {
               className="w-full outline-none h-full bg-transparent"
               value={inputSearch}
               onChange={(e) => setInputSearch(e.target.value)}
+              aria-label="Search by name, role, specific area of mentorship"
             />
           </div>
-          <div onClick={handleSearch} className="  h-full cursor-pointer flex justify-center items-center rounded-2xl bg-customOrange py-6 md:py-2 md:w-[12%]">
+          <div onClick={handleSearch} className="h-full cursor-pointer flex justify-center items-center rounded-2xl bg-customOrange py-6 md:py-2 md:w-[12%]">
             <button className="text-base font-bold text-white">Find Mentor</button>
           </div>
         </section>
@@ -118,16 +127,16 @@ function Explore() {
         {filteredData.map((mentee) => (
           <div
             key={mentee.id}
-            className="border-2 rounded-lg w-full h-[400px] lg:w-fit  md:h-fit bg-white"
+            className="border-2 rounded-lg w-full h-[400px] lg:w-fit md:h-fit bg-white"
           >
-            <div className=" h-1/2 w-full md:h-3/5">
+            <div className="h-1/2 w-full md:h-3/5">
               <img
                 src={mentee.avatar}
-                className=" h-full w-full object-cover"
+                className="h-full w-full object-cover"
                 alt={mentee.first_name}
               />
             </div>
-            <div className="h-1/2   md:h-2/5 p-6">
+            <div className="h-1/2 md:h-2/5 p-6">
               <h3 className="text-lg font-bold text-customDarkBlue">
                 {mentee.first_name} {mentee.last_name}
               </h3>
@@ -136,7 +145,7 @@ function Explore() {
                   <img
                     src="/image/tick.png"
                     className="object-cover h-4 w-4"
-                    alt=""
+                    alt="Verified"
                   />
                 </span>
                 {mentee.email}

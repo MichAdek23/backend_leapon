@@ -1,15 +1,29 @@
 import { GlobalContext } from "@/component/GlobalStore/GlobalState";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faSearch, faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 
 function Message() {
   const { upDatePage, handleToggleState, acceptedMentees } = useContext(GlobalContext);
   const [inputValue, setInputValue] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Handle undefined or null acceptedMentees
-  if (!acceptedMentees) {
+
+  useEffect(() => {
+    if (acceptedMentees) {
+      setLoading(false);
+    } else {
+      setError(new Error("No accepted mentees found"));
+    }
+  }, [acceptedMentees]);
+
+  if (loading) {
     return <div className="text-center text-slate-500 py-6">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500 py-6">Error: {error.message}</div>;
   }
 
   // Filter mentees based on input value
