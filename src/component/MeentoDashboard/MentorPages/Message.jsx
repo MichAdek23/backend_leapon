@@ -5,8 +5,7 @@ import { faBars } from "@fortawesome/free-solid-svg-icons";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 function Message() {
-    const { upDatePage, handleToggleState, acceptedMentees } =
-        useContext(GlobalContext);
+    const { upDatePage, handleToggleState, acceptedMentees } = useContext(GlobalContext);
     const [inputValue, setInputValue] = useState("");
     console.log(acceptedMentees);
 
