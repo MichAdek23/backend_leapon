@@ -30,7 +30,7 @@ function Overview() {
     fetchMentee();
   }, []);
 
-  const { upDatePage, handleToggleState } = useContext(GlobalContext)
+  const { upDatePage, handleToggleState, acceptedMentees } = useContext(GlobalContext)
   const Title = [
     "#1 Tips for Success",
     "#2 Tips for Success",
@@ -70,7 +70,11 @@ function Overview() {
         <div className=" flex flex-col  w-full lg:flex-row justify-start  items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
           <div className="flex flex-col  gap-4">
             <h1 className="text-[32px] font-medium">Welcome</h1>
-            <p className="text-base font-meduim text-slate-600">You have no upcoming sessions</p>
+            <p className="text-base font-medium text-slate-600">
+            {acceptedMentees && acceptedMentees.length > 0 
+              ? `You have ${acceptedMentees.length} upcoming session${acceptedMentees.length > 1 ? 's' : ''}`
+              : 'You have no upcoming sessions'}
+          </p>
           </div>
 
 
