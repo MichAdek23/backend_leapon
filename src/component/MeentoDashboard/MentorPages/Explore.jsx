@@ -52,7 +52,7 @@ function Explore() {
     localStorage.setItem('mentee', JSON.stringify(mentee));
     setSelectedMentee(mentee);
     AddMentees(mentee);
-    upDatePage('Message');
+    upDatePage('Booking');
   };
 
   if (loading) {
