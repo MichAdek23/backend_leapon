@@ -15,18 +15,26 @@ const Profile = () => {
     role: "",
     overview: "",
     areaOfInterest: "",
-    email: ""
+    email: "",
+    image: ""
   });
 
   useEffect(() => {
-    // Fetch the profile data from the backend when the component mounts
-    axios.get('/api/getProfile')
-      .then(response => {
-        setProfile(response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching profile:', error);
-      });
+    // Load profile data from local storage if available
+    const storedProfile = localStorage.getItem('profile');
+    if (storedProfile) {
+      setProfile(JSON.parse(storedProfile));
+    } else {
+      // Fetch the profile data from the backend when the component mounts
+      axios.get('/api/getProfile')
+        .then(response => {
+          setProfile(response.data);
+          localStorage.setItem('profile', JSON.stringify(response.data));
+        })
+        .catch(error => {
+          console.error('Error fetching profile:', error);
+        });
+    }
   }, []);
 
   const toggleEditProfile = () => {
@@ -40,6 +48,8 @@ const Profile = () => {
   const handleProfileUpdate = (updatedProfile) => {
     setProfile(updatedProfile);
     setEditProfileVisible(false);
+    // Save the updated profile to local storage
+    localStorage.setItem('profile', JSON.stringify(updatedProfile));
     // Update the backend with the new profile details
     axios.post('/api/updateProfile', updatedProfile)
       .then(response => {
@@ -76,7 +86,7 @@ const Profile = () => {
       <header className="flex mt-4 justify-between px-4 mb-8">
         <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
           <div className="flex flex-col gap-4">
-            <h1 className="text-2xl font-medium">Settings</h1>
+            <h1 className="text-2xl font-medium">My profile</h1>
             <p className="text-base font-medium text-slate-600">Easy Communication with everyone</p>
           </div>
           <div className="flex justify-center gap-4">
@@ -105,8 +115,8 @@ const Profile = () => {
           <div className="h-48 rounded-t-xl bg-gradient-to-r from-blue-400 to-blue-600 relative" style={{ backgroundImage: 'url(/image/backImage.png)' }}>
             <div className="absolute -bottom-16 left-8 flex items-end">
               <img
-                src="/image/young-people-working-from-modern-place 1.png"
-                alt="Braide Shekinah"
+                src={profile.image || "/image/young-people-working-from-modern-place 1.png"}
+                alt={profile.name}
                 className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800"
                 onError={handleImageError}
               />
@@ -126,11 +136,7 @@ const Profile = () => {
                 Edit Profile
               </button>
             </div>
-            <div className="mt-6">
-              <p className="text-gray-600 dark:text-gray-400 max-w-3xl">
-                {profile.overview}
-              </p>
-            </div>
+       
             <div className="mt-8 flex gap-8">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-red-500" />
@@ -183,6 +189,7 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
       {isEditProfileVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="dark:bg-gray-800 bg-white p-2 lg:w-fit border rounded-2xl shadow-lg">
