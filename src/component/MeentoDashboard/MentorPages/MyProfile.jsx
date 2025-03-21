@@ -125,7 +125,7 @@ const Profile = () => {
           <div className="pt-20 px-8">
             <div className="flex justify-between items-start">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{profile.name}</h1>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{profile.fullName }</h1>
                 <p className="text-gray-600 dark:text-gray-400">{profile.role}</p>
                 <p className="text-gray-600 dark:text-gray-400">{profile.email}</p>
               </div>
