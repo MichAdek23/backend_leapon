@@ -7,36 +7,32 @@ import Login from './component/UserAuth/Login/Login';
 import LandingPage from './component/Landing page/homecomponents/LandingPage';
 import ResetPassWord from './component/UserAuth/resetPassword/resetPassword';
 import GetOtp from './component/UserAuth/resetPassword/GetOtp';
-import ChangePassword from './component/UserAuth/ChangePassword/ChangePassword';
 import ModeOfSignUp from './component/UserAuth/ModeOfRegistring/ModeOfRegistring';
 import MenteeForm from './component/UserAuth/Mentee-Form/Mentee-Form';
 import Payment from './component/UserAuth/Payment';
 import MentorForm from './component/UserAuth/Mentor-form/Mentor-Form';
-
-
-
-
+import ChangePassword from './component/UserAuth/ChangePassword/ChangePassword';
 
 function App() {
   return (
     <>
        <Routes>
         <Route path='/' element={<LandingPage/>} />
-        <Route path='/SignUp' element={<SignUp/>}/>
-        <Route path='/Login' element={<Login/>}/>
-        <Route path='/mentorDashBoard' element={<MentorDashBoard />} />
-        <Route path='/menteeDashBoard' element={<Mentee/>}/>
+        <Route path='/sign-up' element={<SignUp/>}/>
+        <Route path='/login' element={<Login/>}/>
+        <Route path='/mentor-dashboard' element={<MentorDashBoard />} />
+        <Route path='/mentee-dashboard' element={<Mentee/>}/>
         <Route path='/forgot-password' element={<ResetPassWord/>}/>  
-       <Route path='/GetOtp' element={<GetOtp/>}/>
-       <Route path='/ChangePassword' element={<ChangePassword/>}/>
-       <Route path='/ModeOfRegistring' element={<ModeOfSignUp/>}/>
-       <Route path='/MenteeForm' element={<MenteeForm/>}/> 
-       <Route path='MentorForm' element={<MentorForm/>}/>
-       <Route path='/payMent' element={<Payment/>}/>
+       <Route path='/get-otp' element={<GetOtp/>}/>
+       <Route path='/change-password' element={<ChangePassword/>}/>
+       <Route path='/mode-of-registering' element={<ModeOfSignUp/>}/>
+       <Route path='/mentee-form' element={<MenteeForm/>}/> 
+       <Route path='/mentor-form' element={<MentorForm/>}/>
+       <Route path='/payment' element={<Payment/>}/>
       </Routes>
     </>
   )
 }
 
 export default App;
- 
+

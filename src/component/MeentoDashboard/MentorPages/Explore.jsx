@@ -165,7 +165,7 @@ function Explore() {
                   </p>
                 </div>
                 <div onClick={() => handleBookingNavigation(mentee)} className="px-8 bg-customOrange py-3 cursor-pointer rounded-xl text-base font-medium text-white">
-                  <button>Accept Mentee</button>
+                  <button>Connect with Mentee</button>
                 </div>
               </div>
             </div>

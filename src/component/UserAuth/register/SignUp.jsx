@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faLock, faEye, faEyeSlash, faPerson } from '@fortawesome/free-solid-svg-icons';
+import { faEnvelope, faLock, faEye, faEyeSlash, faUser } from '@fortawesome/free-solid-svg-icons';
 import { Link, useNavigate } from 'react-router-dom';
 
 function SignUp() {
@@ -44,7 +44,7 @@ function SignUp() {
   const onSubmit = (data) => {
     console.log('Form Data:', data);
     if (data) {
-      navigate('/ModeOfRegistring'); 
+      navigate('/mode-of-registering'); 
     }
   };
 
@@ -52,7 +52,7 @@ function SignUp() {
     <section className="relative flex h-full">
    
       <div className="hidden lg:block h-full w-3/5">
-        <img src="/image/young-people-working-from-modern-place 1.png" loading="lazy" className="h-full w-full object-cover" alt="" />
+        <img src="/image/close-up-people-learning-together-office 1.png" loading="lazy" className="h-full w-full object-cover" alt="" />
         <div onClick={() => navigate('/')} className="absolute top-4">
           <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
         </div>
@@ -70,10 +70,10 @@ function SignUp() {
           <form className="mt-5" onSubmit={handleSubmit(onSubmit)}>
        
             <div className="flex items-center gap-3">
-              <div className="w-1/2">
+              <div className="w-full">
                 <div className="flex items-center p-2 md:p-4 gap-3 w-full rounded-xl border-2">
                   <span>
-                    <FontAwesomeIcon className="text-gray-400 text-xl" icon={faPerson} />
+                    <FontAwesomeIcon className="text-gray-400 text-xl" icon={faUser} />
                   </span>
                   <input
                     type="text"
@@ -85,20 +85,6 @@ function SignUp() {
                 {errors.FirstName && <p className="text-red-600">{errors.FirstName.message}</p>}
               </div>
 
-              <div className="w-1/2">
-                <div className="flex items-center p-2 md:p-4 gap-3 w-full rounded-xl border-2">
-                  <span>
-                    <FontAwesomeIcon className="text-gray-400 text-xl" icon={faPerson} />
-                  </span>
-                  <input
-                    type="text"
-                    {...register('lastName', { required: 'This field is required' })}
-                    className="outline-none w-full"
-                    placeholder="Last Name"
-                  />
-                </div>
-                {errors.lastName && <p className="text-red-600">{errors.lastName.message}</p>}
-              </div>
             </div>
 
             <div className="mt-4">
@@ -174,7 +160,7 @@ function SignUp() {
           <p className="mt-[30px] text-center text-sm font-medium text-customDarkBlue">
             Already have an account?
             <span className="text-customOrange">
-              <Link to={'/Login'}>Login</Link>
+              <Link to={'/login'}>Login</Link>
             </span>
           </p>
         </div>

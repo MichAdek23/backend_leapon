@@ -1,69 +1,147 @@
-import { GlobalContext } from '@/component/GlobalStore/GlobalState';
-import React, { useContext } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars } from '@fortawesome/free-solid-svg-icons';
+import React from 'react';
+import { Star, Award, BookOpen, Users } from 'lucide-react';
 
-function MyProfile() {
-    const { upDatePage, handleToggleState } = useContext(GlobalContext);
-    return (
-        <div className="p-6 bg-gray-100 rounded-lg shadow-md max-w-2xl mx-auto">
-            <header className="flex justify-between">
-                <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
-                    <div className="flex flex-col gap-4">
-                        <h1 className="text-2xl font-medium">My Profile</h1>
-                        <p className="text-base font-medium text-slate-600">Tell us about yourself</p>
-                    </div>
-                    <div className="flex justify-center gap-4">
-                        <img
-                            onClick={() => upDatePage("Message")}
-                            src="/image/messageIcon.png"
-                            className="md:w-12 h-9 md:h-12 cursor-pointer"
-                            alt="Message Icon"
-                            loading="lazy"
-                        />
-                        <img
-                            onClick={() => upDatePage("Setting")}
-                            src="/image/settingIcon.png"
-                            className="md:w-12 h-9 md:h-12 cursor-pointer"
-                            alt="Setting Icon"
-                            loading="lazy"
-                        />
-                    </div>
-                </div>
-                <div onClick={handleToggleState} className="block lg:hidden mt-3">
-                    <button aria-label="Toggle menu">
-                        <FontAwesomeIcon icon={faBars} />
-                    </button>
-                </div>
-            </header>
+const Profile = () => {
+  const handleImageError = (e) => {
+    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(e.currentTarget.alt)}&background=random`;
+  };
 
-            <section className="mt-20">
-                <div className="relative">
-                    <div className="rounded-lg overflow-hidden h-40">
-                        <img src="/image/backImage.png" loading="lazy" className="w-full h-full object-cover" alt="Background" />
+  const mentors = [
+    {
+      name: "Emma Naku",
+      image: "/mentors/emma.jpg",
+      rating: 4.8,
+      role: "Senior Software Engineer"
+    },
+    {
+      name: "Asake Olamide",
+      image: "/mentors/asake.jpg",
+      rating: 4.7,
+      role: "Product Manager"
+    },
+    {
+      name: "Ruona Obi",
+      image: "/mentors/ruona.jpg",
+      rating: 4.9,
+      role: "UX Designer"
+    }
+  ];
+
+  const recommendations = [
+    {
+      name: "Chris David",
+      rating: 4.8,
+      comment: "Braide is a highly skilled mentor who helped me grow in my career journey. His guidance was invaluable.",
+      role: "Software Developer"
+    },
+    {
+      name: "Fola Henrich",
+      rating: 4.9,
+      comment: "Working with Braide has been transformative. His expertise and mentorship approach are exceptional.",
+      role: "Product Designer"
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="container mx-auto px-4 max-w-6xl">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm">
+          <div className="h-48 rounded-t-xl bg-gradient-to-r from-blue-400 to-blue-600 relative">
+            <div className="absolute -bottom-16 left-8 flex items-end">
+              <img 
+                src="/profile/braide.jpg" 
+                alt="Braide Shekinah"
+                className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800"
+                onError={handleImageError}
+              />
+            </div>
+          </div>
+
+          <div className="pt-20 px-8">
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Braide Shekinah</h1>
+                <p className="text-gray-600 dark:text-gray-400">Head Product/System Coordinator</p>
+              </div>
+              <button className="text-orange-500 hover:text-orange-600 font-medium">
+                Edit Profile
+              </button>
+            </div>
+
+            <div className="mt-6">
+              <h2 className="text-lg font-semibold mb-2">Overview</h2>
+              <p className="text-gray-600 dark:text-gray-400 max-w-3xl">
+                Braide is a very insightful mentor. He takes you from being confused to being in
+                total clarity on what you need to do next and how to do it.
+              </p>
+            </div>
+
+            <div className="mt-8 flex gap-8">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-red-500" />
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Total learning time</p>
+                  <p className="font-semibold">1,570 hrs</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-green-500" />
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Sessions completed</p>
+                  <p className="font-semibold">25</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-12">
+              <h2 className="text-lg font-semibold mb-4">My Mentees</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {mentors.map((mentor, index) => (
+                  <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <img 
+                        src={mentor.image} 
+                        alt={mentor.name}
+                        className="w-12 h-12 rounded-full"
+                        onError={handleImageError}
+                      />
+                      <div>
+                        <h3 className="font-medium">{mentor.name}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{mentor.role}</p>
+                        <div className="flex items-center mt-1">
+                          <Star className="w-4 h-4 text-yellow-400" />
+                          <span className="text-sm ml-1">{mentor.rating}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="absolute top-32 left-1/2 transform -translate-x-1/2">
-                        <img src="/image/profileImage.png" className="w-32 h-32 rounded-full border-4 border-white" alt="Profile" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-12 pb-8">
+              <h2 className="text-lg font-semibold mb-4">Recommendations</h2>
+              <div className="space-y-6">
+                {recommendations.map((rec, index) => (
+                  <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Star className="w-4 h-4 text-yellow-400" />
+                      <span>{rec.rating}</span>
                     </div>
-                </div>
-                <div className="mt-20 text-center">
-                    <h2 className="text-xl font-semibold">John Doe</h2>
-                    <p className="text-gray-600">Mentor</p>
-                </div>
-                <div className="mt-10">
-                    <h3 className="text-lg font-medium">About Me</h3>
-                    <p className="mt-2 text-gray-700">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam.
-                    </p>
-                </div>
-                <div className="mt-10">
-                    <h3 className="text-lg font-medium">Contact Information</h3>
-                    <p className="mt-2 text-gray-700">Email: johndoe@example.com</p>
-                    <p className="mt-2 text-gray-700">Phone: (123) 456-7890</p>
-                </div>
-            </section>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4">{rec.comment}</p>
+                    <div>
+                      <p className="font-medium">{rec.name}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{rec.role}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-    );
-}
+      </div>
+    </div>
+  );
+};
 
-export default MyProfile;
+export default Profile;
