@@ -43,10 +43,10 @@ function ModeOfSignUp() {
   const onSubmit = (data) => {
     console.log('Form Data:', data);
       if (selectedRole === 'mentee') {
-         navigate('/MenteeForm')
+         navigate('/mentee-form')
      
       } else{
-         navigate('/MentorForm')
+         navigate('/mentor-form')
       
       }
     console.log(selectedRole)
