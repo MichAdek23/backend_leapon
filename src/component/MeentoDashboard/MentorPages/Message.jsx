@@ -36,8 +36,8 @@ function Message() {
   return (
     <div className="p-4 md:p-8 h-full flex flex-col">
       {/* Header Section */}
-      <header className="flex  justify-between  mb-6">
-        <div className=" flex flex-col md:flex-row">
+      <header className="flex  justify-between w-full  mb-6">
+        <div className=" flex w-full  justify-between  flex-col md:flex-row">
         <div className="flex flex-col gap-2 md:gap-4">
           <h1 className="text-2xl md:text-3xl font-medium">Message</h1>
           <p className="text-sm md:text-base font-medium text-slate-600">Easy Communication with everyone</p>
