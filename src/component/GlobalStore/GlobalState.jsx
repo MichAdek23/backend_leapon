@@ -71,6 +71,7 @@ function GlobalState({ children }) {
   const memoizedAcceptedMentees = useMemo(() => acceptedMentees, [acceptedMentees]);
 
 
+
   const [currentIndex, setCurrentIndex] = useState(1);
     
   const steps = [1,2,3,4,3]
@@ -108,7 +109,7 @@ function GlobalState({ children }) {
   const ActiveComponent = components[activeComponent] || Overview;
 
   return (
-    <GlobalContext.Provider value={{ ActiveComponent, handleDecreament, handleIncreament , currentIndex,  acceptedMentees: memoizedAcceptedMentees, AddMentees, upDatePage, ShowResetConfirmation , otpshow , setOtpShow, activeComponent, handleToggleState, toggleState, setSelectedMentee, selectedMentee }}>
+    <GlobalContext.Provider value={{ ActiveComponent,  handleDecreament, handleIncreament , currentIndex,  acceptedMentees: memoizedAcceptedMentees, AddMentees, upDatePage, ShowResetConfirmation , otpshow , setOtpShow, activeComponent, handleToggleState, toggleState, setSelectedMentee, selectedMentee }}>
       {children}
     </GlobalContext.Provider>
   );

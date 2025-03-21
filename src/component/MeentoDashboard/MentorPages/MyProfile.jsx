@@ -1,9 +1,53 @@
-import React from 'react';
-import { Star, Award, BookOpen, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Star, BookOpen, Users } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBars, faRemove } from '@fortawesome/free-solid-svg-icons';
+import EditProfile from './EditProfile'; // Import the EditProfile component
+import axios from 'axios'; // Import axios for backend communication
+import { useContext } from 'react';
+import { GlobalContext } from '@/component/GlobalStore/GlobalState';
 
 const Profile = () => {
+  const [isEditProfileVisible, setEditProfileVisible] = useState(false);
+  const { upDatePage, handleToggleState } = useContext(GlobalContext);
+  const [profile, setProfile] = useState({
+    name: "",
+    role: "",
+    overview: "",
+    areaOfInterest: "",
+    email: ""
+  });
+
+  useEffect(() => {
+    // Fetch the profile data from the backend when the component mounts
+    axios.get('/api/getProfile')
+      .then(response => {
+        setProfile(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching profile:', error);
+      });
+  }, []);
+
+  const toggleEditProfile = () => {
+    setEditProfileVisible(!isEditProfileVisible);
+  };
+
   const handleImageError = (e) => {
     e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(e.currentTarget.alt)}&background=random`;
+  };
+
+  const handleProfileUpdate = (updatedProfile) => {
+    setProfile(updatedProfile);
+    setEditProfileVisible(false);
+    // Update the backend with the new profile details
+    axios.post('/api/updateProfile', updatedProfile)
+      .then(response => {
+        console.log('Profile updated successfully:', response.data);
+      })
+      .catch(error => {
+        console.error('Error updating profile:', error);
+      });
   };
 
   const mentors = [
@@ -27,55 +71,66 @@ const Profile = () => {
     }
   ];
 
-  const recommendations = [
-    {
-      name: "Chris David",
-      rating: 4.8,
-      comment: "Braide is a highly skilled mentor who helped me grow in my career journey. His guidance was invaluable.",
-      role: "Software Developer"
-    },
-    {
-      name: "Fola Henrich",
-      rating: 4.9,
-      comment: "Working with Braide has been transformative. His expertise and mentorship approach are exceptional.",
-      role: "Product Designer"
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="h-fit bg-gray-50 dark:bg-gray-900 pb-8">
+      <header className="flex mt-4 justify-between px-4 mb-8">
+        <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
+          <div className="flex flex-col gap-4">
+            <h1 className="text-2xl font-medium">Settings</h1>
+            <p className="text-base font-medium text-slate-600">Easy Communication with everyone</p>
+          </div>
+          <div className="flex justify-center gap-4">
+            <img
+              onClick={() => upDatePage("Message")}
+              src="/image/messageIcon.png"
+              className="md:w-12 h-9 md:h-12 cursor-pointer"
+              alt="Message Icon"
+            />
+            <img
+              onClick={() => upDatePage("Setting")}
+              src="/image/settingIcon.png"
+              className="md:w-12 h-9 md:h-12 cursor-pointer"
+              alt="Setting Icon"
+            />
+          </div>
+        </div>
+        <div onClick={handleToggleState} className="block lg:hidden mt-3">
+          <button aria-label="Toggle menu">
+            <FontAwesomeIcon icon={faBars} />
+          </button>
+        </div>
+      </header>
       <div className="container mx-auto px-4 max-w-6xl">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm">
-          <div className="h-48 rounded-t-xl bg-gradient-to-r from-blue-400 to-blue-600 relative">
+        <div className="bg-white pb-8 dark:bg-gray-800 rounded-xl shadow-sm">
+          <div className="h-48 rounded-t-xl bg-gradient-to-r from-blue-400 to-blue-600 relative" style={{ backgroundImage: 'url(/image/backImage.png)' }}>
             <div className="absolute -bottom-16 left-8 flex items-end">
-              <img 
-                src="/profile/braide.jpg" 
+              <img
+                src="/image/young-people-working-from-modern-place 1.png"
                 alt="Braide Shekinah"
                 className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800"
                 onError={handleImageError}
               />
             </div>
           </div>
-
           <div className="pt-20 px-8">
             <div className="flex justify-between items-start">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Braide Shekinah</h1>
-                <p className="text-gray-600 dark:text-gray-400">Head Product/System Coordinator</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{profile.name}</h1>
+                <p className="text-gray-600 dark:text-gray-400">{profile.role}</p>
+                <p className="text-gray-600 dark:text-gray-400">{profile.email}</p>
               </div>
-              <button className="text-orange-500 hover:text-orange-600 font-medium">
+              <button
+                className="text-orange-500 hover:text-orange-600 font-medium"
+                onClick={toggleEditProfile}
+              >
                 Edit Profile
               </button>
             </div>
-
             <div className="mt-6">
-              <h2 className="text-lg font-semibold mb-2">Overview</h2>
               <p className="text-gray-600 dark:text-gray-400 max-w-3xl">
-                Braide is a very insightful mentor. He takes you from being confused to being in
-                total clarity on what you need to do next and how to do it.
+                {profile.overview}
               </p>
             </div>
-
             <div className="mt-8 flex gap-8">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-red-500" />
@@ -92,15 +147,14 @@ const Profile = () => {
                 </div>
               </div>
             </div>
-
             <div className="mt-12">
               <h2 className="text-lg font-semibold mb-4">My Mentees</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {mentors.map((mentor, index) => (
                   <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                     <div className="flex items-center gap-3">
-                      <img 
-                        src={mentor.image} 
+                      <img
+                        src={mentor.image}
                         alt={mentor.name}
                         className="w-12 h-12 rounded-full"
                         onError={handleImageError}
@@ -118,28 +172,27 @@ const Profile = () => {
                 ))}
               </div>
             </div>
-
-            <div className="mt-12 pb-8">
-              <h2 className="text-lg font-semibold mb-4">Recommendations</h2>
+            <div className="mt-12 bg-slate-200 px-8 py-8 rounded-3xl">
+              <h2 className="text-lg font-semibold mb-2">Overview</h2>
               <div className="space-y-6">
-                {recommendations.map((rec, index) => (
-                  <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Star className="w-4 h-4 text-yellow-400" />
-                      <span>{rec.rating}</span>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-300 mb-4">{rec.comment}</p>
-                    <div>
-                      <p className="font-medium">{rec.name}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{rec.role}</p>
-                    </div>
-                  </div>
-                ))}
+                <p className="text-gray-600 dark:text-gray-400 max-w-3xl">
+                  {profile.overview}
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
+      {isEditProfileVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="dark:bg-gray-800 bg-white p-2 lg:w-fit border rounded-2xl shadow-lg">
+            <button onClick={toggleEditProfile} className="bg-customOrange bg-opacity-50 h-6 w-6 rounded-full float-right">
+              <FontAwesomeIcon className='text-slate-50' icon={faRemove} />
+            </button>
+            <EditProfile profile={profile} onUpdate={handleProfileUpdate} setIsEditProfileVisible={setEditProfileVisible} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

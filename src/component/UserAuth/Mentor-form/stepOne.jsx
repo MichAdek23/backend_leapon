@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 
 function Step1() {
-  const { handleIncreament } = useContext(GlobalContext);
+  const { handleIncreament,  } = useContext(GlobalContext); // Added handleDecreament
   const [imageUrl, setImageUrl] = useState('');
 
   const handleImageUpload = (e) => {
@@ -61,6 +61,7 @@ function Step1() {
       <button onClick={handleIncreament} className='mt-4 w-full h-11 lg:h-14 rounded-lg cursor-pointer text-white bg-customOrange'>
         Continue
       </button>
+
     </div>
   );
 }
