@@ -1,4 +1,3 @@
-
 import { GlobalContext } from '@/component/GlobalStore/GlobalState';
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -6,35 +5,44 @@ import StepOne from './stepOne';
 import StepTwo from './StepTwo';
 import StepThree from './StepThree';
 import StepFour from './StepFour';
-
-
+import { useAuth } from '../../../lib/AuthContext';
 
 function MenteeForm() {
   const navigate = useNavigate();
- const {  currentIndex} = useContext(GlobalContext)
+  const { currentIndex } = useContext(GlobalContext);
+  const { completeProfile } = useAuth();
 
+  const handleFormSubmit = async (formData) => {
+    try {
+      await completeProfile({
+        department: formData.department,
+        yearOfStudy: formData.yearOfStudy,
+        role: 'student'
+      });
+      navigate('/payment');
+    } catch (error) {
+      console.error('Error completing profile:', error);
+      // Handle error (show error message to user)
+    }
+  };
 
-
-  const DisplaySteps = ()=>{
-    if (currentIndex == 1) {
-      return <StepOne/>
-   } else if (currentIndex == 2) {
-      return  <StepTwo/>
-   } else if ( currentIndex == 3) {
-      return <StepThree/>
-   } else if (currentIndex == 4) {
-     return  <StepFour/>
-   }
-  }
-
-
-
-   
-
+  const DisplaySteps = () => {
+    switch (currentIndex) {
+      case 1:
+        return <StepOne />;
+      case 2:
+        return <StepTwo />;
+      case 3:
+        return <StepThree />;
+      case 4:
+        return <StepFour onSubmit={handleFormSubmit} />;
+      default:
+        return <StepOne />;
+    }
+  };
 
   return (
     <section className="relative flex h-full">
-      
       <div className="hidden lg:block h-full w-3/5">
         <img src="/image/young-people-working-from-modern-place 1.png" loading="lazy" className="h-full w-full object-cover" alt="" />
         <div onClick={() => navigate('/')} className="absolute top-4">
@@ -42,21 +50,15 @@ function MenteeForm() {
         </div>
       </div>
 
+      <div className="flex flex-col lg:flex-row w-full lg:w-2/5">
+        <div onClick={() => navigate('/')} className="block lg:hidden bg-black py-2 px-2">
+          <img src="/image/LogoAyth.png" className="w-40" alt="" />
+        </div>
 
-
-      <div className="flex flex-col lg:flex-row w-full lg:w-2/5 ">
-      <div onClick={() => navigate('/')} className=" block lg:hidden bg-black py-2 px-2">
-                    <img src="/image/LogoAyth.png" className="w-40" alt="" />
-     </div>
-
-         <div className=' w-full flex mt-14 justify-center '>            
-         {
-           DisplaySteps() 
-         }
+        <div className='w-full flex mt-14 justify-center'>
+          {DisplaySteps()}
+        </div>
       </div>
-       
-       </div>
-   
     </section>
   );
 }

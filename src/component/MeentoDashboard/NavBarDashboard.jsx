@@ -1,11 +1,13 @@
 import React, { useContext } from 'react'
-import { GlobalContext } from '../GlobalStore/GlobalState';
+import { GlobalContext } from "@/component/GlobalStore/GlobalState";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from "../../lib/AuthContext";
 
 function NavBarDashboard() {
 
   const { upDatePage, activeComponent } = useContext(GlobalContext)
+  const { user } = useAuth();
 
 
   return (
@@ -30,16 +32,19 @@ function NavBarDashboard() {
           <span><img src="/image/BookingIcon.png" className='h-7' alt="" /></span>
           Bookings
         </div>
+        <div onClick={() => upDatePage('Profile')} className={`${activeComponent === 'Profile' ? 'text-customOrange' : 'text-gray-500'} flex gap-4 font-medium cursor-pointer items-center`}>
+          <span><img src="/image/ProfileIcon.png" className='h-7' alt="" /></span>
+          My Profile
+        </div>
+        <div onClick={() => upDatePage('Users')} className={`${activeComponent === 'Users' ? 'text-customOrange' : 'text-gray-500'} flex gap-4 font-medium cursor-pointer items-center`}>
+          <span><img src="/image/usersIcon.png" className='h-7' alt="" /></span>
+          {user?.role === 'mentor' ? 'My Mentees' : 'Find Mentors'}
+        </div>
       </div>
 
       <div className=' mt-36 flex flex-col px-5 gap-4'>
         <h1 className=' text-customDarkBlue text-lg font-medium'>Manage Account</h1>
         <div className=' mt-8   flex flex-col gap-6'>
-          <div onClick={() => upDatePage('Profile')}  className={`${activeComponent === 'Profile' ? 'text-customOrange' : 'text-gray-500'}  flex  gap-4  cursor-pointer font-medium items-center`}>
-            <span><img src="/image/ProfileIcon.png" className=' h-7' alt="" /></span>
-            My Profile
-          </div>
-
           <div onClick={() => upDatePage('Setting')} className={`${activeComponent === 'Setting' ? 'text-customOrange' : 'text-gray-500'}  flex  gap-4  cursor-pointer font-medium items-center`}>
             <span><img src="/image/navBarSettingIcon.png" className=' h-7' alt="" /></span> Settings
           </div>      

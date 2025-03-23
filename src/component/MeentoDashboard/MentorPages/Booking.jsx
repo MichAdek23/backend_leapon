@@ -1,31 +1,65 @@
 import { GlobalContext } from '@/component/GlobalStore/GlobalState';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import Pending from './messageComponemts/Pending';
 import Histroy from './messageComponemts/histroy';
-
+import { sessionApi } from '@/lib/api';
 
 function Booking() {
   const { upDatePage, handleToggleState } = useContext(GlobalContext);
-  const [components, setComponents] = useState('Pending'); 
+  const [components, setComponents] = useState('Pending');
+  const [pendingSessions, setPendingSessions] = useState([]);
+  const [historySessions, setHistorySessions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (components === 'Pending') {
+          const response = await sessionApi.getAll();
+          setPendingSessions(response.data);
+        } else {
+          const response = await sessionApi.getHistory();
+          setHistorySessions(response.data);
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to fetch sessions');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSessions();
+  }, [components]);
 
   const changeStateToPending = () => {
-    setComponents('Pending'); 
+    setComponents('Pending');
   };
 
   const changeStateToHistory = () => {
-    setComponents('History'); 
+    setComponents('History');
   };
 
   const displayComponent = () => {
+    if (loading) {
+      return <div className="text-center py-4">Loading...</div>;
+    }
+
+    if (error) {
+      return <div className="text-red-500 text-center py-4">{error}</div>;
+    }
+
     switch (components) {
       case 'Pending':
-        return  <Pending/>;
+        return <Pending sessions={pendingSessions} />;
       case 'History':
-        return <Histroy/>; 
+        return <Histroy sessions={historySessions} />;
       default:
-        return <div>No component found</div>; 
+        return <div>No component found</div>;
     }
   };
 

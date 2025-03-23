@@ -3,23 +3,54 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faLongArrowRight, faBars } from "@fortawesome/free-solid-svg-icons";
 import { Calendar } from "@/components/ui/calendar";
 import { GlobalContext } from "@/component/GlobalStore/GlobalState";
-import axios from "axios";
-
-
-
+import { userApi } from '../../../lib/api';
+import { useAuth } from '../../../lib/AuthContext';
 
 function Overview() {
   const [mentees, setMentees] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const { upDatePage, handleToggleState, acceptedMentees } = useContext(GlobalContext);
 
+  // Calculate profile completion percentage
+  const calculateProfileStrength = () => {
+    if (!user) return 0;
+
+    const requiredFields = {
+      name: 1,
+      email: 1,
+      overview: 1,
+      interests: 1,
+    };
+
+    // Add role-specific required fields
+    if (user.role === 'student') {
+      requiredFields.department = 1;
+      requiredFields.yearOfStudy = 1;
+    } else if (user.role === 'mentor') {
+      requiredFields.expertise = 1;
+      requiredFields.experience = 1;
+    }
+
+    const totalFields = Object.keys(requiredFields).length;
+    let completedFields = 0;
+
+    // Count completed fields
+    Object.keys(requiredFields).forEach(field => {
+      if (user[field] && (Array.isArray(user[field]) ? user[field].length > 0 : true)) {
+        completedFields++;
+      }
+    });
+
+    return Math.round((completedFields / totalFields) * 100);
+  };
 
   useEffect(() => {
     const fetchMentee = async () => {
       setLoading(true);
       try {
-        const res = await axios.get("https://reqres.in/api/users");
-        console.log(res.data);
-        setMentees(res.data.data);
+        const response = await userApi.getMentees();
+        setMentees(response.data);
       } catch (error) {
         console.error("Error fetching mentees:", error);
       } finally {
@@ -27,10 +58,11 @@ function Overview() {
       }
     };
 
-    fetchMentee();
-  }, []);
+    if (user?.role === 'mentor') {
+      fetchMentee();
+    }
+  }, [user?.role]);
 
-  const { upDatePage, handleToggleState, acceptedMentees } = useContext(GlobalContext)
   const Title = [
     "#1 Tips for Success",
     "#2 Tips for Success",
@@ -50,10 +82,8 @@ function Overview() {
     "After your session, don't be a stranger! Keep your mentor updated on your progress - they are more invested in your success than you think!",
   ];
 
-
   const [index, setIndex] = useState(0);
   const [date, setDate] = useState(new Date());
-
 
   const nextMessage = () => {
     setIndex((prevIndex) => (prevIndex + 1) % Title.length);
@@ -74,9 +104,8 @@ function Overview() {
             {acceptedMentees && acceptedMentees.length > 0 
               ? `You have ${acceptedMentees.length} upcoming session${acceptedMentees.length > 1 ? 's' : ''}`
               : 'You have no upcoming sessions'}
-          </p>
+            </p>
           </div>
-
 
           <div className="flex justify-center gap-4">
             <img
@@ -96,7 +125,6 @@ function Overview() {
           </div>
         </div>
 
-
         <div onClick={handleToggleState} className=" block lg:hidden mt-3 ">
           <button>
             <FontAwesomeIcon icon={faBars} />
@@ -111,17 +139,24 @@ function Overview() {
           <div className="flex justify-between">
             <h1 className=" md:text-lg lg:text-2xl font-medium">Your profile strength</h1>
 
-            <button className="h-[30px] w-[30px] flex justify-center items-center bg-slate-200 rounded-full">
+            <button 
+              onClick={() => upDatePage("MyProfile")}
+              className="h-[30px] w-[30px] flex justify-center items-center bg-slate-200 rounded-full hover:bg-slate-300 transition-colors"
+            >
               <FontAwesomeIcon icon={faLongArrowRight} />
             </button>
           </div>
 
           <p className="mt-3 text-gray-400 text-base lg:text-lg font-medium">
-            Emmanuella Bernard
+            {user?.name || 'Loading...'}
           </p>
 
           <div className="mt-3">
-            <progress className="h-2 w-full" value="80" max="100"></progress>
+            <progress 
+              className="h-2 w-full" 
+              value={calculateProfileStrength()} 
+              max="100"
+            ></progress>
           </div>
 
           <div className="mt-5 border-2 border-gray-100 w-full"></div>
@@ -140,7 +175,6 @@ function Overview() {
           </div>
         </div>
 
-
         <div className="bg-white shadow-2xl  rounded-lg md:w-[40%] lg:w-[33%]">
           <Calendar
             mode="single"
@@ -149,7 +183,6 @@ function Overview() {
             className="rounded-lg w-full h-full -z-50"
           />
         </div>
-
 
         <div className="bg-white p-5 shadow-2xl rounded-lg md:w-[40%] lg:w-[33%] flex flex-col justify-between">
           <div>
@@ -175,26 +208,18 @@ function Overview() {
               </div>
             </div>
 
-
             <h2 className="text-xl font-semibold mt-2">{Heading[index]}</h2>
             <p className=" text-sm md:text-lg text-gray-500 mt-2">{Message[index]}</p>
           </div>
-
-
         </div>
       </section>
 
       <section className=" mt-9">
-
-        {/*  when the api is ready i will be getting the main data for just doing the demo design */}
-
-
         <div className=" flex justify-between">
           <h1 className="  text-base md:text-[22px] font-medium text-customDarkBlue">Your top matches </h1>
           <button onClick={() => upDatePage('Explore')} className=" p-2 md:p-0 h-10 rounded-xl md:w-40 text-white bg-customOrange  flex justify-center items-center">Explore Mentees</button>
         </div>
       </section>
-
 
       <section className="  rounded-lg   grid  grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-y-5 gap-x-5  mt-12 ">
         {loading ? (
@@ -203,20 +228,20 @@ function Overview() {
           mentees.map((mentee) => (
             <div
               onClick={() => upDatePage("Explore")}
-              key={mentee.id}
+              key={mentee._id}
               className="border-2 rounded-lg  overflow-hidden cursor-pointer w-[99%] h-[420px] bg-white"
             >
               <div className="h-3/5">
                 <img
-                  src={mentee.avatar} // Use the avatar from the API
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(mentee.name)}&background=random`}
                   className="h-full w-full object-cover"
-                  alt={mentee.first_name}
+                  alt={mentee.name}
                   loading="lazy"
                 />
               </div>
               <div className="h-2/5 flex flex-col gap-2 p-6">
                 <h3 className="text-lg font-bold text-customDarkBlue">
-                  {mentee.first_name} {mentee.last_name}
+                  {mentee.name}
                 </h3>
                 <p className="flex items-center text-xs text-customDarkBlue font-normal">
                   <span>
@@ -233,10 +258,10 @@ function Overview() {
                 <div className="flex justify-between items-center flex-wrap gap-2">
                   <div className="flex gap-1">
                     <p className="text-xs p-2 rounded-lg bg-slate-200">
-                      Mentee
+                      Department: {mentee.department}
                     </p>
                     <p className="text-xs p-2 rounded-lg bg-slate-200">
-                      Sessions: 21
+                      Year: {mentee.yearOfStudy}
                     </p>
                   </div>
                 </div>
@@ -245,10 +270,7 @@ function Overview() {
           ))
         )}
       </section>
-
     </section>
-
-
   );
 }
 

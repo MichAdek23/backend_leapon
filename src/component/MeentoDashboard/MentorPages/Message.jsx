@@ -1,164 +1,254 @@
-import { GlobalContext } from "@/component/GlobalStore/GlobalState";
-import React, { useContext, useEffect, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faSearch, faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../../../lib/AuthContext';
+import { io } from 'socket.io-client';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPaperPlane, faUser } from '@fortawesome/free-solid-svg-icons';
 import "./Message.css"; // Import the CSS file
 
-function Message() {
-  const { upDatePage, handleToggleState, acceptedMentees } = useContext(GlobalContext);
-  const [inputValue, setInputValue] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const Message = () => {
+  const { user } = useAuth();
+  const [messages, setMessages] = useState([]);
+  const [conversations, setConversations] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [newMessage, setNewMessage] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
+  const messagesEndRef = useRef(null);
+  const socketRef = useRef();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    if (acceptedMentees) {
-      setLoading(false);
-    } else {
-      setError(new Error("No accepted mentees found"));
+    // Initialize socket connection
+    socketRef.current = io(import.meta.env.VITE_API_URL, {
+      auth: {
+        token: localStorage.getItem('token')
+      }
+    });
+
+    // Listen for new messages
+    socketRef.current.on('newMessage', (message) => {
+      setMessages(prev => [...prev, message]);
+      if (message.sender._id !== user._id) {
+        setUnreadCount(prev => prev + 1);
+      }
+    });
+
+    // Load initial conversations and messages
+    loadConversations();
+    loadUnreadCount();
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (selectedUser) {
+      loadMessages(selectedUser._id);
     }
-  }, [acceptedMentees]);
+  }, [selectedUser]);
 
-  if (loading) {
-    return <div className="text-center text-slate-500 py-6">Loading...</div>;
-  }
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
-  if (error) {
-    return <div className="text-center text-red-500 py-6">Error: {error.message}</div>;
-  }
+  const loadConversations = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/messages`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const data = await response.json();
+      
+      // Group messages by conversation
+      const conversationMap = new Map();
+      data.forEach(message => {
+        const otherUser = message.sender._id === user._id ? message.recipient : message.sender;
+        if (!conversationMap.has(otherUser._id)) {
+          conversationMap.set(otherUser._id, {
+            user: otherUser,
+            lastMessage: message,
+            unread: message.recipient._id === user._id && !message.read
+          });
+        }
+      });
+      
+      setConversations(Array.from(conversationMap.values()));
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+    }
+  };
 
-  const filterMentee = acceptedMentees.filter((mentee) =>
-    inputValue
-      ? mentee.first_name.toLowerCase().includes(inputValue.toLowerCase()) ||
-        mentee.last_name.toLowerCase().includes(inputValue.toLowerCase())
-      : true
-  );
+  const loadMessages = async (userId) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/messages/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const data = await response.json();
+      setMessages(data);
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    }
+  };
+
+  const loadUnreadCount = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/messages/unread/count`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const data = await response.json();
+      setUnreadCount(data.count);
+    } catch (error) {
+      console.error('Error loading unread count:', error);
+    }
+  };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedUser) return;
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          recipientId: selectedUser._id,
+          content: newMessage
+        })
+      });
+
+      if (response.ok) {
+        setNewMessage('');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
+
+  const markAsRead = async (messageId) => {
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL}/messages/${messageId}/read`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+    }
+  };
 
   return (
-    <div className="p-4 md:p-8 h-full flex flex-col">
-      {/* Header Section */}
-      <header className="flex  justify-between w-full  mb-6">
-        <div className=" flex w-full  justify-between  flex-col md:flex-row">
-        <div className="flex flex-col gap-2 md:gap-4">
-          <h1 className="text-2xl md:text-3xl font-medium">Message</h1>
-          <p className="text-sm md:text-base font-medium text-slate-600">Easy Communication with everyone</p>
-        </div>
-        <div className="flex gap-4 mt-4 md:mt-0">
-          <img
-            onClick={() => upDatePage("Message")}
-            src="/image/messageIcon.png"
-            className="w-10 h-10 md:w-12 md:h-12 cursor-pointer"
-            alt="Message Icon"
-          />
-          <img
-            onClick={() => upDatePage("Setting")}
-            src="/image/settingIcon.png"
-            className="w-10 h-10 md:w-12 md:h-12 cursor-pointer"
-            alt="Setting Icon"
-          />
-        </div>
-         </div>
-        <div onClick={handleToggleState} className="block lg:hidden mt-3">
-          <button aria-label="Toggle menu">
-            <FontAwesomeIcon icon={faBars} />
-          </button>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col md:flex-row border-4 rounded-3xl bg-white overflow-hidden">
-        {/* Sidebar */}
-        <div className="h-full w-full md:w-1/3 p-4 custom-scrollbar border-r-2">
-          <div className="h-20 mb-4">
-            <div className="w-full h-14 rounded-xl ps-3 border-2 flex items-center">
-              <button aria-label="Search">
-                <FontAwesomeIcon className="text-slate-500" icon={faSearch} />
-              </button>
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                className="outline-none ps-2 h-full w-full"
-                placeholder="Search by Name"
-                aria-label="Search by Name"
-              />
+    <div className="flex h-full">
+      {/* Conversations List */}
+      <div className="w-1/3 border-r border-gray-200 overflow-y-auto">
+        <div className="p-4">
+          <h2 className="text-xl font-semibold mb-4">Messages</h2>
+          {conversations.map((conv) => (
+            <div
+              key={conv.user._id}
+              className={`flex items-center p-3 cursor-pointer hover:bg-gray-100 ${
+                selectedUser?._id === conv.user._id ? 'bg-gray-100' : ''
+              }`}
+              onClick={() => setSelectedUser(conv.user)}
+            >
+              <div className="relative">
+                <FontAwesomeIcon
+                  icon={faUser}
+                  className="w-10 h-10 text-gray-400"
+                />
+                {conv.unread && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {conv.unread ? '1' : ''}
+                  </span>
+                )}
+              </div>
+              <div className="ml-3">
+                <h3 className="font-medium">{conv.user.name}</h3>
+                <p className="text-sm text-gray-500 truncate">
+                  {conv.lastMessage.content}
+                </p>
+              </div>
             </div>
-          </div>
+          ))}
+        </div>
+      </div>
 
-          {/* Mentee List */}
-          <div className="h-full overflow-y-auto custom-scrollbar">
-            <div className="flex flex-col  gap-5">
-              {!filterMentee.length ? (
-                <div className="text-gray-500">No Mentee Accepted</div>
-              ) : (
-                filterMentee.map((mentee) => (
+      {/* Chat Area */}
+      <div className="flex-1 flex flex-col">
+        {selectedUser ? (
+          <>
+            {/* Chat Header */}
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="font-medium">{selectedUser.name}</h3>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {messages.map((message) => (
+                <div
+                  key={message._id}
+                  className={`flex ${
+                    message.sender._id === user._id ? 'justify-end' : 'justify-start'
+                  } mb-4`}
+                >
                   <div
-                    key={mentee.id}
-                    className="flex items-center scrollbar-hide cursor-pointer p-2 hover:bg-gray-100 rounded-lg"
+                    className={`max-w-[70%] rounded-lg p-3 ${
+                      message.sender._id === user._id
+                        ? 'bg-customOrange text-white'
+                        : 'bg-gray-100'
+                    }`}
                   >
-                    <img
-                      src={mentee.avatar || '/default-avatar.png'}
-                      alt={`${mentee.first_name}'s avatar`}
-                      className="w-14 h-14 rounded-lg mr-4"
-                    />
-                    <div>
-                      <h3 className="font-medium">
-                        {mentee.first_name} {mentee.last_name}
-                      </h3>
-                      <p className="text-sm text-gray-500">{mentee.email}</p>
-                    </div>
+                    <p>{message.content}</p>
+                    <span className="text-xs opacity-70">
+                      {new Date(message.createdAt).toLocaleTimeString()}
+                    </span>
                   </div>
-                ))
-              )}
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
             </div>
+
+            {/* Message Input */}
+            <form onSubmit={sendMessage} className="p-4 border-t border-gray-200">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-customOrange"
+                />
+                <button
+                  type="submit"
+                  className="bg-customOrange text-white px-4 py-2 rounded-lg hover:bg-orange-600"
+                >
+                  <FontAwesomeIcon icon={faPaperPlane} />
+                </button>
+              </div>
+            </form>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            Select a conversation to start messaging
           </div>
-        </div>
-
-        {/* Chat Section */}
-        <div className="h-full w-full md:w-2/3 flex flex-col">
-          <header className="flex p-4 border-b-2 justify-between items-center">
-            <div className="flex gap-4 items-center">
-              <div className="h-11 w-11">
-                <img src="/image/img.png" className="h-full w-full" loading="lazy" alt="Profile" />
-              </div>
-              <div>
-                <p>Olaide Bamisebi</p>
-                <p className="text-sm text-green-500">Available</p>
-              </div>
-            </div>
-          </header>
-
-          {/* Chat Messages */}
-          <section className="flex-1 p-4 overflow-y-auto custom-scrollbar">
-            {/* Example messages */}
-            <div className="flex flex-col gap-4">
-              <div className="self-start bg-gray-200 p-3 rounded-lg max-w-xs">
-                <p className="text-sm">Hello, how are you?</p>
-              </div>
-              <div className="self-end bg-blue-500 text-white p-3 rounded-lg max-w-xs">
-                <p className="text-sm">I'm good, thank you!</p>
-              </div>
-              {/* Add more messages here */}
-            </div>
-          </section>
-
-          {/* Message Input */}
-          <div className="p-4 border-t-2">
-            <div className="flex items-center border-2 rounded-xl p-2">
-              <input
-                type="text"
-                className="outline-none flex-1 px-2"
-                placeholder="Type a message"
-                aria-label="Type a message"
-              />
-              <button className="rotate-45 cursor-pointer" aria-label="Send message">
-                <FontAwesomeIcon className="text-slate-600" icon={faPaperPlane} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </main>
+        )}
+      </div>
     </div>
   );
-}
+};
 
 export default Message;

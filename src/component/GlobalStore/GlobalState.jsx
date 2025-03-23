@@ -6,7 +6,10 @@ import Booking from "../MeentoDashboard/MentorPages/Booking";
 import MyProfile from "../MeentoDashboard/MentorPages/MyProfile";
 import Setting from "../MeentoDashboard/MentorPages/Setting";
 import ProfileId from "../MeentoDashboard/MentorPages/profileId";
-
+import UserList from '../MeentoDashboard/MentorPages/UserList';
+import Messages from '../MeentoDashboard/MentorPages/Message';
+import Settings from '../MeentoDashboard/MentorPages/Setting';
+import UsersList from '../MeentoDashboard/MentorPages/UsersList';
 
 export const GlobalContext = createContext();
 
@@ -17,7 +20,31 @@ const components = {
   Booking,
   Profile: MyProfile,
   Setting,
-  ProfileId 
+  ProfileId,
+  UserList,
+  Messages,
+  Settings,
+  UsersList
+};
+
+const defaultProfile = {
+  firstName: '',
+  lastName: '',
+  role: '',
+  email: '',
+  mentorshipStatus: '',
+  gender: '',
+  modeOfContact: '',
+  availability: '',
+  bio: '',
+  overview: '',
+  profilePicture: '',
+  social: {
+    twitter: '',
+    facebook: '',
+    whatsapp: '',
+    instagram: ''
+  }
 };
 
 function GlobalState({ children }) {
@@ -34,14 +61,24 @@ function GlobalState({ children }) {
     return "Overview"; 
   });
 
-  const [otpshow , setOtpShow] = useState(false)
+  const [profile, setProfile] = useState(() => {
+    const storedProfile = localStorage.getItem('profile');
+    if (storedProfile) {
+      try {
+        return JSON.parse(storedProfile);
+      } catch (error) {
+        console.error("Error parsing stored profile:", error);
+        return defaultProfile;
+      }
+    }
+    return defaultProfile;
+  });
 
+  const [otpshow , setOtpShow] = useState(false)
 
   const ShowResetConfirmation = ()=>{
        setOtpShow(!otpshow)
   }
-
-  
 
   const [toggleState, setToggleState] = useState(false);
 
@@ -70,8 +107,6 @@ function GlobalState({ children }) {
 
   const memoizedAcceptedMentees = useMemo(() => acceptedMentees, [acceptedMentees]);
 
-
-
   const [currentIndex, setCurrentIndex] = useState(1);
     
   const steps = [1,2,3,4,3]
@@ -79,16 +114,13 @@ function GlobalState({ children }) {
   const handleIncreament = ()=>{
      setCurrentIndex((index)=> (index + 1 ) % steps.length)
   }
-
   
   const handleDecreament = ()=>{
     setCurrentIndex((index)=> (index - 1 ) % steps.length)
- }
- 
+  }
 
   const handleToggleState = () => {
     setToggleState(!toggleState);
-    // hhhhhdh
   };
 
   const upDatePage = (ComponentName) => {
@@ -109,7 +141,25 @@ function GlobalState({ children }) {
   const ActiveComponent = components[activeComponent] || Overview;
 
   return (
-    <GlobalContext.Provider value={{ ActiveComponent,  handleDecreament, handleIncreament , currentIndex,  acceptedMentees: memoizedAcceptedMentees, AddMentees, upDatePage, ShowResetConfirmation , otpshow , setOtpShow, activeComponent, handleToggleState, toggleState, setSelectedMentee, selectedMentee }}>
+    <GlobalContext.Provider value={{ 
+      ActiveComponent, 
+      handleDecreament, 
+      handleIncreament, 
+      currentIndex, 
+      acceptedMentees: memoizedAcceptedMentees, 
+      AddMentees, 
+      upDatePage, 
+      ShowResetConfirmation, 
+      otpshow, 
+      setOtpShow, 
+      activeComponent, 
+      handleToggleState, 
+      toggleState, 
+      setSelectedMentee, 
+      selectedMentee,
+      profile,
+      setProfile
+    }}>
       {children}
     </GlobalContext.Provider>
   );

@@ -1,71 +1,80 @@
-import { GlobalContext } from '@/component/GlobalStore/GlobalState';
-import React, {  useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGraduationCap, faCalendar } from '@fortawesome/free-solid-svg-icons';
 
-function StepFour() {
-    const [textarea, setTextarea] = useState('');
-    const [university, setUniversity] = useState('');
-    const [department, setDepartment] = useState('');
+function StepFour({ onSubmit }) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
-    const navigate = useNavigate()
+  const handleFormSubmit = (data) => {
+    onSubmit(data);
+  };
 
-    return (
-        <div className=' text-center lg:text-start w-[300px] lg:w-[470px]'>
-            <p className='text-base text-center font-medium mt-3 lg:mt-6'>STEP 4 of 4</p>
+  return (
+    <div className="w-full px-6 lg:px-0 md:w-[400px]">
+      <h1 className="text-2xl font-bold lg:text-[40px] text-customDarkBlue">Complete Your Profile</h1>
+      <p className="text-slate-400 text-sm mt-5">Please provide your academic information</p>
 
-            <progress className='bg-customOrange h-2' value="100" max="100"></progress>
-
-            <h1 className='mt-7 mb-12 text-xl lg:text-[36px] font-medium'>Tell us About yourself</h1>
-
-            {/* University Input Field */}
-            <div className='border-2 relative w-full rounded-xl mb-4'>
-                <input
-                    type="text"
-                    className='relative outline-none p-4 w-full rounded-xl'
-                    placeholder='E.g University of Port Harcourt'
-                    value={university}
-                    onChange={(e) => setUniversity(e.target.value)}
-                />
-         
-                <p className='absolute -top-3 left-4 bg-white px-2 text-base font-bold text-slate-400'>
-                    School
-                </p>
-            </div>
-
-            
-            <div className='border-2 relative w-full rounded-xl mb-4'>
-                <input
-                    type="text"
-                    className='relative outline-none p-4 w-full rounded-xl'
-                    placeholder='E.g Computer Science'
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                />
-                
-                <p className='absolute -top-3 left-4 bg-white px-2 text-base font-bold text-slate-400'>
-                    Department
-                </p>
-            </div>
-
-            <div className='border-2 relative w-full rounded-xl mb-4'>
-                <textarea
-                    className='relative outline-none p-4 w-full h-40 rounded-xl'
-                    placeholder='Introduce yourself to your mentors, let them know your Education Level and what you want to achieve'
-                    value={textarea}
-                    onChange={(e) => setTextarea(e.target.value)}
-                />
-               
-                <p className='absolute -top-3 left-4 bg-white px-2 text-base font-bold text-slate-400'>
-                    Tell us about your Self
-                </p>
-            </div>
-
-            {/* Continue Button */}
-            <button onClick={()=> navigate('/payMent')} className='mt-4 w-full h-11 lg:h-14 rounded-lg cursor-pointer text-white bg-customOrange'>
-                Continue
-            </button>
+      <form className="mt-5" onSubmit={handleSubmit(handleFormSubmit)}>
+        {/* Department Field */}
+        <div className="mt-4">
+          <div className="flex items-center p-2 md:p-4 gap-3 w-full rounded-xl border-2">
+            <span>
+              <FontAwesomeIcon className="text-gray-400 text-xl" icon={faGraduationCap} />
+            </span>
+            <input
+              type="text"
+              {...register('department', { 
+                required: 'Department is required',
+                minLength: {
+                  value: 2,
+                  message: 'Department name must be at least 2 characters long'
+                }
+              })}
+              className="outline-none w-full"
+              placeholder="Department"
+            />
+          </div>
+          {errors.department && <p className="text-red-600">{errors.department.message}</p>}
         </div>
-    );
+
+        {/* Year of Study Field */}
+        <div className="mt-4">
+          <div className="flex items-center p-2 md:p-4 gap-3 w-full rounded-xl border-2">
+            <span>
+              <FontAwesomeIcon className="text-gray-400 text-xl" icon={faCalendar} />
+            </span>
+            <input
+              type="text"
+              {...register('yearOfStudy', { 
+                required: 'Year of study is required',
+                pattern: {
+                  value: /^[1-4]$/,
+                  message: 'Year must be between 1 and 4'
+                }
+              })}
+              className="outline-none w-full"
+              placeholder="Year of Study (1-4)"
+            />
+          </div>
+          {errors.yearOfStudy && <p className="text-red-600">{errors.yearOfStudy.message}</p>}
+        </div>
+
+        <div className="mt-4">
+          <button 
+            type="submit" 
+            className="text-white bg-customOrange w-full h-11 lg:h-14 rounded-lg cursor-pointer hover:bg-orange-600 transition-colors"
+          >
+            Complete Profile
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 }
 
 export default StepFour;
