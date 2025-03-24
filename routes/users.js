@@ -6,46 +6,9 @@ import auth from '../middleware/auth.js';
 import crypto from 'crypto';
 import Session from '../models/Session.js';
 import Message from '../models/Message.js';
-import path from 'path';
-import multer from 'multer';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { upload } from '../config/cloudinary.js';
 
 const router = express.Router();
-
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '..', 'uploads', 'profiles');
-
-// Configure multer for file upload
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '..', 'uploads', 'profiles'));
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const fileFilter = (req, file, cb) => {
-  // Accept images only
-  if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
-    req.fileValidationError = 'Only image files are allowed!';
-    return cb(null, false);
-  }
-  cb(null, true);
-};
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 12 * 1024 * 1024 // 12MB limit
-  },
-  fileFilter: fileFilter
-});
 
 // @route   POST api/users/register
 // @desc    Register a user (Step 1: Basic Info)
@@ -286,7 +249,7 @@ router.put('/me', auth, async (req, res) => {
 // @route   POST api/users/profile-picture
 // @desc    Upload profile picture
 // @access  Private
-router.post('/profile-picture', auth, upload.single('profilePicture'), async (req, res) => {
+router.post('/profile-picture', auth, upload, async (req, res) => {
   try {
     console.log('Profile picture upload request received:', {
       body: req.body,
@@ -294,21 +257,23 @@ router.post('/profile-picture', auth, upload.single('profilePicture'), async (re
       user: req.user
     });
 
-    if (req.fileValidationError) {
-      return res.status(400).json({ message: req.fileValidationError });
-    }
-
     if (!req.file) {
       console.log('No file received in the request');
       return res.status(400).json({ message: 'Please select an image file to upload' });
     }
 
-    // Get the URL for the uploaded file
-    const imageUrl = `/uploads/profiles/${req.file.filename}`;
-    console.log('File uploaded successfully:', {
+    // Get the Cloudinary URL from the uploaded file
+    const imageUrl = req.file.secure_url;
+    if (!imageUrl) {
+      console.error('No secure URL in Cloudinary response:', req.file);
+      return res.status(500).json({ message: 'Failed to get image URL from Cloudinary' });
+    }
+
+    console.log('File uploaded successfully to Cloudinary:', {
       originalname: req.file.originalname,
       filename: req.file.filename,
       path: req.file.path,
+      secure_url: req.file.secure_url,
       imageUrl
     });
 
@@ -319,11 +284,16 @@ router.post('/profile-picture', auth, upload.single('profilePicture'), async (re
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Store the full Cloudinary URL
     user.profilePicture = imageUrl;
     await user.save();
     console.log('User profile updated with new image:', imageUrl);
 
-    res.json({ imageUrl });
+    // Return the full image URL
+    res.json({ 
+      imageUrl,
+      message: 'Profile picture updated successfully'
+    });
   } catch (err) {
     console.error('Error uploading profile picture:', {
       error: err,
@@ -334,6 +304,14 @@ router.post('/profile-picture', auth, upload.single('profilePicture'), async (re
     
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ message: 'File size cannot exceed 12MB' });
+    }
+
+    if (err.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({ message: 'Too many files uploaded' });
+    }
+
+    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({ message: 'Unexpected field in upload' });
     }
 
     res.status(500).json({ 

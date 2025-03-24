@@ -4,12 +4,15 @@ import bcrypt from 'bcryptjs';
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   email: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    trim: true,
+    lowercase: true
   },
   password: {
     type: String,
@@ -17,8 +20,29 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    required: true,
-    enum: ['student', 'mentor']
+    enum: ['student', 'mentor'],
+    required: true
+  },
+  profilePicture: {
+    type: String,
+    default: null,
+    get: function(url) {
+      if (!url) return null;
+      // If it's already a full URL, return it
+      if (url.startsWith('http')) return url;
+      // If it's a Cloudinary URL, return it
+      if (url.includes('cloudinary')) return url;
+      // If it's a relative path, construct the full URL
+      return `${process.env.API_URL}${url}`;
+    },
+    set: function(url) {
+      // If the URL is already a full URL or Cloudinary URL, store it as is
+      if (url && (url.startsWith('http') || url.includes('cloudinary'))) {
+        return url;
+      }
+      // Otherwise, store the relative path
+      return url;
+    }
   },
   profileCompleted: {
     type: Boolean,
@@ -29,33 +53,47 @@ const userSchema = new mongoose.Schema({
     type: String
   }],
   experience: {
-    type: String
+    type: String,
+    required: function() {
+      return this.role === 'mentor';
+    }
   },
   // Student specific fields
   department: {
-    type: String
+    type: String,
+    required: function() {
+      return this.role === 'student';
+    }
   },
   yearOfStudy: {
-    type: String
+    type: String,
+    required: function() {
+      return this.role === 'student';
+    }
   },
   // Common fields
   overview: {
-    type: String
+    type: String,
+    default: ''
   },
   interests: [{
     type: String
   }],
   linkedIn: {
-    type: String
+    type: String,
+    default: ''
   },
   twitter: {
-    type: String
+    type: String,
+    default: ''
   },
   instagram: {
-    type: String
+    type: String,
+    default: ''
   },
   website: {
-    type: String
+    type: String,
+    default: ''
   },
   createdAt: {
     type: Date,
@@ -65,6 +103,8 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
 });
 
 // Hash password before saving
