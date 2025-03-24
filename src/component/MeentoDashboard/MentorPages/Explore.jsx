@@ -222,8 +222,6 @@ function Explore() {
                 </span>
                 {user.email}
               </p>
-              <p>4.0/5 (15 Testimonials)</p>
-
               <div className="flex justify-between items-center flex-wrap gap-2">
                 <div className="flex gap-1">
                   {user.role === 'student' ? (
