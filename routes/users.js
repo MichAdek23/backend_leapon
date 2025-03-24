@@ -76,7 +76,7 @@ router.post('/register', [
       email,
       password,
       role,
-      profileCompleted: false // Explicitly set profileCompleted to false
+      profileCompleted: false
     });
 
     await user.save();
@@ -94,7 +94,6 @@ router.post('/register', [
       { expiresIn: '24h' },
       (err, token) => {
         if (err) throw err;
-        // Return both token and user object
         res.json({ 
           token,
           user: {
@@ -109,7 +108,6 @@ router.post('/register', [
     );
   } catch (err) {
     console.error('Registration error:', err);
-    // Send more specific error messages
     if (err.name === 'ValidationError') {
       return res.status(400).json({ 
         message: 'Validation Error',

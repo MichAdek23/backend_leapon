@@ -2,11 +2,7 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
-  firstName: {
-    type: String,
-    required: true
-  },
-  lastName: {
+  name: {
     type: String,
     required: true
   },
@@ -22,38 +18,44 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     required: true,
-    enum: ['mentor', 'mentee', 'admin']
+    enum: ['student', 'mentor']
   },
-  mentorshipStatus: {
-    type: String,
-    enum: ['available', 'unavailable', 'busy'],
-    default: 'available'
+  profileCompleted: {
+    type: Boolean,
+    default: false
   },
-  gender: {
-    type: String,
-    enum: ['male', 'female', 'other']
-  },
-  modeOfContact: {
-    type: String,
-    enum: ['email', 'phone', 'both']
-  },
-  availability: {
+  // Mentor specific fields
+  expertise: [{
+    type: String
+  }],
+  experience: {
     type: String
   },
-  bio: {
+  // Student specific fields
+  department: {
     type: String
   },
+  yearOfStudy: {
+    type: String
+  },
+  // Common fields
   overview: {
     type: String
   },
-  profilePicture: {
+  interests: [{
+    type: String
+  }],
+  linkedIn: {
     type: String
   },
-  social: {
-    twitter: String,
-    facebook: String,
-    whatsapp: String,
-    instagram: String
+  twitter: {
+    type: String
+  },
+  instagram: {
+    type: String
+  },
+  website: {
+    type: String
   },
   createdAt: {
     type: Date,
