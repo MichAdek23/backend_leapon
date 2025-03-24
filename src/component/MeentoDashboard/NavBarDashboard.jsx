@@ -3,12 +3,18 @@ import { GlobalContext } from "@/component/GlobalStore/GlobalState";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from "../../lib/AuthContext";
+import { useNavigate } from 'react-router-dom';
 
 function NavBarDashboard() {
 
   const { upDatePage, activeComponent } = useContext(GlobalContext)
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <section className='  h-full w-full  pt-10 '>
@@ -48,8 +54,8 @@ function NavBarDashboard() {
           <div onClick={() => upDatePage('Setting')} className={`${activeComponent === 'Setting' ? 'text-customOrange' : 'text-gray-500'}  flex  gap-4  cursor-pointer font-medium items-center`}>
             <span><img src="/image/navBarSettingIcon.png" className=' h-7' alt="" /></span> Settings
           </div>      
-          <div  className={` flex  gap-4  cursor-pointer font-medium items-center`}>
-            <span> <FontAwesomeIcon icon={faDeleteLeft }/> </span> Log Out
+          <div onClick={handleLogout} className="flex gap-4 cursor-pointer font-medium items-center text-gray-500 hover:text-red-500">
+            <span> <FontAwesomeIcon icon={faDeleteLeft}/> </span> Log Out
           </div>
         </div>
       </div>
