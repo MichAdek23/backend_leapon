@@ -1,38 +1,39 @@
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../lib/AuthContext';
 
 function PaymentVerify() {
-    const navigate = useNavigate();
-    const location = useLocation();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
-    const [verificationStatus, setVerificationStatus] = useState('verifying');
+    const [verificationStatus, setVerificationStatus] = useState('');
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { user } = useAuth();
 
     useEffect(() => {
         const verifyPayment = async () => {
-            const searchParams = new URLSearchParams(location.search);
-            const reference = searchParams.get('reference');
-            const trxref = searchParams.get('trxref');
-            const status = searchParams.get('status');
-
-            // Use either reference or trxref, preferring reference
-            const paymentReference = reference || trxref;
-
-            if (!paymentReference) {
-                setError('No payment reference found');
-                setVerificationStatus('failed');
-                setLoading(false);
-                navigate('/payment?error=no_reference');
-                return;
-            }
-
             try {
+                const searchParams = new URLSearchParams(location.search);
+                const reference = searchParams.get('reference');
+                const trxref = searchParams.get('trxref');
+
+                // Use reference if available, otherwise use trxref
+                const paymentReference = reference || trxref;
+
+                if (!paymentReference) {
+                    setError('No payment reference found');
+                    setLoading(false);
+                    return;
+                }
+
                 // Verify payment with backend
-                const response = await fetch(`https://leapon.onrender.com/api/payments/verify/${paymentReference}`, {
-                    method: 'GET',
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/verify`, {
+                    method: 'POST',
                     headers: {
+                        'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
+                    },
+                    body: JSON.stringify({ reference: paymentReference })
                 });
 
                 const data = await response.json();
@@ -43,68 +44,74 @@ function PaymentVerify() {
 
                 setVerificationStatus('success');
                 
-                // Clear all stored data
+                // Clear local storage data
                 localStorage.removeItem('userData');
-                localStorage.removeItem('formData');
-                localStorage.removeItem('loginFormData');
                 localStorage.removeItem('token');
 
-                // Wait for 2 seconds to show success message
+                // Redirect based on user role
                 setTimeout(() => {
-                    navigate('/login');
+                    if (user?.role === 'mentor') {
+                        navigate('/mentor-dashboard');
+                    } else if (user?.role === 'mentee') {
+                        navigate('/mentee-dashboard');
+                    } else if (user?.role === 'admin') {
+                        navigate('/mentor-dashboard');
+                    } else {
+                        navigate('/login');
+                    }
                 }, 2000);
             } catch (err) {
-                setError('Payment verification failed. Please contact support.');
-                setVerificationStatus('failed');
-                console.error('Payment verification error:', err);
-                navigate('/payment?error=verification_failed');
+                setError(err.message || 'Payment verification failed');
+                setVerificationStatus('error');
             } finally {
                 setLoading(false);
             }
         };
 
         verifyPayment();
-    }, [location, navigate]);
+    }, [location, navigate, user]);
 
-    return (
-        <section className='flex justify-center items-center h-full'>
-            <div className="hidden lg:block h-full w-3/5">
-                <img
-                    src="/image/young-people-working-from-modern-place 1.png"
-                    className="h-full w-full object-cover"
-                    alt=""
-                    loading="lazy"
-                />
-                <div onClick={() => navigate('/')} className="absolute top-4">
-                    <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-customOrange mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Verifying your payment...</p>
                 </div>
             </div>
+        );
+    }
 
-            <div className='flex flex-col h-full w-11/12 lg:w-2/5 justify-center items-center'>
-                <div onClick={() => navigate('/')} className="block lg:hidden bg-black py-2 px-2">
-                    <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
-                </div>
-
-                <div className='w-[300px] lg:w-[400px]'>
-                    <h1 className='text-3xl lg:text-[40px] font-medium'>Verifying Payment</h1>
-                    
-                    {loading ? (
-                        <div className="mt-8 p-4 bg-blue-100 text-blue-700 rounded-lg">
-                            Please wait while we verify your payment...
-                        </div>
-                    ) : error ? (
-                        <div className="mt-8 p-4 bg-red-100 text-red-700 rounded-lg">
-                            {error}
-                        </div>
-                    ) : verificationStatus === 'success' ? (
-                        <div className="mt-8 p-4 bg-green-100 text-green-700 rounded-lg">
-                            Payment verified successfully! Redirecting to sign-in...
-                        </div>
-                    ) : null}
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-red-500 text-xl mb-4">❌</div>
+                    <p className="text-red-600 mb-4">{error}</p>
+                    <button 
+                        onClick={() => navigate('/payment')}
+                        className="bg-customOrange text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors"
+                    >
+                        Return to Payment
+                    </button>
                 </div>
             </div>
-        </section>
-    );
+        );
+    }
+
+    if (verificationStatus === 'success') {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-green-500 text-xl mb-4">✓</div>
+                    <p className="text-green-600 mb-4">Payment verified successfully!</p>
+                    <p className="text-gray-600">Redirecting you to your dashboard...</p>
+                </div>
+            </div>
+        );
+    }
+
+    return null;
 }
 
 export default PaymentVerify; 

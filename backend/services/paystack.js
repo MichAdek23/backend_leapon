@@ -26,7 +26,7 @@ const paystack = {
                 email,
                 amount: amount * 100, // Convert to kobo
                 reference,
-                callback_url: 'http://localhost:5173/payment/verify'
+                callback_url: 'https://leap-on-mentorship-program-xkjq.vercel.app/payment/verify'
             });
 
             const req = https.request(options, res => {
