@@ -1,4 +1,4 @@
-import React, { createContext,  useMemo,  useState } from "react";
+import React, { createContext, useMemo, useState } from "react";
 import Overview from "../MeentoDashboard/MentorPages/Overview";
 import Explore from "../MeentoDashboard/MentorPages/Explore";
 import Message from "../MeentoDashboard/MentorPages/Message";
@@ -10,6 +10,7 @@ import UserList from '../MeentoDashboard/MentorPages/UserList';
 import Messages from '../MeentoDashboard/MentorPages/Message';
 import Settings from '../MeentoDashboard/MentorPages/Setting';
 import UsersList from '../MeentoDashboard/MentorPages/UsersList';
+import MenteeOverview from '../MeentoDashboard/MenteePages/Overview';
 
 export const GlobalContext = createContext();
 
@@ -24,7 +25,8 @@ const components = {
   UserList,
   Messages,
   Settings,
-  UsersList
+  UsersList,
+  MenteeOverview
 };
 
 const defaultProfile = {
@@ -112,6 +114,16 @@ function GlobalState({ children }) {
     return null;
   });
 
+  const [acceptedMentors, setAcceptedMentors] = useState(() => {
+    const AcceptedMentor = localStorage.getItem('AddMentor');
+    try {
+      return AcceptedMentor ? JSON.parse(AcceptedMentor) : [];
+    } catch (error) {
+      console.error("Error parsing accepted mentors:", error);
+      return [];
+    }
+  });
+
   const [acceptedMentees, setAcceptedMentees] = useState(() => {
     const AcceptedMentee = localStorage.getItem('Add');
     try {
@@ -155,30 +167,60 @@ function GlobalState({ children }) {
     }
   };
 
+  const AddMentors = (mentor) => {
+    setAcceptedMentors(prev => [...prev, mentor]);
+  };
+
   const ActiveComponent = components[activeComponent] || Overview;
 
+  const value = useMemo(() => ({
+    ActiveComponent, 
+    handleDecreament, 
+    handleIncreament, 
+    currentIndex, 
+    acceptedMentees: memoizedAcceptedMentees, 
+    AddMentees, 
+    upDatePage, 
+    ShowResetConfirmation, 
+    otpshow, 
+    setOtpShow, 
+    activeComponent, 
+    handleToggleState, 
+    toggleState, 
+    setSelectedMentee, 
+    selectedMentee,
+    profile,
+    setProfile,
+    formData,
+    setFormData,
+    acceptedMentors,
+    AddMentors
+  }), [
+    ActiveComponent, 
+    handleDecreament, 
+    handleIncreament, 
+    currentIndex, 
+    memoizedAcceptedMentees, 
+    AddMentees, 
+    upDatePage, 
+    ShowResetConfirmation, 
+    otpshow, 
+    setOtpShow, 
+    activeComponent, 
+    handleToggleState, 
+    toggleState, 
+    setSelectedMentee, 
+    selectedMentee,
+    profile,
+    setProfile,
+    formData,
+    setFormData,
+    acceptedMentors,
+    AddMentors
+  ]);
+
   return (
-    <GlobalContext.Provider value={{ 
-      ActiveComponent, 
-      handleDecreament, 
-      handleIncreament, 
-      currentIndex, 
-      acceptedMentees: memoizedAcceptedMentees, 
-      AddMentees, 
-      upDatePage, 
-      ShowResetConfirmation, 
-      otpshow, 
-      setOtpShow, 
-      activeComponent, 
-      handleToggleState, 
-      toggleState, 
-      setSelectedMentee, 
-      selectedMentee,
-      profile,
-      setProfile,
-      formData,
-      setFormData
-    }}>
+    <GlobalContext.Provider value={value}>
       {children}
     </GlobalContext.Provider>
   );

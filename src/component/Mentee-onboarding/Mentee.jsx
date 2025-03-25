@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import NavBarDashboard from '../MeentoDashboard/NavBarDashboard';
 import { GlobalContext } from '../GlobalStore/GlobalState';
 import NavRes from '../MeentoDashboard/NavRes';
-import Overview from '../MeentoDashboard/MenteePages/Overview';
+import MenteeOverview from '../MeentoDashboard/MenteePages/Overview';
 
 function Mentee() {
     const context = useContext(GlobalContext);
@@ -13,8 +13,8 @@ function Mentee() {
   
     const { ActiveComponent, toggleState } = context;
 
-    // If no ActiveComponent is set, default to Overview
-    const ComponentToRender = ActiveComponent || Overview;
+    // If no ActiveComponent is set, default to MenteeOverview
+    const ComponentToRender = ActiveComponent || MenteeOverview;
 
     return (
          <main className='flex sidebar h-full'>
