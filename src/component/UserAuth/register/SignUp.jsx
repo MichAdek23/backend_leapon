@@ -9,6 +9,7 @@ function SignUp() {
   const [passwordType, setPasswordType] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const { register: registerUser } = useAuth();
 
@@ -50,8 +51,9 @@ function SignUp() {
         token: localStorage.getItem('token') // Store the token as well
       }));
       
-      // Navigate to mode selection
-      navigate('/mode-of-registering');
+      // Show success modal
+      setShowModal(true);
+
     } catch (err) {
       console.error('Registration error:', err);
       setError(err.message || 'Failed to register. Please try again.');
@@ -194,6 +196,25 @@ function SignUp() {
           </p>
         </div>
       </div>
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h2 className="text-xl font-bold mb-4">Account Created</h2>
+            <p>Your account has been created successfully!</p>
+            <div className="mt-6 flex justify-end">
+              <button 
+                onClick={() => {
+                  setShowModal(false);
+                  navigate('/mode-of-registering');
+                }} 
+                className="bg-customOrange text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
