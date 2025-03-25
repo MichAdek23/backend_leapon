@@ -18,6 +18,7 @@ function Step3() {
 
   // State to track the selected checkboxes
   const [selectedInterests, setSelectedInterests] = useState([]);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Save form data to localStorage whenever it changes
   useEffect(() => {
@@ -43,12 +44,15 @@ function Step3() {
     }
     setSelectedInterests(updatedInterests);
     setValue('selectedInterests', updatedInterests, { shouldValidate: true }); // Update the form value
+    setErrorMessage(''); // Clear error message on change
   };
 
   // Handle form submission
   const onSubmit = () => {
     if (selectedInterests.length === 3) {
       handleIncreament(); // Move to the next step
+    } else {
+      setErrorMessage('Please select exactly 3 areas of interest.');
     }
   };
 
@@ -140,6 +144,9 @@ function Step3() {
         {/* Error Message */}
         {errors.selectedInterests && (
           <p className="text-red-500 text-sm">Please select exactly 3 areas of interest.</p>
+        )}
+        {errorMessage && (
+          <p className="text-red-500 text-sm">{errorMessage}</p>
         )}
 
         {/* Continue Button */}
