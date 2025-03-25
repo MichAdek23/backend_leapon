@@ -67,7 +67,7 @@ function App() {
         <Route
           path='/mentee-dashboard'
           element={
-            <ProtectedRoute allowedRoles={['student', 'admin']}>
+            <ProtectedRoute allowedRoles={['mentee', 'admin']}>
               <Mentee />
             </ProtectedRoute>
           }

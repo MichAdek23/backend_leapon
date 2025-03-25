@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import NavBarDashboard from '../MeentoDashboard/NavBarDashboard';
 import { GlobalContext } from '../GlobalStore/GlobalState';
 import NavRes from '../MeentoDashboard/NavRes';
+import Overview from '../MeentoDashboard/MenteePages/Overview';
 
 function Mentee() {
     const context = useContext(GlobalContext);
@@ -12,6 +13,9 @@ function Mentee() {
   
     const { ActiveComponent, toggleState } = context;
 
+    // If no ActiveComponent is set, default to Overview
+    const ComponentToRender = ActiveComponent || Overview;
+
     return (
          <main className='flex sidebar h-full'>
             <div className={`${toggleState ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 fixed h-screen z-50 top-0 bg-white w-full`}>
@@ -21,7 +25,7 @@ function Mentee() {
                 <NavBarDashboard/>
             </section>
             <section className='h-screen sidebar md:px-10 lg:px-[34px] bg-slate-100 py-10 w-full'>
-                <ActiveComponent/> 
+                <ComponentToRender/> 
             </section> 
          </main>
     );
