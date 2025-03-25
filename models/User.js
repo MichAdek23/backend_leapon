@@ -2,17 +2,18 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
-  name: {
+  firstName: {
     type: String,
-    required: true,
-    trim: true
+    required: true
+  },
+  lastName: {
+    type: String,
+    required: true
   },
   email: {
     type: String,
     required: true,
-    unique: true,
-    trim: true,
-    lowercase: true
+    unique: true
   },
   password: {
     type: String,
@@ -20,80 +21,39 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'mentor'],
-    required: true
+    required: true,
+    enum: ['mentor', 'mentee', 'admin']
+  },
+  mentorshipStatus: {
+    type: String,
+    enum: ['available', 'unavailable', 'busy'],
+    default: 'available'
+  },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other']
+  },
+  modeOfContact: {
+    type: String,
+    enum: ['email', 'phone', 'both']
+  },
+  availability: {
+    type: String
+  },
+  bio: {
+    type: String
+  },
+  overview: {
+    type: String
   },
   profilePicture: {
-    type: String,
-    default: null,
-    get: function(url) {
-      if (!url) return null;
-      // If it's already a full URL, return it
-      if (url.startsWith('http')) return url;
-      // If it's a Cloudinary URL, return it
-      if (url.includes('cloudinary')) return url;
-      // If it's a relative path, construct the full URL
-      return `${process.env.API_URL}${url}`;
-    },
-    set: function(url) {
-      // If the URL is already a full URL or Cloudinary URL, store it as is
-      if (url && (url.startsWith('http') || url.includes('cloudinary'))) {
-        return url;
-      }
-      // Otherwise, store the relative path
-      return url;
-    }
-  },
-  profileCompleted: {
-    type: Boolean,
-    default: false
-  },
-  // Mentor specific fields
-  expertise: [{
     type: String
-  }],
-  experience: {
-    type: String,
-    required: function() {
-      return this.role === 'mentor';
-    }
   },
-  // Student specific fields
-  department: {
-    type: String,
-    required: function() {
-      return this.role === 'student';
-    }
-  },
-  yearOfStudy: {
-    type: String,
-    required: function() {
-      return this.role === 'student';
-    }
-  },
-  // Common fields
-  overview: {
-    type: String,
-    default: ''
-  },
-  interests: [{
-    type: String
-  }],
-  linkedIn: {
-    type: String,
-    default: ''
-  },
-  twitter: {
-    type: String,
-    default: ''
-  },
-  instagram: {
-    type: String,
-    default: ''
-  },
-  website: {
-    type: String,
-    default: ''
+  social: {
+    twitter: String,
+    facebook: String,
+    whatsapp: String,
+    instagram: String
   },
   createdAt: {
     type: Date,
@@ -102,9 +62,11 @@ const userSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
+  },
+  paymentCompleted: {
+    type: Boolean,
+    default: false
   }
-}, {
-  timestamps: true
 });
 
 // Hash password before saving
