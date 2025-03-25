@@ -9,14 +9,57 @@ import {
 } from "@/components/ui/select";
 
 function StepOne() {
-  const { handleIncreament } = useContext(GlobalContext);
+  const { handleIncreament, formData, setFormData } = useContext(GlobalContext);
   const [imageUrl, setImageUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [gender, setGender] = useState('');
 
-  const handleImageUpload = (e) => {
+  const uploadToCloudinary = async (file) => {
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'ml_default'); // You can create a specific upload preset in Cloudinary
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/dxuxxhoza/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      setImageUrl(data.secure_url);
+      // Save image URL to formData
+      setFormData(prev => ({ ...prev, profilePicture: data.secure_url }));
+      return data.secure_url;
+    } catch (error) {
+      console.error('Error uploading to Cloudinary:', error);
+      throw error;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImageUrl(URL.createObjectURL(file));
+      try {
+        await uploadToCloudinary(file);
+      } catch (error) {
+        console.error('Failed to upload image:', error);
+      }
     }
+  };
+
+  const handleGenderChange = (value) => {
+    setGender(value);
+    setFormData(prev => ({ ...prev, gender: value }));
   };
 
   return (
@@ -37,15 +80,22 @@ function StepOne() {
             {imageUrl ? <img src={imageUrl} className='h-full w-full rounded-full' alt="Profile" /> : <p className='text-4xl'>E</p>}
           </div>
           <div>
-            <input type="file" name="image" className='bg-transparent' onChange={handleImageUpload} accept="image/*" />
-            <p>Make sure the file is below 12MB</p>
+            <input 
+              type="file" 
+              name="image" 
+              className='bg-transparent' 
+              onChange={handleImageUpload} 
+              accept="image/*"
+              disabled={uploading}
+            />
+            <p>{uploading ? 'Uploading...' : 'Make sure the file is below 12MB'}</p>
           </div>
         </div>
       </div>
 
       {/* Select Gender */}
       <div className='relative border-2 rounded-lg mt-6 border-gray-300'>
-        <Select>
+        <Select onValueChange={handleGenderChange} value={gender}>
           <SelectTrigger className=" w-[300px] lg:w-[400px] h-12 lg:h-[60px] border-0">
             <SelectValue className="text-lg text-slate-500" placeholder="Select One" />
           </SelectTrigger>

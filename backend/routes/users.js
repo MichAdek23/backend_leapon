@@ -51,17 +51,18 @@ const upload = multer({
 // @desc    Register a user (Step 1: Basic Info)
 // @access  Public
 router.post('/register', [
-  body('name', 'Name is required').not().isEmpty(),
+  body('firstName', 'First name is required').not().isEmpty(),
+  body('lastName', 'Last name is required').not().isEmpty(),
   body('email', 'Please include a valid email').isEmail(),
   body('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 }),
-  body('role', 'Role must be either student or mentor').isIn(['student', 'mentor'])
+  body('role', 'Role must be either mentor or mentee').isIn(['mentor', 'mentee'])
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { name, email, password, role } = req.body;
+  const { firstName, lastName, email, password, role } = req.body;
 
   try {
     // Check if user exists
@@ -72,11 +73,11 @@ router.post('/register', [
 
     // Create new user
     user = new User({
-      name,
+      firstName,
+      lastName,
       email,
       password,
-      role,
-      profileCompleted: false // Explicitly set profileCompleted to false
+      role
     });
 
     await user.save();
@@ -207,7 +208,8 @@ router.post('/login', [
     const payload = {
       userId: user.id,
       role: user.role,
-      profileCompleted: user.profileCompleted
+      profileCompleted: user.profileCompleted,
+      paymentCompleted: user.paymentCompleted
     };
 
     jwt.sign(
@@ -224,7 +226,8 @@ router.post('/login', [
             name: user.name,
             email: user.email,
             role: user.role,
-            profileCompleted: user.profileCompleted
+            profileCompleted: user.profileCompleted,
+            paymentCompleted: user.paymentCompleted
           }
         });
       }

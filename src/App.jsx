@@ -10,6 +10,7 @@ import GetOtp from './component/UserAuth/resetPassword/GetOtp';
 import ModeOfSignUp from './component/UserAuth/ModeOfRegistring/ModeOfRegistring';
 import MenteeForm from './component/UserAuth/Mentee-Form/Mentee-Form';
 import Payment from './component/UserAuth/Payment';
+import PaymentVerify from './component/UserAuth/PaymentVerify';
 import MentorForm from './component/UserAuth/Mentor-form/Mentor-Form';
 import ChangePassword from './component/UserAuth/ChangePassword/ChangePassword';
 import { AuthProvider, useAuth } from './lib/AuthContext';
@@ -24,6 +25,11 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   if (!user) {
     return <Navigate to="/login" />;
+  }
+
+  // Check if payment is required
+  if (!user.paymentCompleted) {
+    return <Navigate to="/payment" />;
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
@@ -47,6 +53,7 @@ function App() {
         <Route path='/mentee-form' element={<MenteeForm />} />
         <Route path='/mentor-form' element={<MentorForm />} />
         <Route path='/payment' element={<Payment />} />
+        <Route path='/payment/verify' element={<PaymentVerify />} />
         
         {/* Protected Routes */}
         <Route

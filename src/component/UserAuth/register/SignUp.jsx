@@ -8,6 +8,7 @@ import { useAuth } from '../../../lib/AuthContext';
 function SignUp() {
   const [passwordType, setPasswordType] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { register: registerUser } = useAuth();
 
@@ -26,19 +27,36 @@ function SignUp() {
   const onSubmit = async (data) => {
     try {
       setError('');
+      setLoading(true);
+
+      // Only include the data that's filled in the signup form
       const userData = {
-        name: data.FirstName,
-        email: data.email,
+        firstName: data.FirstName,
+        lastName: data.FirstName, // Using FirstName as lastName for now since we only collect one name
+        email: data.email.toLowerCase(),
         password: data.password,
-        role: 'student', // Default role for initial registration
-        profileCompleted: false // Explicitly set profileCompleted to false
+        role: 'mentee'
       };
       
-      await registerUser(userData);
+      // Register the user
+      const user = await registerUser(userData);
+      
+      // Store the user data in localStorage for later use in profile completion
+      localStorage.setItem('userData', JSON.stringify({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        role: userData.role,
+        token: localStorage.getItem('token') // Store the token as well
+      }));
+      
+      // Navigate to mode selection
       navigate('/mode-of-registering');
     } catch (err) {
       console.error('Registration error:', err);
       setError(err.message || 'Failed to register. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -160,9 +178,10 @@ function SignUp() {
             <div className="mt-4">
               <button 
                 type="submit" 
-                className="text-white bg-customOrange w-full h-11 lg:h-14 rounded-lg cursor-pointer hover:bg-orange-600 transition-colors"
+                disabled={loading}
+                className={`text-white bg-customOrange w-full h-11 lg:h-14 rounded-lg cursor-pointer hover:bg-orange-600 transition-colors ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Sign up
+                {loading ? 'Creating Account...' : 'Sign up'}
               </button>
             </div>
           </form>

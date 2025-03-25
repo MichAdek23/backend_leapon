@@ -1,64 +1,91 @@
-import { useNavigate } from 'react-router-dom';
-import { usePaystackPayment } from 'react-paystack';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function Payment() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useAuth();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [paymentStatus, setPaymentStatus] = useState('');
 
-    // Paystack configuration
-    const config = {
-        reference: new Date().getTime().toString(),
-        email: user?.email || '',
-        amount: 50000, // Amount in kobo (₦500)
-        publicKey: 'pk_test_ef545c8d586d88daee8f055eb3f3f42d136d4865',
-    };
+    // Check if user is logged in
+    useEffect(() => {
+        if (!user) {
+            navigate('/login');
+        }
+    }, [user, navigate]);
 
-    // Initialize Paystack payment
-    const initializePayment = usePaystackPayment(config);
+    // Handle error parameters from verification
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const error = searchParams.get('error');
+        
+        if (error) {
+            switch (error) {
+                case 'verification_failed':
+                    setError('Payment verification failed. Please try again.');
+                    break;
+                case 'no_reference':
+                    setError('No payment reference found. Please try again.');
+                    break;
+                default:
+                    setError('An error occurred during payment. Please try again.');
+            }
+        }
+    }, [location]);
 
-    // Handle payment success
-    const onSuccess = async (reference) => {
+    // Handle payment initialization
+    const handlePayment = async () => {
         try {
             setLoading(true);
             setError('');
-            
-            // Verify payment with backend
-            const response = await fetch('/api/payments/verify', {
+            setPaymentStatus('initializing');
+
+            // Initialize payment with backend
+            const response = await fetch('https://leapon.onrender.com/api/payments/initialize', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ reference: reference.reference })
+                body: JSON.stringify({
+                    email: user.email
+                })
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                throw new Error('Payment verification failed');
+                throw new Error(data.message || 'Failed to initialize payment');
             }
 
-            // Redirect based on user role
-            if (user?.role === 'mentor') {
-                navigate('/mentor-dashboard');
-            } else if (user?.role === 'student') {
-                navigate('/mentee-dashboard');
-            } else {
-                navigate('/');
-            }
+            setPaymentStatus('redirecting');
+            
+            // Redirect to Paystack payment page
+            window.location.href = data.authorizationUrl;
         } catch (err) {
-            setError('Payment verification failed. Please contact support.');
-            console.error('Payment verification error:', err);
+            setError('Failed to initialize payment. Please try again.');
+            setPaymentStatus('failed');
+            console.error('Payment initialization error:', err);
         } finally {
             setLoading(false);
         }
     };
 
-    // Handle payment failure
-    const onClose = () => {
-        setError('Payment was not completed.');
+    // Show payment status message
+    const getStatusMessage = () => {
+        switch (paymentStatus) {
+            case 'initializing':
+                return 'Initializing payment...';
+            case 'redirecting':
+                return 'Redirecting to payment page...';
+            case 'failed':
+                return 'Payment failed. Please try again.';
+            default:
+                return '';
+        }
     };
 
     return (
@@ -89,6 +116,14 @@ function Payment() {
                         </div>
                     )}
 
+                    {paymentStatus && (
+                        <div className={`mt-4 p-3 rounded-lg ${
+                            paymentStatus === 'failed' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                            {getStatusMessage()}
+                        </div>
+                    )}
+
                     <div className='flex justify-between mt-8'>
                         <h1 className='text-slate-500'>Product Name</h1>
                         <p className='text-slate-800 font-semibold'>Mentorship</p>
@@ -109,9 +144,13 @@ function Payment() {
                     </div>
 
                     <button
-                        onClick={() => initializePayment(onSuccess, onClose)}
-                        disabled={loading}
-                        className={`mt-4 w-full h-10 lg:h-14 rounded-lg cursor-pointer text-white bg-customOrange hover:bg-orange-600 transition-colors ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={handlePayment}
+                        disabled={loading || paymentStatus === 'redirecting'}
+                        className={`mt-4 w-full h-10 lg:h-14 rounded-lg cursor-pointer text-white bg-customOrange hover:bg-orange-600 transition-colors ${
+                            (loading || paymentStatus === 'redirecting') 
+                            ? 'opacity-50 cursor-not-allowed' 
+                            : ''
+                        }`}
                     >
                         {loading ? 'Processing...' : 'Continue to Payment'}
                     </button>

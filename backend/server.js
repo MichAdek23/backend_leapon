@@ -9,6 +9,7 @@ import profileRoutes from './routes/profile.js';
 import resourcesRouter from './routes/resources.js';
 import progressRouter from './routes/progress.js';
 import conversationsRouter from './routes/conversations.js';
+import paymentRoutes from './routes/payments.js';
 import http from 'http';
 import setupSocket from './socket.js';
 import path from 'path';
@@ -100,12 +101,13 @@ app.get('/', (req, res) => {
 
 // API Routes
 app.use('/api/users', userRoutes);
-app.use('/api/messages', messageRoutes);
 app.use('/api/sessions', sessionRoutes);
-app.use('/api/mentor', profileRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/profile', profileRoutes);
 app.use('/api/resources', resourcesRouter);
 app.use('/api/progress', progressRouter);
 app.use('/api/conversations', conversationsRouter);
+app.use('/api/payments', paymentRoutes);
 
 // 404 handler
 app.use((req, res) => {

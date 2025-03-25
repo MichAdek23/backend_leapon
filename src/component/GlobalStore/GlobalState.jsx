@@ -74,6 +74,23 @@ function GlobalState({ children }) {
     return defaultProfile;
   });
 
+  const [formData, setFormData] = useState(() => {
+    const storedFormData = localStorage.getItem('formData');
+    if (storedFormData) {
+      try {
+        return JSON.parse(storedFormData);
+      } catch (error) {
+        console.error("Error parsing stored form data:", error);
+        return {};
+      }
+    }
+    return {};
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('formData', JSON.stringify(formData));
+  }, [formData]);
+
   const [otpshow , setOtpShow] = useState(false)
 
   const ShowResetConfirmation = ()=>{
@@ -158,7 +175,9 @@ function GlobalState({ children }) {
       setSelectedMentee, 
       selectedMentee,
       profile,
-      setProfile
+      setProfile,
+      formData,
+      setFormData
     }}>
       {children}
     </GlobalContext.Provider>

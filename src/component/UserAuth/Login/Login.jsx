@@ -28,11 +28,27 @@ function SignIn() {
       setError('');
       const user = await login(data.email, data.password);
       
+      // Check payment status
+      if (!user.paymentCompleted) {
+        navigate('/payment');
+        return;
+      }
+
       // Navigate based on user role
-      if (user.role === 'mentor') {
-        navigate('/mentor-dashboard');
-      } else if (user.role === 'student') {
-        navigate('/mentee-dashboard');
+      switch (user.role) {
+        case 'mentor':
+          navigate('/mentor-dashboard');
+          break;
+        case 'mentee':
+          navigate('/mentee-dashboard');
+          break;
+        case 'admin':
+          // Admin can access both dashboards, default to mentor dashboard
+          navigate('/mentor-dashboard');
+          break;
+        default:
+          setError('Invalid user role');
+          break;
       }
     } catch (err) {
       setError(err.message || 'Failed to login. Please try again.');

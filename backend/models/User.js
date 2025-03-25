@@ -62,6 +62,10 @@ const userSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
+  },
+  paymentCompleted: {
+    type: Boolean,
+    default: false
   }
 });
 
