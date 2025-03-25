@@ -34,9 +34,12 @@ function Step3() {
 
   // Handle checkbox change
   const handleCheckboxChange = (interest) => {
-    const updatedInterests = selectedInterests.includes(interest)
-      ? selectedInterests.filter((i) => i !== interest)
-      : [...selectedInterests, interest];
+    let updatedInterests = [...selectedInterests];
+    if (updatedInterests.includes(interest)) {
+      updatedInterests = updatedInterests.filter(item => item !== interest);
+    } else if (updatedInterests.length < 3) {
+      updatedInterests.push(interest);
+    }
     setSelectedInterests(updatedInterests);
     setValue('selectedInterests', updatedInterests); // Update the form value
   };
