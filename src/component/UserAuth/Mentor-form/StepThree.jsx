@@ -11,6 +11,7 @@ function Step3() {
     handleSubmit,
     watch,
     setValue,
+    formState: { errors },
   } = useForm();
 
   const detailsForm = watch();
@@ -41,12 +42,14 @@ function Step3() {
       updatedInterests.push(interest);
     }
     setSelectedInterests(updatedInterests);
-    setValue('selectedInterests', updatedInterests); // Update the form value
+    setValue('selectedInterests', updatedInterests, { shouldValidate: true }); // Update the form value
   };
 
   // Handle form submission
   const onSubmit = () => {
-    handleIncreament(); // Move to the next step
+    if (selectedInterests.length === 3) {
+      handleIncreament(); // Move to the next step
+    }
   };
 
   return (
@@ -134,7 +137,10 @@ function Step3() {
           />
         </div>
 
-    
+        {/* Error Message */}
+        {errors.selectedInterests && (
+          <p className="text-red-500 text-sm">Please select exactly 3 areas of interest.</p>
+        )}
 
         {/* Continue Button */}
         <button
@@ -143,7 +149,6 @@ function Step3() {
         >
           Continue
         </button>
-
       </form>
     </div>
   );

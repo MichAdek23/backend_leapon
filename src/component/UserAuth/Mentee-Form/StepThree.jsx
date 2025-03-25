@@ -8,11 +8,10 @@ function StepThree() {
   const { handleIncreament, handleDecreament } = useContext(GlobalContext);
 
   const {
-  
     handleSubmit,
     watch,
     setValue,
-   
+    formState: { errors },
   } = useForm();
 
   const detailsForm = watch();
@@ -43,12 +42,14 @@ function StepThree() {
       updatedInterests.push(interest);
     }
     setSelectedInterests(updatedInterests);
-    setValue('selectedInterests', updatedInterests); // Update the form value
+    setValue('selectedInterests', updatedInterests, { shouldValidate: true }); // Update the form value
   };
 
   // Handle form submission
   const onSubmit = () => {
-    handleIncreament(); // Move to the next step
+    if (selectedInterests.length === 3) {
+      handleIncreament(); // Move to the next step
+    }
   };
 
   return (
@@ -135,6 +136,11 @@ function StepThree() {
             className="accent-customOrange text-white w-6 h-4 cursor-pointer"
           />
         </div>
+
+        {/* Error Message */}
+        {errors.selectedInterests && (
+          <p className="text-red-500 text-sm">Please select exactly 3 areas of interest.</p>
+        )}
 
         {/* Continue Button */}
         <button
