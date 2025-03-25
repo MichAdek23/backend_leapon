@@ -66,7 +66,7 @@ function StepFour() {
 
   return (
     <div className="w-full px-6 lg:px-0 md:w-[400px]">
-      <h1 className="text-2xl font-bold lg:text-[40px] text-customDarkBlue">Complete Your Profile</h1>
+      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] w-full sm:w-auto lg:w-[490px] text-customDarkBlue">Complete Your Profile</h1>
       <p className="text-slate-400 text-sm mt-5">Please provide your bio information</p>
 
       <form className="mt-5" onSubmit={handleSubmit(handleFormSubmit)}>

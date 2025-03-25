@@ -68,7 +68,8 @@ function ModeOfSignUp() {
                     <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
      </div>
         <div className="w-full px-6 lg:px-0 md:w-[400px]">
-          <h1 className=" text-xl  md:text-2xl font-bold lg:text-[30px] text-customDarkBlue">Welcome to Mentorship</h1>
+          <h1 className=" text-xl  md:text-2xl font-bold lg:text-[30px]  text-customDarkBlue">Welcome to LEAP </h1>
+          <h1  className=" text-xl  md:text-2xl font-bold lg:text-[30px]  text-customDarkBlue mt-2">PROGRAMME</h1>
 
           <form className="mt-5" onSubmit={handleSubmit(onSubmit)}>
             {/* Role Selection */}
