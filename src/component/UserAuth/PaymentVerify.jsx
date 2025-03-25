@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../../lib/AuthContext';
+import { useAuth } from '../../lib/AuthContext';
 
 function PaymentVerify() {
     const [error, setError] = useState('');
