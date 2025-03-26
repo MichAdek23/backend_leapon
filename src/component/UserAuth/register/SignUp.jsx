@@ -169,8 +169,14 @@ function SignUp() {
                 className="accent-customOrange text-white cursor-pointer w-4 h-4"
               />
               <p className="text-sm font-medium text-slate-400">
-                By creating an account means you agree to the <b className="text-slate-900">Terms & Conditions</b> and our{' '}
-                <b className="text-slate-900">Privacy Policy</b>
+                By creating an account means you agree to the{' '}
+                <Link to="/terms" className="text-customOrange hover:text-orange-600">
+                  Terms & Conditions
+                </Link>{' '}
+                and our{' '}
+                <Link to="/privacy" className="text-customOrange hover:text-orange-600">
+                  Privacy Policy
+                </Link>
               </p>
             </div>
             {errors.terms && <p className="text-red-600">{errors.terms.message}</p>}

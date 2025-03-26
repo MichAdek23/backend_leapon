@@ -14,6 +14,8 @@ import PaymentVerify from './component/UserAuth/PaymentVerify';
 import MentorForm from './component/UserAuth/Mentor-form/Mentor-Form';
 import ChangePassword from './component/UserAuth/ChangePassword/ChangePassword';
 import { AuthProvider, useAuth } from './lib/AuthContext';
+import TermsAndConditions from './component/UserAuth/TermsAndConditions';
+import PrivacyPolicy from './component/UserAuth/PrivacyPolicy';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
@@ -54,6 +56,8 @@ function App() {
         <Route path='/mentor-form' element={<MentorForm />} />
         <Route path='/payment' element={<Payment />} />
         <Route path='/payment/verify' element={<PaymentVerify />} />
+        <Route path='/terms' element={<TermsAndConditions />} />
+        <Route path='/privacy' element={<PrivacyPolicy />} />
         
         {/* Protected Routes */}
         <Route
