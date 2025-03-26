@@ -41,9 +41,14 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await userApi.login(email, password);
       const { token, user } = response.data;
+      
+      if (!token) {
+        throw new Error('No token received from server');
+      }
+      
       localStorage.setItem('token', token);
       setUser(user);
-      return user;
+      return { ...user, token }; // Return both user data and token
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Login failed');
     }

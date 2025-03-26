@@ -3,26 +3,32 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faLongArrowRight, faBars } from "@fortawesome/free-solid-svg-icons";
 import { Calendar } from "@/components/ui/calendar";
 import { GlobalContext } from "@/component/GlobalStore/GlobalState";
-import { userApi } from '../../../lib/api';
+import { userApi, sessionApi } from '../../../lib/api';
 import { useAuth } from '../../../lib/AuthContext';
 
 function Overview() {
   const [mentors, setMentors] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState(null);
   const { user } = useAuth();
   const { upDatePage, handleToggleState, acceptedMentors } = useContext(GlobalContext);
 
-  // Calculate profile completion percentage
+  // Calculate profile completion percentage based on complete profile data
   const calculateProfileStrength = () => {
     if (!user) return 0;
 
     const requiredFields = {
-      name: 1,
+      firstName: 1,
+      lastName: 1,
       email: 1,
-      overview: 1,
+      bio: 1,
       interests: 1,
+      title: 1,
+      socialMediaLinks: 1,
+      profilePicture: 1,
+      gender: 1,
       department: 1,
-      yearOfStudy: 1,
+      yearOfStudy: 1
     };
 
     const totalFields = Object.keys(requiredFields).length;
@@ -39,20 +45,25 @@ function Overview() {
   };
 
   useEffect(() => {
-    const fetchMentors = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await userApi.getMentors();
-        setMentors(response.data);
+        // Fetch mentors
+        const mentorsResponse = await userApi.getMentors();
+        setMentors(mentorsResponse.data);
+
+        // Fetch user stats
+        const statsResponse = await userApi.getStats();
+        setStats(statsResponse.data);
       } catch (error) {
-        console.error("Error fetching mentors:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
     if (user?.role === 'mentee') {
-      fetchMentors();
+      fetchData();
     }
   }, [user?.role]);
 
@@ -62,10 +73,10 @@ function Overview() {
       <header className="flex justify-between">
         <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
           <div className="flex flex-col gap-4">
-            <h1 className="text-[32px] font-medium">Welcome</h1>
+            <h1 className="text-[32px] font-medium">Welcome, {user?.firstName || 'Mentee'}</h1>
             <p className="text-base font-medium text-slate-600">
-              {acceptedMentors && acceptedMentors.length > 0 
-                ? `You have ${acceptedMentors.length} upcoming session${acceptedMentors.length > 1 ? 's' : ''}`
+              {stats?.upcomingSessions > 0 
+                ? `You have ${stats.upcomingSessions} upcoming session${stats.upcomingSessions > 1 ? 's' : ''}`
                 : 'You have no upcoming sessions'}
             </p>
           </div>
@@ -101,7 +112,15 @@ function Overview() {
         <div className="py-4 px-2 md:px-4 lg:px-5 rounded-lg bg-white shadow-2xl lg:w-[33%]">
           <div className="flex justify-between">
             <h1 className="md:text-lg lg:text-2xl font-medium">Your profile strength</h1>
+
+            <button 
+              onClick={() => upDatePage("MyProfile")}
+              className="h-[30px] w-[30px] flex justify-center items-center bg-slate-200 rounded-full hover:bg-slate-300 transition-colors"
+            >
+              <FontAwesomeIcon icon={faLongArrowRight} />
+            </button>
           </div>
+
           <div className="mt-3">
             <div className="flex justify-between mb-2">
               <span className="text-sm text-gray-600">Profile Completion</span>
@@ -112,6 +131,21 @@ function Overview() {
               value={calculateProfileStrength()} 
               max="100"
             ></progress>
+          </div>
+
+          <div className="mt-5 border-2 border-gray-100 w-full"></div>
+          <div className="mt-5 flex justify-between">
+            <h1 className="text-base lg:text-lg text-gray-500 font-medium">
+              Complete your 1st Mentorship Sessions Milestone
+            </h1>
+
+            <button className="h-[30px] w-[50px] flex justify-center items-center bg-slate-200 rounded-full">
+              <FontAwesomeIcon icon={faLongArrowRight} />
+            </button>
+          </div>
+
+          <div className="mt-3">
+            <progress className="h-2 w-full" value={stats?.totalSessions || 0} max="100"></progress>
           </div>
         </div>
 
@@ -132,12 +166,12 @@ function Overview() {
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <img
-                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(mentor.name)}&background=random`}
-                      alt={mentor.name}
+                      src={mentor.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(mentor.firstName + ' ' + mentor.lastName)}&background=random`}
+                      alt={mentor.firstName + ' ' + mentor.lastName}
                       className="w-10 h-10 rounded-full"
                     />
                     <div>
-                      <h3 className="font-medium">{mentor.name}</h3>
+                      <h3 className="font-medium">{mentor.firstName} {mentor.lastName}</h3>
                       <p className="text-sm text-gray-600">Mentor</p>
                     </div>
                   </div>
@@ -165,15 +199,15 @@ function Overview() {
             >
               <div className="h-3/5">
                 <img
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(mentor.name)}&background=random`}
+                  src={mentor.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(mentor.firstName + ' ' + mentor.lastName)}&background=random`}
                   className="h-full w-full object-cover"
-                  alt={mentor.name}
+                  alt={mentor.firstName + ' ' + mentor.lastName}
                   loading="lazy"
                 />
               </div>
               <div className="h-2/5 flex flex-col gap-2 p-6">
                 <h3 className="text-lg font-bold text-customDarkBlue">
-                  {mentor.name}
+                  {mentor.firstName} {mentor.lastName}
                 </h3>
                 <p className="flex items-center text-xs text-customDarkBlue font-normal">
                   <span>

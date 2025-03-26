@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faLock, faEye, faEyeSlash, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faEnvelope, faLock, faEye, faEyeSlash, faUser, faGraduationCap, faChalkboardTeacher, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../lib/AuthContext';
 
@@ -10,6 +10,8 @@ function SignUp() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [showRoleSelection, setShowRoleSelection] = useState(true);
   const navigate = useNavigate();
   const { register: registerUser } = useAuth();
 
@@ -24,6 +26,12 @@ function SignUp() {
     setPasswordType(!passwordType);
   };
 
+  // Handle role selection
+  const handleRoleSelect = (role) => {
+    setSelectedRole(role);
+    setShowRoleSelection(false);
+  };
+
   // Handle form submission
   const onSubmit = async (data) => {
     try {
@@ -36,11 +44,11 @@ function SignUp() {
         lastName: data.FirstName, // Using FirstName as lastName for now since we only collect one name
         email: data.email.toLowerCase(),
         password: data.password,
-        role: 'mentee'
+        role: selectedRole // Use the selected role instead of defaulting to mentee
       };
       
       // Register the user
-      const user = await registerUser(userData);
+      const response = await registerUser(userData);
       
       // Store the user data in localStorage for later use in profile completion
       localStorage.setItem('userData', JSON.stringify({
@@ -48,20 +56,101 @@ function SignUp() {
         lastName: userData.lastName,
         email: userData.email,
         role: userData.role,
+        emailVerified: response.emailVerified || false, // Use the verification status from the response
         token: localStorage.getItem('token') // Store the token as well
       }));
       
       // Show success modal
       setShowModal(true);
 
+      // Redirect based on verification status
+      setTimeout(() => {
+        setShowModal(false);
+        if (response.emailVerified) {
+          // If email is verified, redirect based on role
+          if (userData.role === 'mentor') {
+            navigate('/mentor-form');
+          } else if (userData.role === 'mentee') {
+            navigate('/mentee-form');
+          } else {
+            navigate('/mode-of-registering');
+          }
+        } else {
+          // If email is not verified, redirect to verification page
+          navigate('/verify-email');
+        }
+      }, 2000);
+
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err.message || 'Failed to register. Please try again.');
+      // Handle specific error messages
+      if (err.message.includes('already exists')) {
+        setError('This email is already registered. Please use a different email or login.');
+      } else if (err.message.includes('validation failed')) {
+        setError('Please check your input and try again.');
+      } else {
+        setError('Registration was successful but there was an issue sending the verification email. You can request a new verification email on the next page.');
+        // Still show success modal and redirect
+        setShowModal(true);
+        setTimeout(() => {
+          setShowModal(false);
+          navigate('/verify-email');
+        }, 2000);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  // Role selection view
+  if (showRoleSelection) {
+    return (
+      <section className="relative flex h-full">
+        <div className="hidden lg:block h-full w-3/5">
+          <img src="/image/close-up-people-learning-together-office 1.png" loading="lazy" className="h-full w-full object-cover" alt="" />
+          <div onClick={() => navigate('/')} className="absolute top-4">
+            <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row items-center w-full lg:w-2/5 justify-center">
+          <div onClick={() => navigate('/')} className="block lg:hidden bg-black py-2 px-2">
+            <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
+          </div>
+          <div className="w-full px-6 lg:px-0 md:w-[400px]">
+            <h1 className="text-2xl font-bold lg:text-[40px] text-customDarkBlue">Choose Your Role</h1>
+            <p className="text-slate-400 text-sm mt-2">Select how you want to participate in the mentorship program</p>
+
+            <div className="mt-8 space-y-4">
+              <button
+                onClick={() => handleRoleSelect('mentee')}
+                className="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-customOrange transition-colors flex items-center justify-center gap-4"
+              >
+                <FontAwesomeIcon icon={faGraduationCap} className="text-3xl text-customOrange" />
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold">Mentee</h3>
+                  <p className="text-sm text-gray-600">I want to learn and be mentored</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleRoleSelect('mentor')}
+                className="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-customOrange transition-colors flex items-center justify-center gap-4"
+              >
+                <FontAwesomeIcon icon={faChalkboardTeacher} className="text-3xl text-customOrange" />
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold">Mentor</h3>
+                  <p className="text-sm text-gray-600">I want to share my expertise and mentor others</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Registration form view
   return (
     <section className="relative flex h-full">
       <div className="hidden lg:block h-full w-3/5">
@@ -77,7 +166,12 @@ function SignUp() {
           <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
         </div>
         <div className="w-full px-6 lg:px-0 md:w-[400px]">
-          <h1 className="text-2xl font-bold lg:text-[40px] text-customDarkBlue">Sign Up</h1>
+          <div className="flex items-center gap-2 mb-4">
+            <button onClick={() => setShowRoleSelection(true)} className="text-customOrange">
+              <FontAwesomeIcon icon={faArrowLeft} className="text-xl" />
+            </button>
+            <h1 className="text-2xl font-bold lg:text-[40px] text-customDarkBlue">Sign Up</h1>
+          </div>
           <p className="text-slate-400 text-sm mt-2">Let's Create an Account for you</p>
 
           {error && (
@@ -211,7 +305,7 @@ function SignUp() {
               <button 
                 onClick={() => {
                   setShowModal(false);
-                  navigate('/mode-of-registering');
+                  navigate('/verify-email');
                 }} 
                 className="bg-customOrange text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors"
               >

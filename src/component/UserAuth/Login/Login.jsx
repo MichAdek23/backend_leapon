@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faLock, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { faEnvelope, faLock, faEye, faEyeSlash, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../lib/AuthContext';
 
 function SignIn() {
   const [passwordType, setPasswordType] = useState(false);
   const [error, setError] = useState('');
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -26,16 +27,39 @@ function SignIn() {
   const onSubmit = async (data) => {
     try {
       setError('');
-      const user = await login(data.email, data.password);
+      const response = await login(data.email, data.password);
       
+      console.log('Login response:', response); // Debug log
+      
+      // Calculate token expiration (24 hours from now)
+      const tokenExpiry = new Date();
+      tokenExpiry.setHours(tokenExpiry.getHours() + 24);
+      
+      // Store user data in localStorage with token expiration
+      const userData = {
+        ...response,
+        tokenExpiry: tokenExpiry.toISOString()
+      };
+      
+      console.log('Storing user data:', userData); // Debug log
+      localStorage.setItem('userData', JSON.stringify(userData));
+      
+      console.log('Token stored:', response.token); // Debug log
+      
+      // Check email verification status from the backend response
+      if (!response.emailVerified) {
+        setShowVerificationModal(true);
+        return;
+      }
+
       // Check payment status
-      if (!user.paymentCompleted) {
+      if (!response.paymentCompleted) {
         navigate('/payment');
         return;
       }
 
       // Navigate based on user role
-      switch (user.role) {
+      switch (response.role) {
         case 'mentor':
           navigate('/mentor-dashboard');
           break;
@@ -43,7 +67,6 @@ function SignIn() {
           navigate('/mentee-dashboard');
           break;
         case 'admin':
-          // Admin can access both dashboards, default to mentor dashboard
           navigate('/mentor-dashboard');
           break;
         default:
@@ -154,6 +177,38 @@ function SignIn() {
           </form>
         </div>
       </div>
+
+      {/* Verification Modal */}
+      {showVerificationModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <div className="flex items-center gap-3 mb-4">
+              <FontAwesomeIcon icon={faExclamationCircle} className="text-2xl text-yellow-500" />
+              <h2 className="text-xl font-bold">Email Verification Required</h2>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Your email address has not been verified yet. Please check your inbox for the verification link or request a new one.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setShowVerificationModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  setShowVerificationModal(false);
+                  navigate('/verify-email');
+                }}
+                className="bg-customOrange text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                Verify Email
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

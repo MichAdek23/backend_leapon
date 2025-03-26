@@ -1,6 +1,6 @@
 import express from 'express';
 import Session from '../models/Session.js';
-import auth from '../middleware/auth.js';
+import { auth } from '../middleware/auth.js';
 import { body, validationResult } from 'express-validator';
 
 const router = express.Router();

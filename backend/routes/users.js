@@ -2,7 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
-import auth from '../middleware/auth.js';
+import { auth } from '../middleware/auth.js';
 import crypto from 'crypto';
 import Session from '../models/Session.js';
 import Message from '../models/Message.js';
@@ -10,6 +10,7 @@ import path from 'path';
 import multer from 'multer';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { sendVerificationEmail } from '../services/emailService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -50,77 +51,66 @@ const upload = multer({
 // @route   POST api/users/register
 // @desc    Register a user (Step 1: Basic Info)
 // @access  Public
-router.post('/register', [
-  body('firstName', 'First name is required').not().isEmpty(),
-  body('lastName', 'Last name is required').not().isEmpty(),
-  body('email', 'Please include a valid email').isEmail(),
-  body('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 }),
-  body('role', 'Role must be either mentor or mentee').isIn(['mentor', 'mentee'])
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const { firstName, lastName, email, password, role } = req.body;
-
+router.post('/register', async (req, res) => {
   try {
-    // Check if user exists
-    let user = await User.findOne({ email });
-    if (user) {
+    const { firstName, lastName, email, password, role } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Generate verification token
+    const verificationToken = jwt.sign(
+      { email },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
     // Create new user
-    user = new User({
+    const user = new User({
       firstName,
       lastName,
       email,
       password,
-      role
+      role,
+      verificationToken,
+      verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
     });
 
     await user.save();
 
-    // Create JWT token
-    const payload = {
-      userId: user.id,
-      role: user.role,
-      profileCompleted: user.profileCompleted
-    };
-
-    jwt.sign(
-      payload,
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' },
-      (err, token) => {
-        if (err) throw err;
-        // Return both token and user object
-        res.json({ 
-          token,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            profileCompleted: user.profileCompleted
-          }
-        });
-      }
-    );
-  } catch (err) {
-    console.error('Registration error:', err);
-    // Send more specific error messages
-    if (err.name === 'ValidationError') {
-      return res.status(400).json({ 
-        message: 'Validation Error',
-        errors: Object.values(err.errors).map(e => e.message)
-      });
+    // Send verification email
+    try {
+      await sendVerificationEmail(email, verificationToken);
+    } catch (emailError) {
+      console.error('Error sending verification email:', emailError);
+      // Continue with registration even if email fails
     }
-    res.status(500).json({ 
-      message: 'Server error during registration',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    res.status(201).json({
+      message: 'User registered successfully',
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        emailVerified: user.emailVerified
+      }
     });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Error registering user' });
   }
 });
 
@@ -199,7 +189,7 @@ router.post('/login', [
     }
 
     // Validate password
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -227,7 +217,8 @@ router.post('/login', [
             email: user.email,
             role: user.role,
             profileCompleted: user.profileCompleted,
-            paymentCompleted: user.paymentCompleted
+            paymentCompleted: user.paymentCompleted,
+            emailVerified: user.emailVerified
           }
         });
       }
@@ -504,6 +495,75 @@ router.get('/stats', auth, async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
+  }
+});
+
+// Verify email route
+router.get('/verify-email/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    
+    // Find user with this verification token
+    const user = await User.findOne({ 
+      verificationToken: token,
+      verificationTokenExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ 
+        message: 'Invalid or expired verification token' 
+      });
+    }
+
+    // Update user's verification status
+    user.emailVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await user.save();
+
+    // Redirect to frontend with success message
+    res.redirect(`${process.env.FRONTEND_URL}/verify-email?status=success`);
+  } catch (error) {
+    console.error('Email verification error:', error);
+    res.redirect(`${process.env.FRONTEND_URL}/verify-email?status=error`);
+  }
+});
+
+// Resend verification email route
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Find user
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.emailVerified) {
+      return res.status(400).json({ message: 'Email is already verified' });
+    }
+
+    // Generate new verification token
+    const verificationToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    // Update user with new token
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    await user.save();
+
+    // Send new verification email
+    await sendVerificationEmail(email, verificationToken);
+
+    res.json({ message: 'Verification email sent successfully' });
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({ message: 'Failed to resend verification email' });
   }
 });
 

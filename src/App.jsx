@@ -1,9 +1,13 @@
-import { Route, Routes, Navigate } from 'react-router-dom';
-import './App.css';
-import MentorDashBoard from './component/MeentoDashboard/mentor-DashBoard';
-import Mentee from './component/Mentee-onboarding/Mentee';
-import SignUp from './component/UserAuth/register/SignUp';
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './lib/AuthContext';
 import Login from './component/UserAuth/Login/Login';
+import SignUp from './component/UserAuth/register/SignUp';
+import EmailVerification from './component/UserAuth/EmailVerification';
+import UserProfile from './component/UserProfile/UserProfile';
+import Messages from './component/Mentee-onboarding/Messages';
+import MentorMessages from './component/MeentoDashboard/MentorPages/Message';
+import PrivateRoute from './component/UserAuth/PrivateRoute';
 import LandingPage from './component/Landing page/homecomponents/LandingPage';
 import ResetPassWord from './component/UserAuth/resetPassword/resetPassword';
 import GetOtp from './component/UserAuth/resetPassword/GetOtp';
@@ -13,67 +17,70 @@ import Payment from './component/UserAuth/Payment';
 import PaymentVerify from './component/UserAuth/PaymentVerify';
 import MentorForm from './component/UserAuth/Mentor-form/Mentor-Form';
 import ChangePassword from './component/UserAuth/ChangePassword/ChangePassword';
-import { AuthProvider, useAuth } from './lib/AuthContext';
 import TermsAndConditions from './component/UserAuth/TermsAndConditions';
 import PrivacyPolicy from './component/UserAuth/PrivacyPolicy';
-
-// Protected Route component
-const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  // Check if payment is required
-  if (!user.paymentCompleted) {
-    return <Navigate to="/payment" />;
-  }
-
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" />;
-  }
-
-  return children;
-};
+import MentorDashBoard from './component/MeentoDashboard/mentor-DashBoard';
+import Mentee from './component/Mentee-onboarding/Mentee';
 
 function App() {
   return (
     <AuthProvider>
       <Routes>
-        <Route path='/' element={<LandingPage />} />
-        <Route path='/sign-up' element={<SignUp />} />
-        <Route path='/login' element={<Login />} />
-        <Route path='/forgot-password' element={<ResetPassWord />} />
-        <Route path='/get-otp' element={<GetOtp />} />
-        <Route path='/change-password' element={<ChangePassword />} />
-        <Route path='/mode-of-registering' element={<ModeOfSignUp />} />
-        <Route path='/mentee-form' element={<MenteeForm />} />
-        <Route path='/mentor-form' element={<MentorForm />} />
-        <Route path='/payment' element={<Payment />} />
-        <Route path='/payment/verify' element={<PaymentVerify />} />
-        <Route path='/terms' element={<TermsAndConditions />} />
-        <Route path='/privacy' element={<PrivacyPolicy />} />
-        
-        {/* Protected Routes */}
+        {/* Public routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/sign-up" element={<SignUp />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ResetPassWord />} />
+        <Route path="/get-otp" element={<GetOtp />} />
+        <Route path="/change-password" element={<ChangePassword />} />
+        <Route path="/mode-of-registering" element={<ModeOfSignUp />} />
+        <Route path="/mentee-form" element={<MenteeForm />} />
+        <Route path="/mentor-form" element={<MentorForm />} />
+        <Route path="/payment" element={<Payment />} />
+        <Route path="/payment/verify" element={<PaymentVerify />} />
+        <Route path="/terms" element={<TermsAndConditions />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/verify-email" element={<EmailVerification />} />
+
+        {/* Protected routes */}
         <Route
-          path='/mentor-dashboard'
+          path="/mentor-dashboard"
           element={
-            <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+            <PrivateRoute allowedRoles={['mentor', 'admin']}>
               <MentorDashBoard />
-            </ProtectedRoute>
+            </PrivateRoute>
           }
         />
         <Route
-          path='/mentee-dashboard'
+          path="/mentee-dashboard"
           element={
-            <ProtectedRoute allowedRoles={['mentee', 'admin']}>
+            <PrivateRoute allowedRoles={['mentee', 'admin']}>
               <Mentee />
-            </ProtectedRoute>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile/:userId"
+          element={
+            <PrivateRoute>
+              <UserProfile />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/messages"
+          element={
+            <PrivateRoute>
+              <Messages />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/mentor/messages"
+          element={
+            <PrivateRoute>
+              <MentorMessages />
+            </PrivateRoute>
           }
         />
       </Routes>

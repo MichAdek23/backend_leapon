@@ -1,26 +1,50 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../lib/AuthContext';
 import { useState, useEffect } from 'react';
 
 function Payment() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user } = useAuth();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState('');
 
-    // Check if user is logged in
+    // Check if user is logged in and has a valid token
     useEffect(() => {
-        if (!user) {
+        const token = localStorage.getItem('token');
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        
+        if (!token || !userData.email) {
             navigate('/login');
+            return;
         }
-    }, [user, navigate]);
+
+        // Check if token is expired
+        if (userData.tokenExpiry && new Date(userData.tokenExpiry) < new Date()) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userData');
+            navigate('/login');
+            return;
+        }
+
+        // Check if payment is already completed
+        if (userData.paymentCompleted) {
+            // Redirect based on user role
+            if (userData.role === 'mentor') {
+                navigate('/mentor-dashboard');
+            } else if (userData.role === 'mentee') {
+                navigate('/mentee-dashboard');
+            } else {
+                navigate('/dashboard');
+            }
+            return;
+        }
+    }, [navigate]);
 
     // Handle error parameters from verification
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const error = searchParams.get('error');
+        const reference = searchParams.get('reference');
         
         if (error) {
             switch (error) {
@@ -30,11 +54,77 @@ function Payment() {
                 case 'no_reference':
                     setError('No payment reference found. Please try again.');
                     break;
+                case 'unauthorized':
+                    setError('Your session has expired. Please login again.');
+                    navigate('/login');
+                    break;
                 default:
                     setError('An error occurred during payment. Please try again.');
             }
         }
-    }, [location]);
+
+        // If we have a reference, verify the payment
+        if (reference) {
+            verifyPayment(reference);
+        }
+    }, [location, navigate]);
+
+    // Handle payment verification
+    const verifyPayment = async (reference) => {
+        try {
+            setLoading(true);
+            setError('');
+            setPaymentStatus('verifying');
+
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/payments/verify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ reference })
+            });
+
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('userData');
+                navigate('/login');
+                return;
+            }
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to verify payment');
+            }
+
+            if (data.paymentCompleted) {
+                setPaymentStatus('success');
+                // Update user data in localStorage
+                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                userData.paymentCompleted = true;
+                localStorage.setItem('userData', JSON.stringify(userData));
+
+                // Redirect based on role after 2 seconds
+                setTimeout(() => {
+                    if (userData.role === 'mentor') {
+                        navigate('/mentor-dashboard');
+                    } else if (userData.role === 'mentee') {
+                        navigate('/mentee-dashboard');
+                    } else {
+                        navigate('/dashboard');
+                    }
+                }, 2000);
+            }
+        } catch (err) {
+            setError(err.message || 'Failed to verify payment. Please try again.');
+            setPaymentStatus('failed');
+            console.error('Payment verification error:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Handle payment initialization
     const handlePayment = async () => {
@@ -43,17 +133,51 @@ function Payment() {
             setError('');
             setPaymentStatus('initializing');
 
+            // Get token and user data from localStorage
+            const token = localStorage.getItem('token');
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+
+            console.log('Token:', token); // Debug log
+            console.log('User Data:', userData); // Debug log
+
+            if (!token) {
+                throw new Error('No authentication token found. Please login again.');
+            }
+
+            if (!userData.email) {
+                throw new Error('User email not found. Please login again.');
+            }
+
+            // Check if token is expired
+            if (userData.tokenExpiry && new Date(userData.tokenExpiry) < new Date()) {
+                console.log('Token expired, redirecting to login'); // Debug log
+                localStorage.removeItem('token');
+                localStorage.removeItem('userData');
+                navigate('/login');
+                return;
+            }
+
             // Initialize payment with backend
-            const response = await fetch('https://leapon.onrender.com/api/payments/initialize', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/payments/initialize`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    email: user.email
+                    email: userData.email
                 })
             });
+
+            console.log('Response status:', response.status); // Debug log
+
+            if (response.status === 401) {
+                console.log('Unauthorized, clearing token and redirecting'); // Debug log
+                localStorage.removeItem('token');
+                localStorage.removeItem('userData');
+                navigate('/login');
+                return;
+            }
 
             const data = await response.json();
 
@@ -66,7 +190,7 @@ function Payment() {
             // Redirect to Paystack payment page
             window.location.href = data.authorizationUrl;
         } catch (err) {
-            setError('Failed to initialize payment. Please try again.');
+            setError(err.message || 'Failed to initialize payment. Please try again.');
             setPaymentStatus('failed');
             console.error('Payment initialization error:', err);
         } finally {
@@ -81,6 +205,10 @@ function Payment() {
                 return 'Initializing payment...';
             case 'redirecting':
                 return 'Redirecting to payment page...';
+            case 'verifying':
+                return 'Verifying payment...';
+            case 'success':
+                return 'Payment successful! Redirecting...';
             case 'failed':
                 return 'Payment failed. Please try again.';
             default:
@@ -145,9 +273,9 @@ function Payment() {
 
                     <button
                         onClick={handlePayment}
-                        disabled={loading || paymentStatus === 'redirecting'}
+                        disabled={loading || paymentStatus === 'redirecting' || paymentStatus === 'verifying'}
                         className={`mt-4 w-full h-10 lg:h-14 rounded-lg cursor-pointer text-white bg-customOrange hover:bg-orange-600 transition-colors ${
-                            (loading || paymentStatus === 'redirecting') 
+                            (loading || paymentStatus === 'redirecting' || paymentStatus === 'verifying') 
                             ? 'opacity-50 cursor-not-allowed' 
                             : ''
                         }`}

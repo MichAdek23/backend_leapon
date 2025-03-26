@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://leapon.onrender.com/api',
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -18,6 +20,31 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Handle token expiration
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If the error is 401 and we haven't tried to refresh the token yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Clear the token
+        localStorage.removeItem('token');
+        
+        // Redirect to login
+        window.location.href = '/login';
+      } catch (refreshError) {
+        return Promise.reject(refreshError);
+      }
+    }
+
     return Promise.reject(error);
   }
 );
@@ -92,6 +119,43 @@ export const progressApi = {
   updateProgress: (data) => api.put('/progress', data),
   getAchievements: () => api.get('/progress/achievements'),
   getGoals: () => api.get('/progress/goals')
+};
+
+// Email Verification APIs
+export const sendVerificationEmail = async (email) => {
+  try {
+    const response = await api.post('/auth/send-verification-email', { email });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to send verification email');
+  }
+};
+
+export const verifyEmail = async (token) => {
+  try {
+    const response = await api.post('/auth/verify-email', { token });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to verify email');
+  }
+};
+
+export const checkVerificationStatus = async () => {
+  try {
+    const response = await api.get('/auth/check-verification');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to check verification status');
+  }
+};
+
+export const verifyEmailToken = async (token) => {
+  try {
+    const response = await api.get(`/users/verify-email/${token}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to verify email');
+  }
 };
 
 export default api;

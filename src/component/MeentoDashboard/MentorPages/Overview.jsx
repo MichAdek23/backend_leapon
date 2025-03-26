@@ -3,34 +3,33 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faLongArrowRight, faBars } from "@fortawesome/free-solid-svg-icons";
 import { Calendar } from "@/components/ui/calendar";
 import { GlobalContext } from "@/component/GlobalStore/GlobalState";
-import { userApi } from '../../../lib/api';
+import { userApi, sessionApi } from '../../../lib/api';
 import { useAuth } from '../../../lib/AuthContext';
 
 function Overview() {
   const [mentees, setMentees] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState(null);
   const { user } = useAuth();
   const { upDatePage, handleToggleState, acceptedMentees } = useContext(GlobalContext);
 
-  // Calculate profile completion percentage
+  // Calculate profile completion percentage based on complete profile data
   const calculateProfileStrength = () => {
     if (!user) return 0;
 
     const requiredFields = {
-      name: 1,
+      firstName: 1,
+      lastName: 1,
       email: 1,
-      overview: 1,
+      bio: 1,
       interests: 1,
+      title: 1,
+      socialMediaLinks: 1,
+      profilePicture: 1,
+      gender: 1,
+      expertise: 1,
+      experience: 1
     };
-
-    // Add role-specific required fields
-    if (user.role === 'student') {
-      requiredFields.department = 1;
-      requiredFields.yearOfStudy = 1;
-    } else if (user.role === 'mentor') {
-      requiredFields.expertise = 1;
-      requiredFields.experience = 1;
-    }
 
     const totalFields = Object.keys(requiredFields).length;
     let completedFields = 0;
@@ -46,20 +45,25 @@ function Overview() {
   };
 
   useEffect(() => {
-    const fetchMentee = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await userApi.getMentees();
-        setMentees(response.data);
+        // Fetch mentees
+        const menteesResponse = await userApi.getMentees();
+        setMentees(menteesResponse.data);
+
+        // Fetch user stats
+        const statsResponse = await userApi.getStats();
+        setStats(statsResponse.data);
       } catch (error) {
-        console.error("Error fetching mentees:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
     if (user?.role === 'mentor') {
-      fetchMentee();
+      fetchData();
     }
   }, [user?.role]);
 
@@ -71,7 +75,7 @@ function Overview() {
   ];
   const Heading = [
     "How to prepare for your first meeting",
-    "What should we talk   about during our meeting?",
+    "What should we talk about during our meeting?",
     "Be on time!",
     "After the session, stay connected!",
   ];
@@ -94,16 +98,16 @@ function Overview() {
   };
 
   return (
-    <section className=" p-3 md:p-0">
+    <section className="p-3 md:p-0">
       {/* Header Section */}
-      <header className="flex justify-between  ">
-        <div className=" flex flex-col  w-full lg:flex-row justify-start  items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
-          <div className="flex flex-col  gap-4">
-            <h1 className="text-[32px] font-medium">Welcome</h1>
+      <header className="flex justify-between">
+        <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
+          <div className="flex flex-col gap-4">
+            <h1 className="text-[32px] font-medium">Welcome, {user?.firstName || 'Mentor'}</h1>
             <p className="text-base font-medium text-slate-600">
-            {acceptedMentees && acceptedMentees.length > 0 
-              ? `You have ${acceptedMentees.length} upcoming session${acceptedMentees.length > 1 ? 's' : ''}`
-              : 'You have no upcoming sessions'}
+              {stats?.upcomingSessions > 0 
+                ? `You have ${stats.upcomingSessions} upcoming session${stats.upcomingSessions > 1 ? 's' : ''}`
+                : 'You have no upcoming sessions'}
             </p>
           </div>
 
@@ -125,7 +129,7 @@ function Overview() {
           </div>
         </div>
 
-        <div onClick={handleToggleState} className=" block lg:hidden mt-3 ">
+        <div onClick={handleToggleState} className="block lg:hidden mt-3">
           <button>
             <FontAwesomeIcon icon={faBars} />
           </button>
@@ -135,9 +139,9 @@ function Overview() {
       {/* Main Content */}
       <section className="mt-11 flex flex-wrap lg:flex-nowrap gap-5 justify-center">
         {/* Profile Strength Section */}
-        <div className="py-4 px-2 md:px-4 lg:px-5 rounded-lg bg-white shadow-2xl  lg:w-[33%]">
+        <div className="py-4 px-2 md:px-4 lg:px-5 rounded-lg bg-white shadow-2xl lg:w-[33%]">
           <div className="flex justify-between">
-            <h1 className=" md:text-lg lg:text-2xl font-medium">Your profile strength</h1>
+            <h1 className="md:text-lg lg:text-2xl font-medium">Your profile strength</h1>
 
             <button 
               onClick={() => upDatePage("MyProfile")}
@@ -147,11 +151,11 @@ function Overview() {
             </button>
           </div>
 
-          <p className="mt-3 text-gray-400 text-base lg:text-lg font-medium">
-            {user?.name || 'Loading...'}
-          </p>
-
           <div className="mt-3">
+            <div className="flex justify-between mb-2">
+              <span className="text-sm text-gray-600">Profile Completion</span>
+              <span className="text-sm font-medium">{calculateProfileStrength()}%</span>
+            </div>
             <progress 
               className="h-2 w-full" 
               value={calculateProfileStrength()} 
@@ -161,7 +165,7 @@ function Overview() {
 
           <div className="mt-5 border-2 border-gray-100 w-full"></div>
           <div className="mt-5 flex justify-between">
-            <h1 className=" text-base lg:text-lg text-gray-500 font-medium">
+            <h1 className="text-base lg:text-lg text-gray-500 font-medium">
               Complete your 1st Mentorship Sessions Milestone
             </h1>
 
@@ -171,24 +175,24 @@ function Overview() {
           </div>
 
           <div className="mt-3">
-            <progress className="h-2 w-full" value="30" max="100"></progress>
+            <progress className="h-2 w-full" value={stats?.totalSessions || 0} max="100"></progress>
           </div>
         </div>
 
-        <div className="bg-white shadow-2xl  rounded-lg md:w-[40%] lg:w-[33%]">
+        <div className="bg-white shadow-2xl rounded-lg md:w-[40%] lg:w-[33%]">
           <Calendar
             mode="single"
             selected={date}
             onSelect={setDate}
-            className="rounded-lg w-full h-full -z-50"
+            className="rounded-lg w-full h-full"
           />
         </div>
 
         <div className="bg-white p-5 shadow-2xl rounded-lg md:w-[40%] lg:w-[33%] flex flex-col justify-between">
           <div>
-            <div className="flex justify-between ">
+            <div className="flex justify-between">
               <div>
-                <h1 className=" md:text-lg font-medium text-gray-600">{Title[index]}</h1>
+                <h1 className="md:text-lg font-medium text-gray-600">{Title[index]}</h1>
               </div>
 
               <div className="flex gap-3">
@@ -209,19 +213,21 @@ function Overview() {
             </div>
 
             <h2 className="text-xl font-semibold mt-2">{Heading[index]}</h2>
-            <p className=" text-sm md:text-lg text-gray-500 mt-2">{Message[index]}</p>
+            <p className="text-sm md:text-lg text-gray-500 mt-2">{Message[index]}</p>
           </div>
         </div>
       </section>
 
-      <section className=" mt-9">
-        <div className=" flex justify-between">
-          <h1 className="  text-base md:text-[22px] font-medium text-customDarkBlue">Your top matches </h1>
-          <button onClick={() => upDatePage('Explore')} className=" p-2 md:p-0 h-10 rounded-xl md:w-40 text-white bg-customOrange  flex justify-center items-center">Explore Mentees</button>
+      <section className="mt-9">
+        <div className="flex justify-between">
+          <h1 className="text-base md:text-[22px] font-medium text-customDarkBlue">Your top matches</h1>
+          <button onClick={() => upDatePage('Explore')} className="p-2 md:p-0 h-10 rounded-xl md:w-40 text-white bg-customOrange flex justify-center items-center">
+            Explore Mentees
+          </button>
         </div>
       </section>
 
-      <section className="  rounded-lg   grid  grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-y-5 gap-x-5  mt-12 ">
+      <section className="rounded-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-5 gap-x-5 mt-12">
         {loading ? (
           <div>Loading...</div>
         ) : (
@@ -229,19 +235,19 @@ function Overview() {
             <div
               onClick={() => upDatePage("Explore")}
               key={mentee._id}
-              className="border-2 rounded-lg  overflow-hidden cursor-pointer w-[99%] h-[420px] bg-white"
+              className="border-2 rounded-lg overflow-hidden cursor-pointer w-[99%] h-[420px] bg-white"
             >
               <div className="h-3/5">
                 <img
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(mentee.name)}&background=random`}
+                  src={mentee.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(mentee.firstName + ' ' + mentee.lastName)}&background=random`}
                   className="h-full w-full object-cover"
-                  alt={mentee.name}
+                  alt={mentee.firstName + ' ' + mentee.lastName}
                   loading="lazy"
                 />
               </div>
               <div className="h-2/5 flex flex-col gap-2 p-6">
                 <h3 className="text-lg font-bold text-customDarkBlue">
-                  {mentee.name}
+                  {mentee.firstName} {mentee.lastName}
                 </h3>
                 <p className="flex items-center text-xs text-customDarkBlue font-normal">
                   <span>

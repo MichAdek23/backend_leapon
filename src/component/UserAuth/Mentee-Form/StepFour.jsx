@@ -1,11 +1,14 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { GlobalContext } from '@/component/GlobalStore/GlobalState';
 import { useNavigate } from 'react-router-dom';
+import { userApi } from '../../../lib/api';
 
 function StepFour() {
   const navigate = useNavigate();
   const { formData } = useContext(GlobalContext);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const {
     register,
     handleSubmit,
@@ -14,9 +17,12 @@ function StepFour() {
 
   const handleFormSubmit = async (data) => {
     try {
+      setLoading(true);
+      setError('');
+
       // Get the stored user data
       const storedUserData = JSON.parse(localStorage.getItem('userData'));
-      if (!storedUserData || !storedUserData.token) {
+      if (!storedUserData) {
         throw new Error('No user data found. Please sign up again.');
       }
 
@@ -34,20 +40,8 @@ function StepFour() {
         gender: formData.gender || ''
       };
 
-      // Send data to backend for profile completion
-      const response = await fetch('https://leapon.onrender.com/api/users/complete-profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${storedUserData.token}`
-        },
-        body: JSON.stringify(profileData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Profile completion failed');
-      }
+      // Use the api instance to complete profile
+      await userApi.completeProfile(profileData);
 
       // Clear all stored data after successful update
       localStorage.removeItem('userData');
@@ -58,7 +52,9 @@ function StepFour() {
       navigate('/payment');
     } catch (error) {
       console.error('Profile completion error:', error);
-      // Handle error (you might want to show an error message to the user)
+      setError(error.response?.data?.message || error.message || 'Failed to complete profile. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -67,11 +63,16 @@ function StepFour() {
       <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-semibold w-full sm:w-auto lg:w-[490px] text-customDarkBlue">Complete Your Profile</h1>
       <p className="text-slate-400 text-sm mt-5">Please provide your bio information</p>
 
+      {error && (
+        <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
+
       <form className="mt-5" onSubmit={handleSubmit(handleFormSubmit)}>
         {/* Bio Field */}
         <div className="mt-4">
           <div className="flex items-center p-2 md:p-4 gap-3 w-full rounded-xl border-2">
-      
             <textarea
               {...register('bio', { 
                 required: 'Bio is required',
@@ -94,9 +95,10 @@ function StepFour() {
         <div className="mt-4">
           <button 
             type="submit" 
-            className="text-white bg-customOrange w-full h-11 lg:h-14 rounded-lg cursor-pointer hover:bg-orange-600 transition-colors"
+            disabled={loading}
+            className={`text-white bg-customOrange w-full h-11 lg:h-14 rounded-lg cursor-pointer hover:bg-orange-600 transition-colors ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            Complete Registration
+            {loading ? 'Completing Profile...' : 'Complete Registration'}
           </button>
         </div>
       </form>

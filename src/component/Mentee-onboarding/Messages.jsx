@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Send, Paperclip, MoreVertical, Search } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
-import { useContext } from 'react';
 import { GlobalContext } from '@/component/GlobalStore/GlobalState';
+import { useAuth } from '../../lib/AuthContext';
+import { io } from 'socket.io-client';
 
 const Messages = () => {
-  const { handleToggleState } = useContext(GlobalContext);
+  const { handleToggleState, upDatePage } = useContext(GlobalContext);
+  const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -14,10 +16,31 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
+  const socketRef = useRef();
 
   useEffect(() => {
+    // Initialize socket connection
+    socketRef.current = io(import.meta.env.VITE_API_URL, {
+      auth: {
+        token: localStorage.getItem('token')
+      }
+    });
+
+    // Listen for new messages
+    socketRef.current.on('newMessage', (message) => {
+      if (activeConversation && (message.sender._id === activeConversation._id || message.recipient._id === activeConversation._id)) {
+        setMessages(prev => [...prev, message]);
+      }
+    });
+
     fetchConversations();
-  }, []);
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, [user, activeConversation]);
 
   useEffect(() => {
     if (activeConversation) {
@@ -31,7 +54,7 @@ const Messages = () => {
 
   const fetchConversations = async () => {
     try {
-      const response = await fetch('/conversations', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/messages`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -42,7 +65,23 @@ const Messages = () => {
       }
 
       const data = await response.json();
-      setConversations(data);
+      
+      // Group messages by conversation
+      const conversationMap = new Map();
+      data.forEach(message => {
+        const otherUser = message.sender._id === user._id ? message.recipient : message.sender;
+        if (!conversationMap.has(otherUser._id)) {
+          conversationMap.set(otherUser._id, {
+            _id: otherUser._id,
+            name: otherUser.name,
+            email: otherUser.email,
+            lastMessage: message,
+            unread: message.recipient._id === user._id && !message.read
+          });
+        }
+      });
+      
+      setConversations(Array.from(conversationMap.values()));
       setLoading(false);
     } catch (err) {
       setError(err.message);
@@ -50,9 +89,9 @@ const Messages = () => {
     }
   };
 
-  const fetchMessages = async (conversationId) => {
+  const fetchMessages = async (userId) => {
     try {
-      const response = await fetch(`/conversations/${conversationId}/messages`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/messages/${userId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -74,21 +113,22 @@ const Messages = () => {
     if (!newMessage.trim() || !activeConversation) return;
 
     try {
-      const response = await fetch(`/conversations/${activeConversation._id}/messages`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ content: newMessage })
+        body: JSON.stringify({
+          recipientId: activeConversation._id,
+          content: newMessage
+        })
       });
 
       if (!response.ok) {
         throw new Error('Failed to send message');
       }
 
-      const message = await response.json();
-      setMessages([...messages, message]);
       setNewMessage('');
     } catch (err) {
       console.error('Error sending message:', err);
@@ -107,10 +147,32 @@ const Messages = () => {
       <header className="flex mt-4 justify-between px-4 mb-8">
         <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
           <div className="flex flex-col gap-4">
-            <h1 className="text-2xl font-medium">Messages</h1>
-            <p className="text-base font-medium text-slate-600">Communicate with your mentors</p>
+            <h1 className="text-[32px] font-medium">
+              {user?.role === 'mentor' ? 'Mentees' : 'Mentors'}
+            </h1>
+            <p className="text-base font-medium text-slate-600">
+              {user?.role === 'mentor' ? 'Connect with Mentees' : 'Find a Mentor'}
+            </p>
+          </div>
+
+          <div className="flex justify-center gap-4">
+            <img
+              onClick={() => upDatePage("Message")}
+              src="/image/messageIcon.png"
+              className="md:w-12 h-9 md:h-12 cursor-pointer"
+              alt="Message Icon"
+              loading="lazy"
+            />
+            <img
+              onClick={() => upDatePage("Setting")}
+              src="/image/settingIcon.png"
+              className="md:w-12 h-9 md:h-12 cursor-pointer"
+              alt="Setting Icon"
+              loading="lazy"
+            />
           </div>
         </div>
+
         <div onClick={handleToggleState} className="block lg:hidden mt-3">
           <button aria-label="Toggle menu">
             <FontAwesomeIcon icon={faBars} />
@@ -143,16 +205,21 @@ const Messages = () => {
                 >
                   <div className="flex items-center gap-4">
                     <img
-                      src={conversation.mentor.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(conversation.mentor.name)}&background=random`}
-                      alt={conversation.mentor.name}
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(conversation.name)}&background=random`}
+                      alt={conversation.name}
                       className="w-12 h-12 rounded-full"
                     />
                     <div className="flex-1">
-                      <h3 className="font-medium">{conversation.mentor.name}</h3>
+                      <h3 className="font-medium">{conversation.name}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                        {conversation.lastMessage?.content || 'No messages yet'}
+                        {conversation.lastMessage.content}
                       </p>
                     </div>
+                    {conversation.unread && (
+                      <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        1
+                      </span>
+                    )}
                     <MoreVertical className="w-5 h-5 text-gray-400" />
                   </div>
                 </div>
@@ -168,12 +235,12 @@ const Messages = () => {
                 <div className="p-4 border-b dark:border-gray-700 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <img
-                      src={activeConversation.mentor.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(activeConversation.mentor.name)}&background=random`}
-                      alt={activeConversation.mentor.name}
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(activeConversation.name)}&background=random`}
+                      alt={activeConversation.name}
                       className="w-10 h-10 rounded-full"
                     />
                     <div>
-                      <h3 className="font-medium">{activeConversation.mentor.name}</h3>
+                      <h3 className="font-medium">{activeConversation.name}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">Online</p>
                     </div>
                   </div>
@@ -185,11 +252,11 @@ const Messages = () => {
                   {messages.map(message => (
                     <div
                       key={message._id}
-                      className={`flex ${message.sender === 'mentee' ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${message.sender._id === user._id ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
                         className={`max-w-[70%] rounded-lg p-3 ${
-                          message.sender === 'mentee'
+                          message.sender._id === user._id
                             ? 'bg-orange-500 text-white'
                             : 'bg-gray-100 dark:bg-gray-700'
                         }`}

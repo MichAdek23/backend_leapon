@@ -53,42 +53,16 @@ function Explore() {
 
   const handleBookingNavigation = async (selectedUser) => {
     try {
-      // Create a new session
-      const sessionData = {
-        mentor: user.role === 'mentor' ? user.userId : selectedUser._id,
-        mentee: user.role === 'student' ? user.userId : selectedUser._id,
-        date: new Date().toISOString(),
-        duration: 60,
-        topic: 'Initial Mentorship Session',
-        type: 'one-on-one',
-        status: 'scheduled'
-      };
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/sessions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(sessionData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create session');
-      }
-
-      const session = await response.json();
-
       // Create a new conversation
-      const conversationResponse = await fetch(`${import.meta.env.VITE_API_URL}/conversations`, {
+      const conversationResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          otherUserId: selectedUser._id
+          recipientId: selectedUser._id,
+          content: 'Hello! Let\'s start chatting.'
         })
       });
 
@@ -96,19 +70,15 @@ function Explore() {
         throw new Error('Failed to create conversation');
       }
 
-      const conversation = await conversationResponse.json();
-
-      // Store the selected user, session, and conversation in local storage
-      localStorage.setItem('mentee', JSON.stringify(selectedUser));
-      localStorage.setItem('session', JSON.stringify(session));
-      localStorage.setItem('conversation', JSON.stringify(conversation));
+      // Store the selected user in local storage
+      localStorage.setItem('selectedUser', JSON.stringify(selectedUser));
 
       // Update the UI state
       setSelectedMentee(selectedUser);
       AddMentees(selectedUser);
 
-      // Navigate to the booking page
-      upDatePage('Booking');
+      // Navigate to the message page
+      upDatePage('Message');
     } catch (error) {
       console.error('Error creating connection:', error);
       // Show error message to user
@@ -249,7 +219,7 @@ function Explore() {
                   className="px-8 bg-customOrange py-3 cursor-pointer rounded-xl text-base font-medium text-white hover:bg-orange-600 transition-colors"
                 >
                   <button>
-                    {user.role === 'student' ? 'Connect with Mentee' : 'Connect with Mentor'}
+                    {user.role === 'student' ? 'Start Chat' : 'Start Chat'}
                   </button>
                 </div>
               </div>
