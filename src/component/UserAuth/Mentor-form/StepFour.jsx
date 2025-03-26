@@ -1,7 +1,5 @@
 import React, { useContext } from 'react';
 import { useForm } from 'react-hook-form';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
 import { GlobalContext } from '@/component/GlobalStore/GlobalState';
 import { useNavigate } from 'react-router-dom';
 
@@ -66,16 +64,14 @@ function StepFour() {
 
   return (
     <div className="w-full px-6 lg:px-0 md:w-[400px]">
-      <h1 className="text-2xl font-bold lg:text-[40px] text-customDarkBlue">Complete Your Profile</h1>
+      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] w-full sm:w-auto lg:w-[490px] font-semibold text-customDarkBlue">Complete Your Profile</h1>
       <p className="text-slate-400 text-sm mt-5">Please provide your bio information</p>
 
       <form className="mt-5" onSubmit={handleSubmit(handleFormSubmit)}>
         {/* Bio Field */}
         <div className="mt-4">
           <div className="flex items-center p-2 md:p-4 gap-3 w-full rounded-xl border-2">
-            <span>
-              <FontAwesomeIcon className="text-gray-400 text-xl" icon={faUser} />
-            </span>
+          
             <textarea
               {...register('bio', { 
                 required: 'Bio is required',

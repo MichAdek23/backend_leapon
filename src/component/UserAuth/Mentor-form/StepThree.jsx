@@ -11,12 +11,14 @@ function Step3() {
     handleSubmit,
     watch,
     setValue,
+    formState: { errors },
   } = useForm();
 
   const detailsForm = watch();
 
   // State to track the selected checkboxes
   const [selectedInterests, setSelectedInterests] = useState([]);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Save form data to localStorage whenever it changes
   useEffect(() => {
@@ -34,16 +36,24 @@ function Step3() {
 
   // Handle checkbox change
   const handleCheckboxChange = (interest) => {
-    const updatedInterests = selectedInterests.includes(interest)
-      ? selectedInterests.filter((i) => i !== interest)
-      : [...selectedInterests, interest];
+    let updatedInterests = [...selectedInterests];
+    if (updatedInterests.includes(interest)) {
+      updatedInterests = updatedInterests.filter(item => item !== interest);
+    } else if (updatedInterests.length < 3) {
+      updatedInterests.push(interest);
+    }
     setSelectedInterests(updatedInterests);
-    setValue('selectedInterests', updatedInterests); // Update the form value
+    setValue('selectedInterests', updatedInterests, { shouldValidate: true }); // Update the form value
+    setErrorMessage(''); // Clear error message on change
   };
 
   // Handle form submission
   const onSubmit = () => {
-    handleIncreament(); // Move to the next step
+    if (selectedInterests.length === 3) {
+      handleIncreament(); // Move to the next step
+    } else {
+      setErrorMessage('Please select exactly 3 areas of interest.');
+    }
   };
 
   return (
@@ -131,7 +141,13 @@ function Step3() {
           />
         </div>
 
-    
+        {/* Error Message */}
+        {errors.selectedInterests && (
+          <p className="text-red-500 text-sm">Please select exactly 3 areas of interest.</p>
+        )}
+        {errorMessage && (
+          <p className="text-red-500 text-sm">{errorMessage}</p>
+        )}
 
         {/* Continue Button */}
         <button
@@ -140,7 +156,6 @@ function Step3() {
         >
           Continue
         </button>
-
       </form>
     </div>
   );

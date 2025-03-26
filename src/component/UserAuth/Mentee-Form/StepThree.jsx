@@ -8,17 +8,17 @@ function StepThree() {
   const { handleIncreament, handleDecreament } = useContext(GlobalContext);
 
   const {
-  
     handleSubmit,
     watch,
     setValue,
-   
+    formState: { errors },
   } = useForm();
 
   const detailsForm = watch();
 
-  // State to track the selected checkbox
-  const [selectedInterest, setSelectedInterest] = useState('');
+  // State to track the selected checkboxes
+  const [selectedInterests, setSelectedInterests] = useState([]);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Save form data to localStorage whenever it changes
   useEffect(() => {
@@ -29,20 +29,31 @@ function StepThree() {
     const savedFormData = localStorage.getItem('loginFormData');
     if (savedFormData) {
       const parsedFormData = JSON.parse(savedFormData);
-      setValue('selectedInterest', parsedFormData.selectedInterest);
-      setSelectedInterest(parsedFormData.selectedInterest); // Sync the state with the form value
+      setValue('selectedInterests', parsedFormData.selectedInterests);
+      setSelectedInterests(parsedFormData.selectedInterests || []); // Sync the state with the form value
     }
   }, [setValue]);
 
   // Handle checkbox change
   const handleCheckboxChange = (interest) => {
-    setSelectedInterest(interest); 
-    setValue('selectedInterest', interest); // Update the form value
+    let updatedInterests = [...selectedInterests];
+    if (updatedInterests.includes(interest)) {
+      updatedInterests = updatedInterests.filter(item => item !== interest);
+    } else if (updatedInterests.length < 3) {
+      updatedInterests.push(interest);
+    }
+    setSelectedInterests(updatedInterests);
+    setValue('selectedInterests', updatedInterests, { shouldValidate: true }); // Update the form value
+    setErrorMessage(''); // Clear error message on change
   };
 
   // Handle form submission
   const onSubmit = () => {
-    handleIncreament(); // Move to the next step
+    if (selectedInterests.length === 3) {
+      handleIncreament(); // Move to the next step
+    } else {
+      setErrorMessage('Please select exactly 3 areas of interest.');
+    }
   };
 
   return (
@@ -72,7 +83,7 @@ function StepThree() {
           </div>
           <input
             type="checkbox"
-            checked={selectedInterest === 'academics'}
+            checked={selectedInterests.includes('academics')}
             onChange={() => handleCheckboxChange('academics')}
             className="accent-customOrange text-white w-6 h-4 cursor-pointer"
           />
@@ -85,7 +96,7 @@ function StepThree() {
           </div>
           <input
             type="checkbox"
-            checked={selectedInterest === 'business'}
+            checked={selectedInterests.includes('business')}
             onChange={() => handleCheckboxChange('business')}
             className="accent-customOrange text-white w-6 h-4 cursor-pointer"
           />
@@ -98,7 +109,7 @@ function StepThree() {
           </div>
           <input
             type="checkbox"
-            checked={selectedInterest === 'career'}
+            checked={selectedInterests.includes('career')}
             onChange={() => handleCheckboxChange('career')}
             className="accent-customOrange text-white w-6 h-4 cursor-pointer"
           />
@@ -111,7 +122,7 @@ function StepThree() {
           </div>
           <input
             type="checkbox"
-            checked={selectedInterest === 'discipleship'}
+            checked={selectedInterests.includes('discipleship')}
             onChange={() => handleCheckboxChange('discipleship')}
             className="accent-customOrange text-white w-6 h-4 cursor-pointer"
           />
@@ -124,11 +135,19 @@ function StepThree() {
           </div>
           <input
             type="checkbox"
-            checked={selectedInterest === 'personalDevelopment'}
+            checked={selectedInterests.includes('personalDevelopment')}
             onChange={() => handleCheckboxChange('personalDevelopment')}
             className="accent-customOrange text-white w-6 h-4 cursor-pointer"
           />
         </div>
+
+        {/* Error Message */}
+        {errors.selectedInterests && (
+          <p className="text-red-500 text-sm">Please select exactly 3 areas of interest.</p>
+        )}
+        {errorMessage && (
+          <p className="text-red-500 text-sm">{errorMessage}</p>
+        )}
 
         {/* Continue Button */}
         <button
