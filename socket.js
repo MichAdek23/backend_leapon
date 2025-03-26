@@ -2,12 +2,17 @@ import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import User from './models/User.js';
 
-const setupSocket = (server) => {
+const initializeSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || "http://localhost:5173",
-      methods: ["GET", "POST"]
-    }
+      origin: process.env.CLIENT_URL || 'http://localhost:5173',
+      methods: ['GET', 'POST'],
+      credentials: true,
+      allowedHeaders: ['Authorization', 'Content-Type']
+    },
+    transports: ['websocket', 'polling'],
+    pingTimeout: 60000,
+    pingInterval: 25000
   });
 
   // Middleware for authentication
@@ -15,11 +20,11 @@ const setupSocket = (server) => {
     try {
       const token = socket.handshake.auth.token;
       if (!token) {
-        return next(new Error('Authentication error'));
+        return next(new Error('No token provided'));
       }
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(decoded.userId).select('-password');
+      const user = await User.findById(decoded.userId);
       
       if (!user) {
         return next(new Error('User not found'));
@@ -28,24 +33,31 @@ const setupSocket = (server) => {
       socket.user = user;
       next();
     } catch (err) {
+      console.error('Socket authentication error:', err);
       next(new Error('Authentication error'));
     }
   });
 
-  // Handle connections
+  // Handle socket connections
   io.on('connection', (socket) => {
-    console.log('User connected:', socket.user.name);
+    console.log('User connected:', socket.user._id);
 
-    // Join user's personal room
+    // Join user's room for private messages
     socket.join(socket.user._id.toString());
 
     // Handle disconnection
     socket.on('disconnect', () => {
-      console.log('User disconnected:', socket.user.name);
+      console.log('User disconnected:', socket.user._id);
+    });
+
+    // Handle socket errors
+    socket.on('error', (error) => {
+      console.error('Socket error:', error);
     });
   });
 
+  // Store io instance in app for use in routes
   return io;
 };
 
-export default setupSocket; 
+export default initializeSocket; 

@@ -2,6 +2,14 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import initializeSocket from './socket.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { promises as fs } from 'fs';
+
+// Import routes
 import userRoutes from './routes/users.js';
 import messageRoutes from './routes/messages.js';
 import sessionRoutes from './routes/sessions.js';
@@ -10,12 +18,9 @@ import resourcesRouter from './routes/resources.js';
 import progressRouter from './routes/progress.js';
 import conversationsRouter from './routes/conversations.js';
 import paymentRoutes from './routes/payments.js';
-import http from 'http';
-import setupSocket from './socket.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import { promises as fs } from 'fs';
+import emailVerificationRoutes from './routes/emailVerificationRoutes.js';
+import authRoutes from './routes/auth.js';
+import connectionRoutes from './routes/connections.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -24,14 +29,19 @@ const __dirname = dirname(__filename);
 dotenv.config();
 
 const app = express();
-const server = http.createServer(app);
+const httpServer = createServer(app);
 
-// Setup Socket.IO
-const io = setupSocket(server);
-app.set('io', io); // Make io accessible to routes
+// Initialize socket.io
+const io = initializeSocket(httpServer);
+app.set('io', io);
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Authorization', 'Content-Type']
+}));
 app.use(express.json());
 
 // Serve static files
@@ -100,6 +110,7 @@ app.get('/', (req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/messages', messageRoutes);
@@ -108,6 +119,8 @@ app.use('/api/resources', resourcesRouter);
 app.use('/api/progress', progressRouter);
 app.use('/api/conversations', conversationsRouter);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/emailVerification', emailVerificationRoutes);
+app.use('/api/connections', connectionRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -125,6 +138,6 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 }); 
