@@ -11,6 +11,10 @@ import multer from 'multer';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { sendVerificationEmail } from '../services/emailService.js';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,18 +30,16 @@ const storage = multer.diskStorage({
     cb(null, path.join(__dirname, '..', 'uploads', 'profiles'));
   },
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    cb(null, Date.now() + '-' + file.originalname);
   }
 });
 
 const fileFilter = (req, file, cb) => {
-  // Accept images only
-  if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
-    req.fileValidationError = 'Only image files are allowed!';
-    return cb(null, false);
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Not an image! Please upload an image.'), false);
   }
-  cb(null, true);
 };
 
 const upload = multer({
@@ -53,7 +55,12 @@ const upload = multer({
 // @access  Public
 router.post('/register', async (req, res) => {
   try {
-    const { firstName, lastName, email, password, role } = req.body;
+    const { firstName, lastName, email, password } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -61,33 +68,15 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Generate verification token
-    const verificationToken = jwt.sign(
-      { email },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
     // Create new user
     const user = new User({
       firstName,
       lastName,
       email,
-      password,
-      role,
-      verificationToken,
-      verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+      password
     });
 
     await user.save();
-
-    // Send verification email
-    try {
-      await sendVerificationEmail(email, verificationToken);
-    } catch (emailError) {
-      console.error('Error sending verification email:', emailError);
-      // Continue with registration even if email fails
-    }
 
     // Generate JWT token
     const token = jwt.sign(
@@ -104,13 +93,15 @@ router.post('/register', async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        role: user.role,
         emailVerified: user.emailVerified
       }
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ message: 'Error registering user' });
+    res.status(500).json({ 
+      message: 'Error registering user',
+      error: error.message 
+    });
   }
 });
 
@@ -122,12 +113,12 @@ router.put('/complete-profile', auth, [
   body('yearOfStudy').if(body('role').equals('student')).notEmpty(),
   body('expertise').if(body('role').equals('mentor')).isArray(),
   body('experience').if(body('role').equals('mentor')).notEmpty(),
+  body('bio').optional(),
   body('overview').optional(),
-  body('interests').optional(),
-  body('linkedIn').optional(),
-  body('twitter').optional(),
-  body('instagram').optional(),
-  body('website').optional()
+  body('profilePicture').optional(),
+  body('gender').optional(),
+  body('social').optional(),
+  body('interests').optional()
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -150,12 +141,21 @@ router.put('/complete-profile', auth, [
     }
 
     // Update common profile fields
+    user.profilePicture = req.body.profilePicture || user.profilePicture;
+    user.gender = req.body.gender || user.gender;
+    user.bio = req.body.bio || user.bio;
     user.overview = req.body.overview || user.overview;
     user.interests = req.body.interests || user.interests;
-    user.linkedIn = req.body.linkedIn || user.linkedIn;
-    user.twitter = req.body.twitter || user.twitter;
-    user.instagram = req.body.instagram || user.instagram;
-    user.website = req.body.website || user.website;
+
+    // Update social media links
+    if (req.body.social) {
+      user.social = {
+        linkedIn: req.body.social.linkedIn || user.social?.linkedIn || '',
+        twitter: req.body.social.twitter || user.social?.twitter || '',
+        instagram: req.body.social.instagram || user.social?.instagram || '',
+        website: req.body.social.website || user.social?.website || ''
+      };
+    }
 
     user.profileCompleted = true;
     await user.save();
@@ -213,9 +213,10 @@ router.post('/login', [
           token,
           user: {
             id: user.id,
-            name: user.name,
+            firstName: user.firstName,
+            lastName: user.lastName,
             email: user.email,
-            role: user.role,
+            role: user.role || 'mentee', // Default to 'mentee' if role is not set
             profileCompleted: user.profileCompleted,
             paymentCompleted: user.paymentCompleted,
             emailVerified: user.emailVerified
@@ -261,7 +262,7 @@ router.put('/me', auth, async (req, res) => {
       'department', 'yearOfStudy', 'expertise', 'experience',
       'overview', 'interests', 'linkedIn', 'twitter',
       'instagram', 'website', 'availability', 'modeOfContact',
-      'gender', 'relationshipStatus'
+      'relationshipStatus'
     ];
 
     // Update all provided fields
