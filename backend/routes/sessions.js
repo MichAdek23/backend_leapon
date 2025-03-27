@@ -2,7 +2,6 @@ import express from 'express';
 import Session from '../models/Session.js';
 import { auth } from '../middleware/auth.js';
 import { body, validationResult } from 'express-validator';
-import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
 
@@ -30,8 +29,8 @@ router.post('/', auth, [
       return res.status(400).json({ message: 'Cannot create a session with yourself' });
     }
 
-    // Create a unique Jitsi room ID
-    const jitsiRoomId = uuidv4();
+    // Create a unique Jitsi room ID using timestamp and random number
+    const jitsiRoomId = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 
     const session = new Session({
       mentor,
