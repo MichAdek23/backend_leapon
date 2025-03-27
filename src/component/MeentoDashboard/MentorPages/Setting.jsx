@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -9,76 +9,227 @@ import {
   SelectValue,
 } from "@/components/ui/select"; 
 import { GlobalContext } from '@/component/GlobalStore/GlobalState';
-import axios from 'axios';
+import { userApi } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 
-// Create axios instance with base configuration
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'https://leapon.onrender.com/api',
-    headers: {
-        'Content-Type': 'application/json'
-    }
-});
+// Function to get full image URL
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return "/image/Subtract.png";
+  if (imagePath.startsWith('http')) return imagePath;
+  if (imagePath.startsWith('/uploads')) {
+    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${imagePath}`;
+  }
+  if (imagePath.startsWith('/api/uploads')) {
+    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${imagePath.replace('/api', '')}`;
+  }
+  return imagePath;
+};
 
 function Setting() {
     const [activeTab, setActiveTab] = useState('basicDetails');
     const { upDatePage, handleToggleState, setProfile } = useContext(GlobalContext);
+    const { user, login } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [profileDetails, setProfileDetails] = useState({
+        firstName: '',
+        lastName: '',
+        profilePicture: '',
         fullName: '',
         mentorshipStatus: '',
         gender: '',
         modeOfContact: '',
         availability: '',
         bio: '',
-        twitter: '',
-        facebook: '',
-        whatsapp: '',
-        instagram: '',
-        email: ''
+        overview: '',
+        social: {
+            twitter: '',
+            facebook: '',
+            whatsapp: '',
+            instagram: '',
+            linkedIn: '',
+            website: ''
+        },
+        email: '',
+        password: '',
+        confirmPassword: '',
+        currentPassword: '',
+        department: '',
+        expertise: [],
+        experience: '',
+        interests: []
     });
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                setLoading(true);
+                const response = await userApi.getProfile();
+                const userData = response.data;
+                
+                // Update profile details with user data
+                setProfileDetails({
+                    firstName: userData.firstName || '',
+                    lastName: userData.lastName || '',
+                    profilePicture: userData.profilePicture || '',
+                    fullName: userData.fullName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || '',
+                    mentorshipStatus: userData.mentorshipStatus || '',
+                    gender: userData.gender || '',
+                    modeOfContact: userData.modeOfContact || '',
+                    availability: userData.availability || '',
+                    bio: userData.bio || '',
+                    overview: userData.overview || '',
+                    social: {
+                        twitter: userData.social?.twitter || '',
+                        facebook: userData.social?.facebook || '',
+                        whatsapp: userData.social?.whatsapp || '',
+                        instagram: userData.social?.instagram || '',
+                        linkedIn: userData.social?.linkedIn || '',
+                        website: userData.social?.website || ''
+                    },
+                    email: userData.email || '',
+                    password: '',
+                    confirmPassword: '',
+                    currentPassword: '',
+                    department: userData.department || '',
+                    expertise: userData.expertise || [],
+                    experience: userData.experience || '',
+                    interests: userData.interests || []
+                });
+            } catch (error) {
+                console.error('Error fetching profile:', error);
+                setError(error.response?.data?.message || 'Error fetching profile data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProfile();
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setProfileDetails({ ...profileDetails, [name]: value });
+        if (name.startsWith('social.')) {
+            const socialField = name.split('.')[1];
+            setProfileDetails(prev => ({
+                ...prev,
+                social: {
+                    ...prev.social,
+                    [socialField]: value
+                }
+            }));
+        } else {
+            setProfileDetails(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSelectChange = (name, value) => {
-        setProfileDetails({ ...profileDetails, [name]: value });
+        setProfileDetails(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 12 * 1024 * 1024) {
+                setError('File size must be less than 12MB');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await userApi.uploadProfilePicture(formData);
+                
+                // Update both local state and global context
+                setProfileDetails(prev => ({ ...prev, profilePicture: response.data.profilePicture }));
+                setProfile(prev => ({ ...prev, profilePicture: response.data.profilePicture }));
+                
+                // Update user data in localStorage
+                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                userData.profilePicture = response.data.profilePicture;
+                localStorage.setItem('userData', JSON.stringify(userData));
+                
+                setSuccess('Profile picture updated successfully');
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                setError(error.message || 'Failed to upload image. Please try again.');
+            }
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
+        setSuccess('');
 
         try {
-            // Get the token from localStorage
-            const token = localStorage.getItem('token');
-            
-            // Add token to request headers
-            const config = {
-                headers: {
-                    'Authorization': `Bearer ${token}`
+            if (activeTab === 'loginAndSecurity') {
+                if (profileDetails.password !== profileDetails.confirmPassword) {
+                    throw new Error('Passwords do not match');
                 }
-            };
 
-            // Make the API call
-            const response = await api.post('/mentor/profile/update', profileDetails, config);
-            
-            // Update the profile in the global state
-            setProfile(response.data.profile);
-            
-            // Show success message
-            alert('Profile Updated Successfully');
+                if (!profileDetails.password) {
+                    throw new Error('Please enter a new password');
+                }
+
+                await userApi.updatePassword({
+                    currentPassword: profileDetails.currentPassword,
+                    newPassword: profileDetails.password
+                });
+
+                setProfileDetails(prev => ({
+                    ...prev,
+                    password: '',
+                    confirmPassword: '',
+                    currentPassword: ''
+                }));
+
+                setSuccess('Password Updated Successfully');
+            } else {
+                // Remove undefined or empty string values and password fields
+                const updateData = Object.fromEntries(
+                    Object.entries(profileDetails).filter(([key, value]) => {
+                        if (key === 'password' || key === 'confirmPassword' || key === 'currentPassword') {
+                            return false;
+                        }
+                        if (typeof value === 'object') {
+                            return Object.values(value).some(v => v !== undefined && v !== '');
+                        }
+                        return value !== undefined && value !== '';
+                    })
+                );
+
+                const response = await userApi.updateProfile(updateData);
+                
+                // Update both local state and global context
+                setProfileDetails(response.data);
+                setProfile(response.data);
+                
+                // Update user data in localStorage
+                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                const updatedUserData = { ...userData, ...response.data };
+                localStorage.setItem('userData', JSON.stringify(updatedUserData));
+                
+                setSuccess('Profile Updated Successfully');
+            }
         } catch (error) {
             console.error('Error updating profile:', error);
-            setError(error.response?.data?.message || 'Error updating profile. Please try again.');
-            alert(error.response?.data?.message || 'Error updating profile. Please try again.');
+            setError(error.message || 'Error updating profile. Please try again.');
         } finally {
             setLoading(false);
         }
     };
+
+    if (loading && !profileDetails.fullName) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6">
@@ -135,6 +286,12 @@ function Setting() {
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
                     <span className="block sm:inline">{error}</span>
+                </div>
+            )}
+
+            {success && (
+                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <span className="block sm:inline">{success}</span>
                 </div>
             )}
 
@@ -298,7 +455,17 @@ function Setting() {
                     <h2 className="text-xl font-bold mb-4">Login and Security</h2>
                     <form onSubmit={handleSubmit}>
                         <div className="mb-4">
-                            <label className="block text-gray-700">Password</label>
+                            <label className="block text-gray-700">Current Password</label>
+                            <input
+                                type="password"
+                                name="currentPassword"
+                                value={profileDetails.currentPassword}
+                                onChange={handleInputChange}
+                                className="flex items-center p-2 md:p-4 gap-3 w-full rounded-xl border-2 border-orange-500 mt-1"
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700">New Password</label>
                             <input
                                 type="password"
                                 name="password"
@@ -308,7 +475,7 @@ function Setting() {
                             />
                         </div>
                         <div className="mb-4">
-                            <label className="block text-gray-700">Confirm Password</label>
+                            <label className="block text-gray-700">Confirm New Password</label>
                             <input
                                 type="password"
                                 name="confirmPassword"

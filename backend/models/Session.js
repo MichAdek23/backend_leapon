@@ -31,16 +31,16 @@ const sessionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['scheduled', 'completed', 'cancelled'],
-    default: 'scheduled'
+    enum: ['pending', 'accepted', 'rejected', 'completed', 'cancelled'],
+    default: 'pending'
   },
   notes: {
     type: String,
     default: ''
   },
-  meetingLink: {
+  jitsiRoomId: {
     type: String,
-    default: ''
+    unique: true
   },
   description: {
     type: String

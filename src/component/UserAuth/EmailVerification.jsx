@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faSpinner, faCheckCircle, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
-import { sendVerificationEmail, checkVerificationStatus, verifyEmailToken } from '../../lib/api';
+import { faEnvelope, faSpinner, faCheckCircle, faExclamationCircle, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { userApi } from '../../lib/api';
 
 function EmailVerification() {
   const navigate = useNavigate();
@@ -13,12 +13,37 @@ function EmailVerification() {
   const [resendDisabled, setResendDisabled] = useState(true);
   const [success, setSuccess] = useState('');
   const [verificationStatus, setVerificationStatus] = useState(null);
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
-    // Check for verification token in URL
-    const token = searchParams.get('token');
-    if (token) {
-      handleVerificationToken(token);
+    // Get user email from localStorage
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    if (userData.email) {
+      setUserEmail(userData.email);
+    }
+
+    // Check for verification status in URL
+    const status = searchParams.get('status');
+    if (status === 'success') {
+      setVerificationStatus('success');
+      setSuccess('Email verified successfully! Redirecting...');
+      
+      // Get user data from localStorage
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      
+      // Redirect based on role
+      setTimeout(() => {
+        if (userData.role === 'mentor') {
+          navigate('/mentor-form');
+        } else if (userData.role === 'mentee') {
+          navigate('/mentee-form');
+        } else {
+          navigate('/mode-of-registering');
+        }
+      }, 2000);
+    } else if (status === 'error') {
+      setVerificationStatus('error');
+      setError('Verification failed. Please try again or request a new verification email.');
     }
 
     let timer;
@@ -30,60 +55,7 @@ function EmailVerification() {
       setResendDisabled(false);
     }
     return () => clearInterval(timer);
-  }, [countdown, resendDisabled, searchParams]);
-
-  const handleVerificationToken = async (token) => {
-    try {
-      setLoading(true);
-      setError('');
-      setSuccess('');
-
-      const response = await verifyEmailToken(token);
-      
-      if (response.verified) {
-        // Store the token in localStorage
-        localStorage.setItem('token', response.token);
-        
-        // Update userData with the new token and verification status
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-        userData.token = response.token;
-        userData.emailVerified = true;
-        localStorage.setItem('userData', JSON.stringify(userData));
-
-        setVerificationStatus('success');
-        setSuccess('Email verified successfully! Redirecting...');
-        
-        // Redirect based on role
-        setTimeout(() => {
-          if (userData.role === 'mentor') {
-            navigate('/mentor-form');
-          } else if (userData.role === 'mentee') {
-            navigate('/mentee-form');
-          } else {
-            navigate('/mode-of-registering');
-          }
-        }, 2000);
-      } else {
-        setVerificationStatus('error');
-        setError('Verification failed. Please try again or request a new verification email.');
-      }
-    } catch (err) {
-      setVerificationStatus('error');
-      setError(err.message || 'Verification failed. Please try again or request a new verification email.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Get user email from localStorage
-  const getUserEmail = () => {
-    const userData = localStorage.getItem('userData');
-    if (userData) {
-      const { email } = JSON.parse(userData);
-      return email;
-    }
-    return null;
-  };
+  }, [countdown, resendDisabled, searchParams, navigate]);
 
   const handleResendEmail = async () => {
     try {
@@ -91,17 +63,16 @@ function EmailVerification() {
       setError('');
       setSuccess('');
       
-      const email = getUserEmail();
-      if (!email) {
+      if (!userEmail) {
         throw new Error('User email not found');
       }
 
-      await sendVerificationEmail(email);
+      await userApi.sendVerificationEmail(userEmail);
       setSuccess('Verification email sent successfully!');
       setResendDisabled(true);
       setCountdown(60);
     } catch (err) {
-      setError(err.message || 'Failed to resend verification email. Please try again.');
+      setError(err.response?.data?.message || 'Failed to resend verification email. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -113,7 +84,7 @@ function EmailVerification() {
       setError('');
       setSuccess('');
 
-      const response = await checkVerificationStatus();
+      const response = await userApi.checkVerificationStatus();
       
       if (response.verified) {
         // Get user data from localStorage
@@ -136,30 +107,44 @@ function EmailVerification() {
         setError('Email not verified yet. Please check your inbox and click the verification link.');
       }
     } catch (err) {
-      setError(err.message || 'Failed to check verification status. Please try again.');
+      setError(err.response?.data?.message || 'Failed to check verification status. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   return (
     <section className="relative flex h-full">
-      <div className="hidden lg:block h-full w-3/5">
-        <img
-          src="/image/LogoAyth.png"
-          className="h-full w-full object-cover"
+      <div className="hidden  relative  lg:block h-full w-3/5">
+        {/* <img
+          src="/public/image/logo.png.png"
+          className="h-20   absolute top-4 left-8 w-20  object-cover"
           alt="Email Verification"
-        />
-        <div onClick={() => navigate('/')} className="absolute top-4">
-          <img src="/public/image/close-up-people-learning-together-office 1.png" className="w-40" alt="Logo" />
+        /> */}
+        <div onClick={() => navigate('/')} className="  w-full h-full ">
+          <img src="/image/close-up-people-learning-together-office 1.png" className="w-full h-full object-cover" alt="Logo" />
         </div>
       </div>
 
       <div className="flex items-center w-full lg:w-2/5 justify-center">
         <div className="w-full px-6 lg:px-0 md:w-[400px]">
+          {/* Back Button */}
+          <button 
+            onClick={handleBack}
+            className="mb-6 flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
+            Back
+          </button>
+
           <h1 className="text-2xl font-bold lg:text-[40px] text-customDarkBlue">Verify Your Email</h1>
           <p className="text-slate-400 text-sm mt-2">
-            We've sent a verification link to your email address. Please check your inbox and click the link to verify your account.
+            We've sent a verification link to <span className="font-semibold text-gray-700">{userEmail}</span>. 
+            Please check your inbox and click the link to verify your account.
           </p>
 
           {error && (
@@ -202,19 +187,21 @@ function EmailVerification() {
                   resendDisabled
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-customOrange hover:bg-orange-600'
-                } transition-colors mb-4`}
+                } transition-colors mb-4 flex items-center justify-center gap-2`}
               >
                 {loading ? (
                   <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
                 ) : (
-                  `Resend Email ${resendDisabled ? `(${countdown}s)` : ''}`
+                  <>
+                    Resend Email {resendDisabled && `(${countdown}s)`}
+                  </>
                 )}
               </button>
 
               <button
                 onClick={handleCheckVerification}
                 disabled={loading}
-                className="w-full py-3 rounded-lg text-white bg-customOrange hover:bg-orange-600 transition-colors"
+                className="w-full py-3 rounded-lg text-white bg-customOrange hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <FontAwesomeIcon icon={faSpinner} className="animate-spin" />

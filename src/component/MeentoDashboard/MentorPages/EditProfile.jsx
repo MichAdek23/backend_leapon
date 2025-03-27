@@ -29,59 +29,73 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [updatedProfile, setUpdatedProfile] = useState({
-    fullName: profile?.fullName || '',
     firstName: profile?.firstName || '',
     lastName: profile?.lastName || '',
     profilePicture: profile?.profilePicture || '',
-    interests: profile?.interests || '',
-    linkedIn: profile?.linkedIn || '',
-    twitter: profile?.twitter || '',
-    instagram: profile?.instagram || '',
-    website: profile?.website || '',
+    interests: profile?.interests || [],
+    social: {
+      linkedIn: profile?.social?.linkedIn || '',
+      twitter: profile?.social?.twitter || '',
+      instagram: profile?.social?.instagram || '',
+      website: profile?.social?.website || ''
+    },
     overview: profile?.overview || '',
     email: profile?.email || '',
     availability: profile?.availability || '',
     modeOfContact: profile?.modeOfContact || '',
     gender: profile?.gender || '',
-    relationshipStatus: profile?.relationshipStatus || ''
+    title: profile?.title || '',
+    department: profile?.department || '',
+    expertise: profile?.expertise || [],
+    experience: profile?.experience || ''
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUpdatedProfile({ ...updatedProfile, [name]: value });
+    if (name.startsWith('social.')) {
+      const socialField = name.split('.')[1];
+      setUpdatedProfile(prev => ({
+        ...prev,
+        social: {
+          ...prev.social,
+          [socialField]: value
+        }
+      }));
+    } else {
+      setUpdatedProfile(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSelectChange = (name, value) => {
-    setUpdatedProfile({ ...updatedProfile, [name]: value });
+    setUpdatedProfile(prev => ({ ...prev, [name]: value }));
   };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 12 * 1024 * 1024) { // 12MB limit
-        alert('File size must be less than 12MB');
+        setError('File size must be less than 12MB');
         return;
       }
 
       try {
-        // Create FormData object to send file
         const formData = new FormData();
-        formData.append('profilePicture', file);
+        formData.append('file', file);
 
-        console.log('Uploading file:', {
-          name: file.name,
-          type: file.type,
-          size: file.size
-        });
-
-        // Use userApi instance for consistent API handling
         const response = await userApi.uploadProfilePicture(formData);
-        console.log('Upload successful:', response);
-        setUpdatedProfile(prev => ({ ...prev, profilePicture: response.data.imageUrl }));
+        
+        // Update local state
+        setUpdatedProfile(prev => ({ ...prev, profilePicture: response.data.profilePicture }));
+        
+        // Update user data in localStorage
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        userData.profilePicture = response.data.profilePicture;
+        localStorage.setItem('userData', JSON.stringify(userData));
+        
+        setError(null);
       } catch (error) {
         console.error('Error uploading image:', error);
         setError(error.message || 'Failed to upload image. Please try again.');
-        alert(error.message || 'Failed to upload image. Please try again.');
       }
     }
   };
@@ -94,14 +108,20 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
     try {
       // Remove undefined or empty string values
       const profileData = Object.fromEntries(
-        Object.entries(updatedProfile).filter(([, value]) => value !== undefined && value !== '')
+        Object.entries(updatedProfile).filter(([, value]) => {
+          if (typeof value === 'object') {
+            return Object.values(value).some(v => v !== undefined && v !== '');
+          }
+          return value !== undefined && value !== '';
+        })
       );
 
+      // Update profile using /api/users/me endpoint
       const response = await userApi.updateProfile(profileData);
       onUpdate(response.data);
       setIsEditProfileVisible(false);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error updating profile');
+    } catch (error) {
+      setError(error.message || 'Error updating profile');
     } finally {
       setLoading(false);
     }
@@ -132,23 +152,6 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
               <input
                 type="text"
                 className="outline-none w-full"
-                name="fullName"
-                value={updatedProfile.fullName}
-                onChange={handleChange}
-                placeholder="Enter Full Name"
-              />
-              <p className="absolute -top-7 left-2 bg-white px-1 text-base font-bold text-slate-400">
-                Full Name
-              </p>
-            </div>
-          </div>
-        </div>
-        <div>
-          <div className="mt-4 flex items-center p-2 md:p-4 justify-between gap-3 w-full rounded-xl border-2">
-            <div className="relative flex items-center w-full justify-center gap-3">
-              <input
-                type="text"
-                className="outline-none w-full"
                 name="firstName"
                 value={updatedProfile.firstName}
                 onChange={handleChange}
@@ -167,7 +170,7 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
                 type="text"
                 className="outline-none w-full"
                 name="lastName"
-                value={updatedProfile.lastName || ''}
+                value={updatedProfile.lastName}
                 onChange={handleChange}
                 placeholder="Enter Last Name"
               />
@@ -190,6 +193,23 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
               />
               <p className="absolute -top-7 left-2 bg-white px-1 text-base font-bold text-slate-400">
                 Email
+              </p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div className="mt-4 flex items-center p-2 md:p-4 justify-between gap-3 w-full rounded-xl border-2">
+            <div className="relative flex items-center w-full justify-center gap-3">
+              <input
+                type="text"
+                className="outline-none w-full"
+                name="title"
+                value={updatedProfile.title}
+                onChange={handleChange}
+                placeholder="Enter Title"
+              />
+              <p className="absolute -top-7 left-2 bg-white px-1 text-base font-bold text-slate-400">
+                Title
               </p>
             </div>
           </div>
@@ -256,26 +276,61 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
                 <SelectValue className="text-lg text-slate-500" placeholder="Select One" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Male">Male</SelectItem>
-                <SelectItem value="Female">Female</SelectItem>
+                <SelectItem value="male">Male</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
       </div>
       <div className="form-group">
-        <label className="block text-sm font-medium text-gray-700">Relationship Status</label>
+        <label className="block text-sm font-medium text-gray-700">Department</label>
         <div className="mt-4 flex items-center p-2 md:p-4 justify-between gap-3 w-full rounded-xl border-2">
           <div className="relative flex items-center w-full justify-center gap-3">
-            <Select onValueChange={(value) => handleSelectChange('relationshipStatus', value)}>
-              <SelectTrigger className="outline-none w-full">
-                <SelectValue className="text-lg text-slate-500" placeholder="Select One" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Married">Married</SelectItem>
-                <SelectItem value="Single">Single</SelectItem>
-              </SelectContent>
-            </Select>
+            <input
+              type="text"
+              name="department"
+              value={updatedProfile.department}
+              onChange={handleChange}
+              className="outline-none w-full"
+              placeholder="Enter Department"
+            />
+          </div>
+        </div>
+      </div>
+      <div className="form-group">
+        <label className="block text-sm font-medium text-gray-700">Experience</label>
+        <div className="mt-4 flex items-center p-2 md:p-4 justify-between gap-3 w-full rounded-xl border-2">
+          <div className="relative flex items-center w-full justify-center gap-3">
+            <input
+              type="text"
+              name="experience"
+              value={updatedProfile.experience}
+              onChange={handleChange}
+              className="outline-none w-full"
+              placeholder="Enter Years of Experience"
+            />
+          </div>
+        </div>
+      </div>
+      <div className="form-group">
+        <label className="block text-sm font-medium text-gray-700">Expertise</label>
+        <div className="mt-4 flex items-center p-2 md:p-4 justify-between gap-3 w-full rounded-xl border-2">
+          <div className="relative flex items-center w-full justify-center gap-3">
+            <input
+              type="text"
+              name="expertise"
+              value={updatedProfile.expertise.join(', ')}
+              onChange={(e) => handleChange({
+                target: {
+                  name: 'expertise',
+                  value: e.target.value.split(',').map(item => item.trim())
+                }
+              })}
+              className="outline-none w-full"
+              placeholder="Enter Expertise (comma-separated)"
+            />
           </div>
         </div>
       </div>
@@ -286,10 +341,15 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
             <input
               type="text"
               name="interests"
-              value={updatedProfile.interests}
-              onChange={handleChange}
+              value={updatedProfile.interests.join(', ')}
+              onChange={(e) => handleChange({
+                target: {
+                  name: 'interests',
+                  value: e.target.value.split(',').map(item => item.trim())
+                }
+              })}
               className="outline-none w-full"
-              placeholder="Career guidance, Academics"
+              placeholder="Enter Interests (comma-separated)"
             />
           </div>
         </div>
@@ -305,8 +365,8 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
           <div className="relative flex items-center w-full justify-center gap-3">
             <input
               type="text"
-              name="linkedIn"
-              value={updatedProfile.linkedIn}
+              name="social.linkedIn"
+              value={updatedProfile.social.linkedIn}
               onChange={handleChange}
               className="outline-none w-full"
               placeholder="LinkedIn"
@@ -320,8 +380,8 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
           <div className="relative flex items-center w-full justify-center gap-3">
             <input
               type="text"
-              name="twitter"
-              value={updatedProfile.twitter}
+              name="social.twitter"
+              value={updatedProfile.social.twitter}
               onChange={handleChange}
               className="outline-none w-full"
               placeholder="Twitter"
@@ -335,11 +395,11 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
           <div className="relative flex items-center w-full justify-center gap-3">
             <input
               type="text"
-              name="instagram"
-              value={updatedProfile.instagram}
+              name="social.instagram"
+              value={updatedProfile.social.instagram}
               onChange={handleChange}
               className="outline-none w-full"
-              placeholder="EmmanuellaBernard"
+              placeholder="Instagram"
             />
           </div>
         </div>
@@ -350,11 +410,11 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
           <div className="relative flex items-center w-full justify-center gap-3">
             <input
               type="text"
-              name="website"
-              value={updatedProfile.website}
+              name="social.website"
+              value={updatedProfile.social.website}
               onChange={handleChange}
               className="outline-none w-full"
-              placeholder="Emmanuella.com"
+              placeholder="Website"
             />
           </div>
         </div>
@@ -367,7 +427,7 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
       <h1 className="text-gray-800 dark:text-gray-200 text-2xl font-semibold">
         {profile.firstName || profile.lastName 
           ? `${profile.firstName} ${profile.lastName}`
-          : profile.fullName}
+          : 'Edit Profile'}
       </h1>
       <p className='mb-10 text-sm text-slate-600 font-medium'>Update your profile details</p>
       <div className="tab-buttons flex border-b-2 mb-4">

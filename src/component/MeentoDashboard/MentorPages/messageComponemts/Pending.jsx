@@ -1,89 +1,184 @@
-import { GlobalContext } from '@/component/GlobalStore/GlobalState';
-import React, { useContext } from 'react';
-import { useAuth } from '../../../../lib/AuthContext';
+import React, { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faVideo, faClock, faCalendar, faCheck, faTimes, faBan } from '@fortawesome/free-solid-svg-icons';
+import { sessionApi } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
-import { sessionApi } from '../../../../lib/api';
 
-function Pending({ sessions }) {
-  const { upDatePage } = useContext(GlobalContext);
+const Pending = ({ sessions, onJoinMeeting, onSessionUpdate }) => {
   const { user } = useAuth();
+  const [actionLoading, setActionLoading] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
-  const handleJoinMeeting = (sessionId) => {
-    // Implement meeting join logic
-    console.log('Joining meeting for session:', sessionId);
-  };
-
-  const handleSendMessage = (recipientId) => {
-    // Navigate to message component with recipient
-    upDatePage('Message', { recipientId });
-  };
-
-  const handleCancelSession = async (sessionId) => {
+  const handleSessionAction = async (sessionId, action) => {
     try {
-      await sessionApi.update(sessionId, { status: 'cancelled' });
-      // The parent component will handle refreshing the sessions
-    } catch (err) {
-      console.error('Error canceling session:', err);
+      setActionLoading(sessionId);
+      setActionError(null);
+
+      const response = await sessionApi.updateStatus(sessionId, action);
+      
+      if (response.data) {
+        if (onSessionUpdate) {
+          onSessionUpdate();
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to ${action} session:`, error);
+      setActionError(`Failed to ${action} session. Please try again.`);
+    } finally {
+      setActionLoading(null);
     }
   };
 
   if (!sessions || sessions.length === 0) {
-    return <div className="text-center text-slate-500 py-6">No pending mentorship sessions.</div>;
+    return (
+      <div className="text-center py-8 text-gray-500">
+        No pending sessions found
+      </div>
+    );
   }
 
   return (
-    <section>
-      {sessions.map((session) => (
-        <div key={session._id} className="py-6 border-b-2 border-slate-400">
-          <div className="flex items-center gap-4">
-            <img
-              src={session.mentor._id === user.id ? session.mentee.profileImage : session.mentor.profileImage || '/default-avatar.png'}
-              alt={`${session.mentor._id === user.id ? session.mentee.name : session.mentor.name}'s avatar`}
-              className="h-24 w-24 rounded-full"
-            />
+    <div className="space-y-4">
+      {actionError && (
+        <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4">
+          {actionError}
+        </div>
+      )}
+      
+      {sessions.map((session) => {
+        const sessionDate = new Date(session.date);
+        const isMentor = user?.role === 'mentor';
+        const isCreator = session.mentor?._id === user?.id;
+        const otherParticipant = isMentor ? session.mentee : session.mentor;
+        const isLoading = actionLoading === session._id;
+        
+        return (
+          <div
+            key={session._id}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6"
+          >
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100">
+                  <img
+                    src={otherParticipant?.profileImage || '/default-avatar.png'}
+                    alt={`${otherParticipant?.name || 'User'}'s avatar`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = '/default-avatar.png';
+                    }}
+                  />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">{session.topic}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {isMentor ? 'Mentee' : 'Mentor'}: {otherParticipant?.name || 'Unknown User'}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {session.type === 'one-on-one' ? 'One-on-One Session' : 'Group Session'}
+                  </p>
+                </div>
+              </div>
 
-            <div>
-              <h1 className="text-slate-500">
-                Mentorship Session with {session.mentor._id === user.id ? session.mentee.name : session.mentor.name}
-              </h1>
-              <p className="text-slate-400">
-                {format(new Date(session.date), 'PPP p')}
-              </p>
-              <p className="text-slate-400">
-                Duration: {session.duration} minutes
-              </p>
-              <p className="text-slate-400">
-                Topic: {session.topic}
-              </p>
+              <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-2">
+                  <FontAwesomeIcon icon={faCalendar} className="w-4 h-4" />
+                  <span>{format(sessionDate, 'PPP')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FontAwesomeIcon icon={faClock} className="w-4 h-4" />
+                  <span>{format(sessionDate, 'p')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FontAwesomeIcon icon={faClock} className="w-4 h-4" />
+                  <span>{session.duration} minutes</span>
+                </div>
+              </div>
+            </div>
+
+            {session.description && (
+              <div className="mt-4 text-gray-600 dark:text-gray-400">
+                <p className="text-sm">{session.description}</p>
+              </div>
+            )}
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              {session.status === 'accepted' && (
+                <button
+                  onClick={() => onJoinMeeting(session.jitsiRoomId)}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50"
+                >
+                  <FontAwesomeIcon icon={faVideo} className="w-4 h-4" />
+                  Join Meeting
+                </button>
+              )}
+
+              {session.status === 'pending' && isMentor && !isCreator && (
+                <>
+                  <button
+                    onClick={() => handleSessionAction(session._id, 'accepted')}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 disabled:opacity-50"
+                  >
+                    {isLoading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <FontAwesomeIcon icon={faCheck} className="w-4 h-4" />
+                    )}
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => handleSessionAction(session._id, 'rejected')}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 disabled:opacity-50"
+                  >
+                    {isLoading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <FontAwesomeIcon icon={faTimes} className="w-4 h-4" />
+                    )}
+                    Reject
+                  </button>
+                </>
+              )}
+
+              {session.status === 'pending' && isCreator && (
+                <button
+                  onClick={() => handleSessionAction(session._id, 'cancelled')}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <FontAwesomeIcon icon={faBan} className="w-4 h-4" />
+                  )}
+                  Cancel Session
+                </button>
+              )}
+
+              {session.status === 'accepted' && isMentor && (
+                <button
+                  onClick={() => handleSessionAction(session._id, 'completed')}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <FontAwesomeIcon icon={faCheck} className="w-4 h-4" />
+                  )}
+                  Mark as Completed
+                </button>
+              )}
             </div>
           </div>
-
-          <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-8">
-            <button 
-              onClick={() => handleJoinMeeting(session._id)}
-              className="h-10 lg:h-12 min-w-[100px] md:min-w-[120px] p-2 rounded-lg text-slate-100 font-semibold bg-customOrange hover:bg-orange-600 transition-colors"
-            >
-              Join meeting
-            </button>
-
-            <button
-              onClick={() => handleSendMessage(session.mentor._id === user.id ? session.mentee._id : session.mentor._id)}
-              className="h-10 lg:h-12 min-w-[100px] md:min-w-[120px] p-2 rounded-lg border-2 font-semibold hover:bg-slate-100 transition-colors"
-            >
-              Send message
-            </button>
-
-            <button 
-              onClick={() => handleCancelSession(session._id)}
-              className="h-10 lg:h-12 min-w-[100px] md:min-w-[120px] p-2 rounded-lg border-2 font-semibold hover:bg-slate-100 transition-colors text-red-500 hover:bg-red-50"
-            >
-              Cancel Session
-            </button>
-          </div>
-        </div>
-      ))}
-    </section>
+        );
+      })}
+    </div>
   );
-}
+};
 
 export default Pending;

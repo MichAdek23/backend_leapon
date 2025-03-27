@@ -29,23 +29,6 @@ function SignIn() {
       setError('');
       const response = await login(data.email, data.password);
       
-      console.log('Login response:', response); // Debug log
-      
-      // Calculate token expiration (24 hours from now)
-      const tokenExpiry = new Date();
-      tokenExpiry.setHours(tokenExpiry.getHours() + 24);
-      
-      // Store user data in localStorage with token expiration
-      const userData = {
-        ...response,
-        tokenExpiry: tokenExpiry.toISOString()
-      };
-      
-      console.log('Storing user data:', userData); // Debug log
-      localStorage.setItem('userData', JSON.stringify(userData));
-      
-      console.log('Token stored:', response.token); // Debug log
-      
       // Check email verification status from the backend response
       if (!response.emailVerified) {
         setShowVerificationModal(true);
@@ -59,7 +42,7 @@ function SignIn() {
       }
 
       // Navigate based on user role
-      switch (response.role) {
+      switch (response.role?.toLowerCase()) {
         case 'mentor':
           navigate('/mentor-dashboard');
           break;
@@ -70,7 +53,8 @@ function SignIn() {
           navigate('/mentor-dashboard');
           break;
         default:
-          setError('Invalid user role');
+          console.error('Invalid user role:', response.role);
+          setError('Invalid user role. Please contact support.');
           break;
       }
     } catch (err) {

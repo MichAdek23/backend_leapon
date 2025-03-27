@@ -3,19 +3,62 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faLongArrowRight, faBars } from "@fortawesome/free-solid-svg-icons";
 import { Calendar } from "@/components/ui/calendar";
 import { GlobalContext } from "@/component/GlobalStore/GlobalState";
-import { userApi, sessionApi } from '../../../lib/api';
+import { userApi } from '../../../lib/api';
 import { useAuth } from '../../../lib/AuthContext';
 
+// Function to get full image URL
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return "/image/default-profile.png";
+  
+  // For Cloudinary URLs
+  if (imagePath.includes('cloudinary.com')) {
+    console.log('Using Cloudinary URL:', imagePath);
+    return imagePath;
+  }
+  
+  // For uploaded images from the database
+  if (imagePath.startsWith('/uploads/')) {
+    const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${imagePath}`;
+    console.log('Using local server URL:', url);
+    return url;
+  }
+  
+  // For static images in the public directory
+  console.log('Using static image:', imagePath);
+  return imagePath;
+};
+
 function Overview() {
-  const [mentees, setMentees] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
+  const [userData, setUserData] = useState(null);
   const { user } = useAuth();
   const { upDatePage, handleToggleState, acceptedMentees } = useContext(GlobalContext);
 
-  // Calculate profile completion percentage based on complete profile data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch user profile data
+        const profileResponse = await userApi.getProfile();
+        setUserData(profileResponse.data);
+        console.log('Fetched user data:', profileResponse.data);
+
+        // Fetch user stats
+        const statsResponse = await userApi.getStats();
+        setStats(statsResponse.data);
+        console.log('Fetched stats:', statsResponse.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    if (user?.role === 'mentor') {
+      fetchData();
+    }
+  }, [user?.role]);
+
+  // Calculate profile completion percentage based on User model fields
   const calculateProfileStrength = () => {
-    if (!user) return 0;
+    if (!userData) return 0;
 
     const requiredFields = {
       firstName: 1,
@@ -24,11 +67,17 @@ function Overview() {
       bio: 1,
       interests: 1,
       title: 1,
-      socialMediaLinks: 1,
+      department: 1,
+      expertise: 1,
+      experience: 1,
       profilePicture: 1,
       gender: 1,
-      expertise: 1,
-      experience: 1
+      social: {
+        linkedIn: 1,
+        twitter: 1,
+        instagram: 1,
+        website: 1
+      }
     };
 
     const totalFields = Object.keys(requiredFields).length;
@@ -36,36 +85,17 @@ function Overview() {
 
     // Count completed fields
     Object.keys(requiredFields).forEach(field => {
-      if (user[field] && (Array.isArray(user[field]) ? user[field].length > 0 : true)) {
+      if (field === 'social') {
+        // Check if any social media links are filled
+        const hasSocialLinks = Object.values(userData[field] || {}).some(link => link && link.trim() !== '');
+        if (hasSocialLinks) completedFields++;
+      } else if (userData[field] && (Array.isArray(userData[field]) ? userData[field].length > 0 : true)) {
         completedFields++;
       }
     });
 
     return Math.round((completedFields / totalFields) * 100);
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Fetch mentees
-        const menteesResponse = await userApi.getMentees();
-        setMentees(menteesResponse.data);
-
-        // Fetch user stats
-        const statsResponse = await userApi.getStats();
-        setStats(statsResponse.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user?.role === 'mentor') {
-      fetchData();
-    }
-  }, [user?.role]);
 
   const Title = [
     "#1 Tips for Success",
@@ -218,62 +248,49 @@ function Overview() {
         </div>
       </section>
 
+      {/* Statistics Section */}
       <section className="mt-9">
-        <div className="flex justify-between">
-          <h1 className="text-base md:text-[22px] font-medium text-customDarkBlue">Your top matches</h1>
-          <button onClick={() => upDatePage('Explore')} className="p-2 md:p-0 h-10 rounded-xl md:w-40 text-white bg-customOrange flex justify-center items-center">
-            Explore Mentees
-          </button>
-        </div>
-      </section>
-
-      <section className="rounded-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-5 gap-x-5 mt-12">
-        {loading ? (
-          <div>Loading...</div>
-        ) : (
-          mentees.map((mentee) => (
-            <div
-              onClick={() => upDatePage("Explore")}
-              key={mentee._id}
-              className="border-2 rounded-lg overflow-hidden cursor-pointer w-[99%] h-[420px] bg-white"
-            >
-              <div className="h-3/5">
-                <img
-                  src={mentee.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(mentee.firstName + ' ' + mentee.lastName)}&background=random`}
-                  className="h-full w-full object-cover"
-                  alt={mentee.firstName + ' ' + mentee.lastName}
-                  loading="lazy"
-                />
+        <h1 className="text-base md:text-[22px] font-medium text-customDarkBlue mb-6">Your Statistics</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Connected Mentees Card */}
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm">Connected Mentees</p>
+                <h3 className="text-2xl font-bold mt-1">{acceptedMentees?.length || 0}</h3>
               </div>
-              <div className="h-2/5 flex flex-col gap-2 p-6">
-                <h3 className="text-lg font-bold text-customDarkBlue">
-                  {mentee.firstName} {mentee.lastName}
-                </h3>
-                <p className="flex items-center text-xs text-customDarkBlue font-normal">
-                  <span>
-                    <img
-                      src="/image/tick.png"
-                      className="object-cover h-4 w-4"
-                      alt=""
-                    />
-                  </span>
-                  {mentee.email}
-                </p>
-
-                <div className="flex justify-between items-center flex-wrap gap-2">
-                  <div className="flex gap-1">
-                    <p className="text-xs p-2 rounded-lg bg-slate-200">
-                      Department: {mentee.department}
-                    </p>
-                    <p className="text-xs p-2 rounded-lg bg-slate-200">
-                      Year: {mentee.yearOfStudy}
-                    </p>
-                  </div>
-                </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <img src="/image/mentee-icon.png" alt="Mentees" className="w-8 h-8" />
               </div>
             </div>
-          ))
-        )}
+          </div>
+
+          {/* Completed Sessions Card */}
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm">Completed Sessions</p>
+                <h3 className="text-2xl font-bold mt-1">{stats?.totalSessions || 0}</h3>
+              </div>
+              <div className="bg-green-100 p-3 rounded-full">
+                <img src="/image/session-icon.png" alt="Sessions" className="w-8 h-8" />
+              </div>
+            </div>
+          </div>
+
+          {/* Upcoming Sessions Card */}
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm">Upcoming Sessions</p>
+                <h3 className="text-2xl font-bold mt-1">{stats?.upcomingSessions || 0}</h3>
+              </div>
+              <div className="bg-orange-100 p-3 rounded-full">
+                <img src="/image/calendar-icon.png" alt="Calendar" className="w-8 h-8" />
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
     </section>
   );

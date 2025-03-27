@@ -16,21 +16,49 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored token and validate it
-    const token = localStorage.getItem('token');
-    if (token) {
-      validateToken();
-    } else {
-      setLoading(false);
-    }
+    checkAuthStatus();
   }, []);
 
-  const validateToken = async () => {
+  const checkAuthStatus = async () => {
     try {
-      const response = await userApi.getProfile();
-      setUser(response.data);
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('userData');
+
+      if (!token || !userData) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      const parsedData = JSON.parse(userData);
+      const tokenExpiry = new Date(parsedData.tokenExpiry);
+      const now = new Date();
+
+      // Check if token is expired
+      if (now >= tokenExpiry) {
+        // Token is expired, clear storage
+        localStorage.removeItem('userData');
+        localStorage.removeItem('token');
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      // Set the user from localStorage first
+      setUser(parsedData);
+
+      // Then try to validate with server in the background
+      try {
+        const response = await userApi.getProfile();
+        setUser(response.data);
+      } catch (error) {
+        // If server validation fails, don't clear storage or log out
+        // Just log the error and keep using the local data
+        console.error('Server validation failed:', error);
+      }
     } catch (error) {
-      localStorage.removeItem('token');
+      console.error('Auth status check failed:', error);
+      // Don't clear storage on error, just set user to null
       setUser(null);
     } finally {
       setLoading(false);
@@ -46,9 +74,22 @@ export const AuthProvider = ({ children }) => {
         throw new Error('No token received from server');
       }
       
+      // Calculate token expiration (24 hours from now)
+      const tokenExpiry = new Date();
+      tokenExpiry.setHours(tokenExpiry.getHours() + 24);
+      
+      // Store user data with token expiration
+      const userData = {
+        ...user,
+        token,
+        tokenExpiry: tokenExpiry.toISOString()
+      };
+      
+      localStorage.setItem('userData', JSON.stringify(userData));
       localStorage.setItem('token', token);
       setUser(user);
-      return { ...user, token }; // Return both user data and token
+      
+      return userData;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Login failed');
     }
@@ -58,25 +99,30 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await userApi.register(userData);
       const { token, user } = response.data;
+      
+      // Calculate token expiration (24 hours from now)
+      const tokenExpiry = new Date();
+      tokenExpiry.setHours(tokenExpiry.getHours() + 24);
+      
+      // Store user data with token expiration
+      const userDataWithExpiry = {
+        ...user,
+        token,
+        tokenExpiry: tokenExpiry.toISOString()
+      };
+      
+      localStorage.setItem('userData', JSON.stringify(userDataWithExpiry));
       localStorage.setItem('token', token);
       setUser(user);
+      
       return user;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Registration failed');
     }
   };
 
-  const completeProfile = async (profileData) => {
-    try {
-      const response = await userApi.updateProfile(profileData);
-      setUser(response.data);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Profile completion failed');
-    }
-  };
-
   const logout = () => {
+    localStorage.removeItem('userData');
     localStorage.removeItem('token');
     setUser(null);
   };
@@ -86,7 +132,6 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     register,
-    completeProfile,
     logout
   };
 

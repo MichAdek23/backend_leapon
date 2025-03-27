@@ -17,7 +17,7 @@ function NavBarDashboard() {
   };
 
   return (
-    <section className='  h-full w-full  pt-10 '>
+    <section className=' fixed top-0 left-0  h-full   pt-10 '>
       <div className=' w-full flex justify-center items-center '>
         <img src="/image/logo.png.png" className=' h-8' alt="" />
       </div>
@@ -42,10 +42,7 @@ function NavBarDashboard() {
           <span><img src="/image/ProfileIcon.png" className='h-7' alt="" /></span>
           My Profile
         </div>
-        <div onClick={() => upDatePage('Users')} className={`${activeComponent === 'Users' ? 'text-customOrange' : 'text-gray-500'} flex gap-4 font-medium cursor-pointer items-center`}>
-          <span><img src="/image/usersIcon.png" className='h-7' alt="" /></span>
-          {user?.role === 'mentor' ? 'My Mentees' : 'Find Mentors'}
-        </div>
+     
       </div>
 
       <div className=' mt-36 flex flex-col px-5 gap-4'>

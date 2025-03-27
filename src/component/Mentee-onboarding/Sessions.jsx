@@ -1,35 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Video, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, Clock, Video, MessageSquare, CheckCircle, XCircle, Plus } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { useContext } from 'react';
 import { GlobalContext } from '@/component/GlobalStore/GlobalState';
+import { sessionApi } from '@/lib/api';
+import { Link } from 'react-router-dom';
 
 const Sessions = () => {
   const { handleToggleState } = useContext(GlobalContext);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState('pending');
 
   useEffect(() => {
     fetchSessions();
-  }, []);
+  }, [activeTab]);
 
   const fetchSessions = async () => {
     try {
-      const response = await fetch('/api/sessions/mentee', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch sessions');
+      let response;
+      switch (activeTab) {
+        case 'pending':
+          response = await sessionApi.getPending();
+          break;
+        case 'accepted':
+          response = await sessionApi.getAccepted();
+          break;
+        case 'history':
+          response = await sessionApi.getHistory();
+          break;
+        default:
+          response = await sessionApi.getPending();
       }
-
-      const data = await response.json();
-      setSessions(data);
+      setSessions(response.data);
       setLoading(false);
     } catch (err) {
       setError(err.message);
@@ -39,32 +44,17 @@ const Sessions = () => {
 
   const handleSessionAction = async (sessionId, action) => {
     try {
-      const response = await fetch(`/api/sessions/${sessionId}/${action}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to ${action} session`);
-      }
-
-      // Refresh sessions after action
-      fetchSessions();
+      await sessionApi.updateStatus(sessionId, action);
+      fetchSessions(); // Refresh sessions after action
     } catch (err) {
-      console.error(`Error ${action}ing session:`, err);
+      setError(err.response?.data?.message || `Failed to ${action} session`);
     }
   };
 
-  const filteredSessions = sessions.filter(session => {
-    if (activeTab === 'upcoming') {
-      return new Date(session.date) > new Date();
-    } else if (activeTab === 'past') {
-      return new Date(session.date) < new Date();
-    }
-    return true;
-  });
+  const joinJitsiMeeting = (roomId) => {
+    // Open Jitsi Meet in a new window
+    window.open(`https://meet.jit.si/${roomId}`, '_blank');
+  };
 
   if (loading) return <div className="flex justify-center items-center h-full">Loading...</div>;
   if (error) return <div className="text-red-500 text-center">{error}</div>;
@@ -77,6 +67,13 @@ const Sessions = () => {
             <h1 className="text-2xl font-medium">My Sessions</h1>
             <p className="text-base font-medium text-slate-600">Manage your mentoring sessions</p>
           </div>
+          <Link
+            to="/mentee/create-session"
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+          >
+            <Plus className="w-4 h-4" />
+            Schedule New Session
+          </Link>
         </div>
         <div onClick={handleToggleState} className="block lg:hidden mt-3">
           <button aria-label="Toggle menu">
@@ -88,34 +85,44 @@ const Sessions = () => {
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="mb-8 flex gap-4">
           <button
-            onClick={() => setActiveTab('upcoming')}
+            onClick={() => setActiveTab('pending')}
             className={`px-4 py-2 rounded-lg ${
-              activeTab === 'upcoming'
+              activeTab === 'pending'
                 ? 'bg-orange-500 text-white'
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
             }`}
           >
-            Upcoming
+            Pending
           </button>
           <button
-            onClick={() => setActiveTab('past')}
+            onClick={() => setActiveTab('accepted')}
             className={`px-4 py-2 rounded-lg ${
-              activeTab === 'past'
+              activeTab === 'accepted'
                 ? 'bg-orange-500 text-white'
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
             }`}
           >
-            Past
+            Accepted
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-2 rounded-lg ${
+              activeTab === 'history'
+                ? 'bg-orange-500 text-white'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+            }`}
+          >
+            History
           </button>
         </div>
 
         <div className="grid grid-cols-1 gap-6">
-          {filteredSessions.map(session => (
+          {sessions.map(session => (
             <div key={session._id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex items-center gap-4">
                   <img
-                    src={session.mentor.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.mentor.name)}&background=random`}
+                    src={session.mentor.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.mentor.name)}&background=random`}
                     alt={session.mentor.name}
                     className="w-12 h-12 rounded-full"
                   />
@@ -138,25 +145,17 @@ const Sessions = () => {
               </div>
 
               <div className="mt-4 flex flex-wrap gap-4">
-                {session.type === 'video' ? (
+                {session.status === 'accepted' && (
                   <button
-                    onClick={() => window.open(session.meetingLink, '_blank')}
+                    onClick={() => joinJitsiMeeting(session.jitsiRoomId)}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                   >
                     <Video className="w-4 h-4" />
                     Join Meeting
                   </button>
-                ) : (
-                  <button
-                    onClick={() => window.open(session.meetingLink, '_blank')}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    Open Chat
-                  </button>
                 )}
 
-                {activeTab === 'upcoming' && (
+                {activeTab === 'pending' && session.status === 'pending' && (
                   <>
                     <button
                       onClick={() => handleSessionAction(session._id, 'accept')}
@@ -173,6 +172,16 @@ const Sessions = () => {
                       Reject
                     </button>
                   </>
+                )}
+
+                {session.status === 'accepted' && (
+                  <button
+                    onClick={() => handleSessionAction(session._id, 'complete')}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Mark as Completed
+                  </button>
                 )}
               </div>
             </div>

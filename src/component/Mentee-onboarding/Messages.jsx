@@ -143,7 +143,7 @@ const Messages = () => {
   if (error) return <div className="text-red-500 text-center">{error}</div>;
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-900">
+    <div className=" h-fit bg-gray-50 dark:bg-gray-900">
       <header className="flex mt-4 justify-between px-4 mb-8">
         <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
           <div className="flex flex-col gap-4">

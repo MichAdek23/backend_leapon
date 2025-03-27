@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { useForm } from 'react-hook-form';
 
-function Step3() {
+function StepThree() {
   const { handleIncreament, handleDecreament } = useContext(GlobalContext);
 
   const {
@@ -22,15 +22,19 @@ function Step3() {
 
   // Save form data to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('loginFormData', JSON.stringify(detailsForm));
-  }, [detailsForm]);
+    const stepThreeData = {
+      selectedInterests: selectedInterests
+    };
+    localStorage.setItem('stepThreeData', JSON.stringify(stepThreeData));
+  }, [selectedInterests]);
 
+  // Load saved form data from localStorage on component mount
   useEffect(() => {
-    const savedFormData = localStorage.getItem('loginFormData');
+    const savedFormData = localStorage.getItem('stepThreeData');
     if (savedFormData) {
       const parsedFormData = JSON.parse(savedFormData);
       setValue('selectedInterests', parsedFormData.selectedInterests);
-      setSelectedInterests(parsedFormData.selectedInterests || []); // Sync the state with the form value
+      setSelectedInterests(parsedFormData.selectedInterests || []);
     }
   }, [setValue]);
 
@@ -43,21 +47,21 @@ function Step3() {
       updatedInterests.push(interest);
     }
     setSelectedInterests(updatedInterests);
-    setValue('selectedInterests', updatedInterests, { shouldValidate: true }); // Update the form value
-    setErrorMessage(''); // Clear error message on change
+    setValue('selectedInterests', updatedInterests, { shouldValidate: true });
+    setErrorMessage('');
   };
 
   // Handle form submission
   const onSubmit = () => {
     if (selectedInterests.length === 3) {
-      handleIncreament(); // Move to the next step
+      handleIncreament();
     } else {
       setErrorMessage('Please select exactly 3 areas of interest.');
     }
   };
 
   return (
-    <div className=" text-center lg:text-start w-[300px] lg:w-[400px]">
+    <div className="text-center lg:text-start w-[300px] lg:w-[400px]">
       {/* Back Button */}
       <div onClick={handleDecreament}>
         <button className="w-10 flex justify-center items-center text-slate-200 h-10 bg-slate-400 rounded-full">
@@ -66,10 +70,10 @@ function Step3() {
       </div>
 
       {/* Step Indicator */}
-      <p className="text-base text-center font-medium ">STEP 3 of 4</p>
+      <p className="text-base text-center font-medium">STEP 3 of 4</p>
 
       {/* Progress Bar */}
-      <progress className="bg-customOrange h-2" value="80" max="100"></progress>
+      <progress className="bg-customOrange h-2" value="60" max="100"></progress>
 
       {/* Form Title */}
       <h1 className="mt-7 text-xl lg:text-[36px] font-medium">Select areas of Interest</h1>
@@ -161,4 +165,4 @@ function Step3() {
   );
 }
 
-export default Step3;
+export default StepThree;

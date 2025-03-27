@@ -1,65 +1,61 @@
 import { GlobalContext } from '@/component/GlobalStore/GlobalState';
 import React, { useContext, useState } from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { userApi } from '@/lib/api';
 
 function StepOne() {
-  const { handleIncreament, formData, setFormData } = useContext(GlobalContext);
+  const { handleIncreament } = useContext(GlobalContext);
   const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [gender, setGender] = useState('');
 
-  const uploadToCloudinary = async (file) => {
-    try {
-      setUploading(true);
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', 'ml_default'); // You can create a specific upload preset in Cloudinary
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/dxuxxhoza/image/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const data = await response.json();
-      setImageUrl(data.secure_url);
-      // Save image URL to formData
-      setFormData(prev => ({ ...prev, profilePicture: data.secure_url }));
-      return data.secure_url;
-    } catch (error) {
-      console.error('Error uploading to Cloudinary:', error);
-      throw error;
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 12 * 1024 * 1024) { // 12MB limit
+        alert('File size must be less than 12MB');
+        return;
+      }
+
       try {
-        await uploadToCloudinary(file);
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('profilePicture', file);
+
+        const response = await userApi.uploadProfilePicture(formData);
+        const uploadedUrl = response.data.imageUrl;
+        setImageUrl(uploadedUrl);
+        
+        // Save step one data to localStorage
+        const stepOneData = {
+          profilePicture: uploadedUrl,
+          gender: gender
+        };
+        localStorage.setItem('stepOneData', JSON.stringify(stepOneData));
       } catch (error) {
-        console.error('Failed to upload image:', error);
+        console.error('Error uploading image:', error);
+        alert(error.message || 'Failed to upload image. Please try again.');
+      } finally {
+        setUploading(false);
       }
     }
   };
 
-  const handleGenderChange = (value) => {
-    setGender(value);
-    setFormData(prev => ({ ...prev, gender: value }));
+  const handleGenderSelect = (selectedGender) => {
+    setGender(selectedGender);
+    // Update localStorage with new gender
+    const existingData = JSON.parse(localStorage.getItem('stepOneData') || '{}');
+    localStorage.setItem('stepOneData', JSON.stringify({
+      ...existingData,
+      gender: selectedGender
+    }));
+  };
+
+  const handleContinue = () => {
+    if (!imageUrl || !gender) {
+      alert('Please upload a profile picture and select your gender');
+      return;
+    }
+    handleIncreament();
   };
 
   return (
@@ -77,7 +73,7 @@ function StepOne() {
 
         <div className='flex flex-col lg:flex-row items-center mt-5 gap-3'>
           <div className='h-[75px] w-[75px] rounded-full flex justify-center items-center bg-slate-600 font-medium text-blue-950'>
-            {imageUrl ? <img src={imageUrl} className='h-full w-full rounded-full' alt="Profile" /> : <p className='text-4xl'>M</p>}
+            {imageUrl ? <img src={imageUrl} className='h-full w-full rounded-full' alt="Profile" /> : <p className='text-4xl'>E</p>}
           </div>
           <div>
             <input 
@@ -93,22 +89,42 @@ function StepOne() {
         </div>
       </div>
 
-      {/* Select Gender */}
-      <div className='relative border-2 rounded-lg mt-6 border-gray-300'>
-        <Select onValueChange={handleGenderChange} value={gender}>
-          <SelectTrigger className=" w-[300px] lg:w-[400px] h-12 lg:h-[60px] border-0">
-            <SelectValue className="text-lg text-slate-500" placeholder="Select One" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Male">Male</SelectItem>
-            <SelectItem value="Female">Female</SelectItem>
-          </SelectContent>
-        </Select>
-        <p className='absolute left-3 bottom-10 lg:bottom-12 bg-white text-base font-bold text-slate-400'>Select Gender</p>
+      {/* Gender Selection */}
+      <div className="mt-6">
+        <p className='text-lg font-medium text-cyan-600'>Select your gender*</p>
+        <div className="flex gap-4 mt-2">
+          <button
+            type="button"
+            onClick={() => handleGenderSelect('male')}
+            className={`px-4 py-2 rounded-lg border-2 ${
+              gender === 'male' ? 'border-customOrange bg-orange-50' : 'border-gray-300'
+            }`}
+          >
+            Male
+          </button>
+          <button
+            type="button"
+            onClick={() => handleGenderSelect('female')}
+            className={`px-4 py-2 rounded-lg border-2 ${
+              gender === 'female' ? 'border-customOrange bg-orange-50' : 'border-gray-300'
+            }`}
+          >
+            Female
+          </button>
+          <button
+            type="button"
+            onClick={() => handleGenderSelect('other')}
+            className={`px-4 py-2 rounded-lg border-2 ${
+              gender === 'other' ? 'border-customOrange bg-orange-50' : 'border-gray-300'
+            }`}
+          >
+            Other
+          </button>
+        </div>
       </div>
 
       {/* Continue Button */}
-      <button onClick={handleIncreament} className='mt-4 w-full h-11 lg:h-14 rounded-lg cursor-pointer text-white bg-customOrange'>
+      <button onClick={handleContinue} className='mt-4 w-full h-11 lg:h-14 rounded-lg cursor-pointer text-white bg-customOrange'>
         Continue
       </button>
     </div>

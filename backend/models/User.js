@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import process from 'process';
 
 const userSchema = new mongoose.Schema({
   firstName: {
@@ -25,47 +27,77 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['mentor', 'mentee', 'admin'],
+    required: true,
+    enum: ['mentor', 'mentee'],
     default: 'mentee'
+  },
+  profilePicture: {
+    type: String,
+    default: ''
+  },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other'],
+    default: 'other'
+  },
+  title: {
+    type: String,
+    default: ''
+  },
+  department: {
+    type: String,
+    default: ''
+  },
+  yearOfStudy: {
+    type: String,
+    default: ''
+  },
+  expertise: {
+    type: [String],
+    default: []
+  },
+  experience: {
+    type: String,
+    default: ''
+  },
+  social: {
+    linkedIn: {
+      type: String,
+      default: ''
+    },
+    twitter: {
+      type: String,
+      default: ''
+    },
+    instagram: {
+      type: String,
+      default: ''
+    },
+    website: {
+      type: String,
+      default: ''
+    }
+  },
+  interests: {
+    type: [String],
+    default: []
+  },
+  bio: {
+    type: String,
+    default: ''
+  },
+  overview: {
+    type: String,
+    default: ''
+  },
+  profileCompleted: {
+    type: Boolean,
+    default: false
   },
   mentorshipStatus: {
     type: String,
     enum: ['available', 'unavailable', 'busy'],
     default: 'available'
-  },
-  gender: {
-    type: String,
-    enum: ['male', 'female', 'other']
-  },
-  modeOfContact: {
-    type: String,
-    enum: ['email', 'phone', 'both']
-  },
-  availability: {
-    type: String
-  },
-  bio: {
-    type: String
-  },
-  overview: {
-    type: String
-  },
-  profilePicture: {
-    type: String
-  },
-  social: {
-    twitter: String,
-    facebook: String,
-    whatsapp: String,
-    instagram: String
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
   },
   paymentCompleted: {
     type: Boolean,
@@ -76,7 +108,16 @@ const userSchema = new mongoose.Schema({
     default: false
   },
   verificationToken: String,
-  verificationTokenExpires: Date
+  verificationTokenExpires: Date,
+  paymentReference: String,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
 // Hash password before saving
@@ -96,6 +137,15 @@ userSchema.pre('save', async function(next) {
 // Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Method to generate auth token
+userSchema.methods.generateAuthToken = function() {
+  return jwt.sign(
+    { id: this._id },
+    process.env.JWT_SECRET,
+    { expiresIn: '24h' }
+  );
 };
 
 const User = mongoose.model('User', userSchema);

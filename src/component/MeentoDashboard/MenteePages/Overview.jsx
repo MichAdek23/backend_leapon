@@ -3,19 +3,40 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faLongArrowRight, faBars } from "@fortawesome/free-solid-svg-icons";
 import { Calendar } from "@/components/ui/calendar";
 import { GlobalContext } from "@/component/GlobalStore/GlobalState";
-import { userApi, sessionApi } from '../../../lib/api';
+import { userApi } from '../../../lib/api';
 import { useAuth } from '../../../lib/AuthContext';
 
 function Overview() {
-  const [mentors, setMentors] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
+  const [userData, setUserData] = useState(null);
   const { user } = useAuth();
   const { upDatePage, handleToggleState, acceptedMentors } = useContext(GlobalContext);
 
-  // Calculate profile completion percentage based on complete profile data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch user profile data
+        const profileResponse = await userApi.getProfile();
+        setUserData(profileResponse.data);
+        console.log('Fetched user data:', profileResponse.data);
+
+        // Fetch user stats
+        const statsResponse = await userApi.getStats();
+        setStats(statsResponse.data);
+        console.log('Fetched stats:', statsResponse.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    if (user?.role === 'mentee') {
+      fetchData();
+    }
+  }, [user?.role]);
+
+  // Calculate profile completion percentage based on User model fields
   const calculateProfileStrength = () => {
-    if (!user) return 0;
+    if (!userData) return 0;
 
     const requiredFields = {
       firstName: 1,
@@ -24,11 +45,16 @@ function Overview() {
       bio: 1,
       interests: 1,
       title: 1,
-      socialMediaLinks: 1,
+      department: 1,
+      yearOfStudy: 1,
       profilePicture: 1,
       gender: 1,
-      department: 1,
-      yearOfStudy: 1
+      social: {
+        linkedIn: 1,
+        twitter: 1,
+        instagram: 1,
+        website: 1
+      }
     };
 
     const totalFields = Object.keys(requiredFields).length;
@@ -36,36 +62,17 @@ function Overview() {
 
     // Count completed fields
     Object.keys(requiredFields).forEach(field => {
-      if (user[field] && (Array.isArray(user[field]) ? user[field].length > 0 : true)) {
+      if (field === 'social') {
+        // Check if any social media links are filled
+        const hasSocialLinks = Object.values(userData[field] || {}).some(link => link && link.trim() !== '');
+        if (hasSocialLinks) completedFields++;
+      } else if (userData[field] && (Array.isArray(userData[field]) ? userData[field].length > 0 : true)) {
         completedFields++;
       }
     });
 
     return Math.round((completedFields / totalFields) * 100);
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Fetch mentors
-        const mentorsResponse = await userApi.getMentors();
-        setMentors(mentorsResponse.data);
-
-        // Fetch user stats
-        const statsResponse = await userApi.getStats();
-        setStats(statsResponse.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user?.role === 'mentee') {
-      fetchData();
-    }
-  }, [user?.role]);
 
   return (
     <section className="p-3 md:p-0">
@@ -172,7 +179,7 @@ function Overview() {
                     />
                     <div>
                       <h3 className="font-medium">{mentor.firstName} {mentor.lastName}</h3>
-                      <p className="text-sm text-gray-600">Mentor</p>
+                      <p className="text-sm text-gray-600">{mentor.title || 'Mentor'}</p>
                     </div>
                   </div>
                   <button className="text-customOrange hover:text-orange-600">
@@ -187,53 +194,49 @@ function Overview() {
         </div>
       </section>
 
-      {/* Mentors Section */}
-      <section className="rounded-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-5 gap-x-5 mt-12">
-        {loading ? (
-          <div>Loading...</div>
-        ) : (
-          mentors.map((mentor) => (
-            <div
-              key={mentor._id}
-              className="border-2 rounded-lg overflow-hidden w-[99%] h-[420px] bg-white"
-            >
-              <div className="h-3/5">
-                <img
-                  src={mentor.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(mentor.firstName + ' ' + mentor.lastName)}&background=random`}
-                  className="h-full w-full object-cover"
-                  alt={mentor.firstName + ' ' + mentor.lastName}
-                  loading="lazy"
-                />
+      {/* Statistics Section */}
+      <section className="mt-9">
+        <h1 className="text-base md:text-[22px] font-medium text-customDarkBlue mb-6">Your Statistics</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Connected Mentors Card */}
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm">Connected Mentors</p>
+                <h3 className="text-2xl font-bold mt-1">{acceptedMentors?.length || 0}</h3>
               </div>
-              <div className="h-2/5 flex flex-col gap-2 p-6">
-                <h3 className="text-lg font-bold text-customDarkBlue">
-                  {mentor.firstName} {mentor.lastName}
-                </h3>
-                <p className="flex items-center text-xs text-customDarkBlue font-normal">
-                  <span>
-                    <img
-                      src="/image/tick.png"
-                      className="object-cover h-4 w-4"
-                      alt=""
-                    />
-                  </span>
-                  {mentor.email}
-                </p>
-
-                <div className="flex justify-between items-center flex-wrap gap-2">
-                  <div className="flex gap-1">
-                    <p className="text-xs p-2 rounded-lg bg-slate-200">
-                      Expertise: {mentor.expertise}
-                    </p>
-                    <p className="text-xs p-2 rounded-lg bg-slate-200">
-                      Experience: {mentor.experience}
-                    </p>
-                  </div>
-                </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <img src="/image/mentor-icon.png" alt="Mentors" className="w-8 h-8" />
               </div>
             </div>
-          ))
-        )}
+          </div>
+
+          {/* Completed Sessions Card */}
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm">Completed Sessions</p>
+                <h3 className="text-2xl font-bold mt-1">{stats?.totalSessions || 0}</h3>
+              </div>
+              <div className="bg-green-100 p-3 rounded-full">
+                <img src="/image/session-icon.png" alt="Sessions" className="w-8 h-8" />
+              </div>
+            </div>
+          </div>
+
+          {/* Upcoming Sessions Card */}
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm">Upcoming Sessions</p>
+                <h3 className="text-2xl font-bold mt-1">{stats?.upcomingSessions || 0}</h3>
+              </div>
+              <div className="bg-orange-100 p-3 rounded-full">
+                <img src="/image/calendar-icon.png" alt="Calendar" className="w-8 h-8" />
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
     </section>
   );

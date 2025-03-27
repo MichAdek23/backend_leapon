@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance with base URL
 const api = axios.create({
@@ -34,14 +34,21 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      try {
-        // Clear the token
+      // Only clear storage and redirect if we get a specific error message
+      // indicating the token is invalid or expired
+      if (error.response?.data?.message?.toLowerCase().includes('token') && 
+          (error.response?.data?.message?.toLowerCase().includes('invalid') || 
+           error.response?.data?.message?.toLowerCase().includes('expired'))) {
         localStorage.removeItem('token');
+        localStorage.removeItem('userData');
         
-        // Redirect to login
-        window.location.href = '/login';
-      } catch (refreshError) {
-        return Promise.reject(refreshError);
+        // Only redirect to login if we're not already on the login page
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('/login')) {
+          // Use history.pushState instead of window.location.href
+          window.history.pushState({}, '', '/login');
+          window.dispatchEvent(new PopStateEvent('popstate'));
+        }
       }
     }
 
@@ -59,7 +66,36 @@ export const userApi = {
   getCurrentUser: () => api.get('/users/me'),
   updateProfile: (data) => api.put('/users/me', data),
   updatePassword: (data) => api.put('/users/password', data),
-  completeProfile: (data) => api.put('/users/complete-profile', data),
+  completeProfile: async (profileData) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await axios.put(
+        `${API_URL}/users/complete-profile`,
+        profileData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('API Error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || error.message || 'Failed to complete profile'
+      };
+    }
+  },
   uploadProfilePicture: (formData) => {
     // Override the default Content-Type for file upload
     const config = {
@@ -68,19 +104,30 @@ export const userApi = {
       }
     };
     return api.post('/users/profile-picture', formData, config);
-  }
+  },
+  logout: () => api.post('/auth/logout'),
+  sendVerificationEmail: (email) => api.post('/users/resend-verification', { email }),
+  verifyEmail: (token) => api.get(`/users/verify-email/${token}`),
+  checkVerificationStatus: () => api.get('/users/me'),
+  initializePayment: (paymentData) => api.post('/payments/initialize', paymentData),
+  verifyPayment: (reference) => api.post('/payments/verify', { reference }),
+  getPaymentHistory: () => api.get('/payments/history'),
 };
 
 // API methods for sessions
 export const sessionApi = {
-  getAll: () => api.get('/sessions/pending'),
+  getAll: () => api.get('/sessions'),
+  getPending: () => api.get('/sessions/pending'),
+  getAccepted: () => api.get('/sessions/accepted'),
+  getHistory: () => api.get('/sessions/history'),
   getById: (id) => api.get(`/sessions/${id}`),
   create: (data) => api.post('/sessions', data),
+  updateStatus: (id, status) => api.put(`/sessions/${id}/status`, { status }),
+  addFeedback: (id, feedback) => api.post(`/sessions/${id}/feedback`, feedback),
   update: (id, data) => api.put(`/sessions/${id}/status`, data),
   delete: (id) => api.delete(`/sessions/${id}`),
   join: (id) => api.post(`/sessions/${id}/join`),
   leave: (id) => api.post(`/sessions/${id}/leave`),
-  getHistory: () => api.get('/sessions/history'),
   getUpcoming: () => api.get('/sessions/upcoming')
 };
 
@@ -119,43 +166,6 @@ export const progressApi = {
   updateProgress: (data) => api.put('/progress', data),
   getAchievements: () => api.get('/progress/achievements'),
   getGoals: () => api.get('/progress/goals')
-};
-
-// Email Verification APIs
-export const sendVerificationEmail = async (email) => {
-  try {
-    const response = await api.post('/auth/send-verification-email', { email });
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to send verification email');
-  }
-};
-
-export const verifyEmail = async (token) => {
-  try {
-    const response = await api.post('/auth/verify-email', { token });
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to verify email');
-  }
-};
-
-export const checkVerificationStatus = async () => {
-  try {
-    const response = await api.get('/auth/check-verification');
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to check verification status');
-  }
-};
-
-export const verifyEmailToken = async (token) => {
-  try {
-    const response = await api.get(`/users/verify-email/${token}`);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to verify email');
-  }
 };
 
 export default api;

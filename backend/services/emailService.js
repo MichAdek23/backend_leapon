@@ -20,7 +20,8 @@ export const sendVerificationEmail = async (email, token) => {
   try {
     // Ensure FRONTEND_URL doesn't end with a slash
     const baseUrl = process.env.FRONTEND_URL.replace(/\/$/, '');
-    const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const verificationUrl = `${backendUrl}/api/users/verify-email/${token}`;
     
     console.log('Sending verification email to:', email);
     console.log('Verification URL:', verificationUrl);

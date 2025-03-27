@@ -173,6 +173,28 @@ function GlobalState({ children }) {
 
   const ActiveComponent = components[activeComponent] || Overview;
 
+  const [selectedChatUser, setSelectedChatUser] = useState(() => {
+    const storedChatUser = localStorage.getItem('selectedChatUser');
+    if (storedChatUser) {
+      try {
+        return JSON.parse(storedChatUser);
+      } catch (error) {
+        console.error("Error parsing stored chat user:", error);
+        return null;
+      }
+    }
+    return null;
+  });
+
+  // Add effect to save selectedChatUser to localStorage
+  React.useEffect(() => {
+    if (selectedChatUser) {
+      localStorage.setItem('selectedChatUser', JSON.stringify(selectedChatUser));
+    } else {
+      localStorage.removeItem('selectedChatUser');
+    }
+  }, [selectedChatUser]);
+
   const value = useMemo(() => ({
     ActiveComponent, 
     handleDecreament, 
@@ -194,7 +216,9 @@ function GlobalState({ children }) {
     formData,
     setFormData,
     acceptedMentors,
-    AddMentors
+    AddMentors,
+    selectedChatUser,
+    setSelectedChatUser
   }), [
     ActiveComponent, 
     handleDecreament, 
@@ -216,7 +240,9 @@ function GlobalState({ children }) {
     formData,
     setFormData,
     acceptedMentors,
-    AddMentors
+    AddMentors,
+    selectedChatUser,
+    setSelectedChatUser
   ]);
 
   return (

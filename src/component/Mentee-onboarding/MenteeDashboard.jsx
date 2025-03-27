@@ -1,14 +1,26 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { GlobalContext } from '@/component/GlobalStore/GlobalState';
 import NavBarDashboard from '../NavBarDashboard';
 import NavRes from '../NavRes';
 import MenteeProfile from './MenteeProfile';
+import Setting from '../MeentoDashboard/MenteePages/Setting';
 import { useAuth } from '../../lib/AuthContext';
 
 const MenteeDashboard = () => {
-  const { toggleState } = useContext(GlobalContext);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [activeComponent, setActiveComponent] = useState('Profile');
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login');
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
 
   const renderActiveComponent = () => {
     switch (activeComponent) {
@@ -17,7 +29,7 @@ const MenteeDashboard = () => {
       case 'Message':
         return <div>Messages Component</div>;
       case 'Setting':
-        return <div>Settings Component</div>;
+        return <Setting />;
       case 'Mentors':
         return <div>Mentors List Component</div>;
       case 'Sessions':
@@ -32,17 +44,15 @@ const MenteeDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-      <div className={`${toggleState ? 'block' : 'hidden'} lg:block w-64 bg-white dark:bg-gray-800 shadow-lg`}>
+    <div className="flex">
+      <div className="hidden lg:block">
         <NavBarDashboard activeComponent={activeComponent} setActiveComponent={setActiveComponent} />
-      </div>
-      <div className="flex-1 overflow-auto">
-        <div className="p-4">
-          {renderActiveComponent()}
-        </div>
       </div>
       <div className="lg:hidden">
         <NavRes activeComponent={activeComponent} setActiveComponent={setActiveComponent} />
+      </div>
+      <div className="flex-1">
+        {renderActiveComponent()}
       </div>
     </div>
   );

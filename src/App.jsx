@@ -21,6 +21,7 @@ import TermsAndConditions from './component/UserAuth/TermsAndConditions';
 import PrivacyPolicy from './component/UserAuth/PrivacyPolicy';
 import MentorDashBoard from './component/MeentoDashboard/mentor-DashBoard';
 import Mentee from './component/Mentee-onboarding/Mentee';
+import CreateSession from './component/Mentee-onboarding/CreateSession';
 
 function App() {
   return (
@@ -56,6 +57,14 @@ function App() {
           element={
             <PrivateRoute allowedRoles={['mentee', 'admin']}>
               <Mentee />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/mentee/create-session"
+          element={
+            <PrivateRoute allowedRoles={['mentee', 'admin']}>
+              <CreateSession />
             </PrivateRoute>
           }
         />

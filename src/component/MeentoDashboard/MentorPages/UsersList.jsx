@@ -71,12 +71,7 @@ const UsersList = () => {
               </div>
             )}
 
-            {user.role === 'student' && (
-              <div className="mt-4">
-                <p className="text-gray-600">Department: {user.department}</p>
-                <p className="text-gray-600">Year of Study: {user.yearOfStudy}</p>
-              </div>
-            )}
+ 
 
             {user.overview && (
               <div className="mt-4">
