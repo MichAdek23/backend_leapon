@@ -20,7 +20,7 @@ export const sendVerificationEmail = async (email, token) => {
   try {
     // Ensure FRONTEND_URL doesn't end with a slash
     const baseUrl = process.env.FRONTEND_URL.replace(/\/$/, '');
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = process.env.BACKEND_URL || 'https://leapon.onrender.com';
     const verificationUrl = `${backendUrl}/api/users/verify-email/${token}`;
     
     console.log('Sending verification email to:', email);

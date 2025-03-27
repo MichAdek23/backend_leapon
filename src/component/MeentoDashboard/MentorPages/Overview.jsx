@@ -18,7 +18,7 @@ const getImageUrl = (imagePath) => {
   
   // For uploaded images from the database
   if (imagePath.startsWith('/uploads/')) {
-    const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${imagePath}`;
+    const url = `${import.meta.env.VITE_API_URL || 'https://leapon.onrender.com'}${imagePath}`;
     console.log('Using local server URL:', url);
     return url;
   }

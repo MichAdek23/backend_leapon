@@ -1,6 +1,6 @@
 const config = {
   development: {
-    baseURL: 'http://localhost:5000/api',
+    baseURL: 'https://leapon.onrender.com/api',
     timeout: 10000,
   },
   production: {
@@ -8,7 +8,7 @@ const config = {
     timeout: 10000,
   },
   test: {
-    baseURL: 'http://localhost:5000/api',
+    baseURL: 'https://leapon.onrender.com/api',
     timeout: 10000,
   },
 };

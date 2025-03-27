@@ -17,10 +17,10 @@ const getImageUrl = (imagePath) => {
   if (!imagePath) return "/image/Subtract.png";
   if (imagePath.startsWith('http')) return imagePath;
   if (imagePath.startsWith('/uploads')) {
-    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${imagePath}`;
+    return `${import.meta.env.VITE_API_URL || 'https://leapon.onrender.com'}${imagePath}`;
   }
   if (imagePath.startsWith('/api/uploads')) {
-    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${imagePath.replace('/api', '')}`;
+    return `${import.meta.env.VITE_API_URL || 'https://leapon.onrender.com'}${imagePath.replace('/api', '')}`;
   }
   return imagePath;
 };

@@ -14,11 +14,11 @@ const getImageUrl = (imagePath) => {
   if (imagePath.startsWith('http')) return imagePath;
   if (imagePath.startsWith('/uploads')) {
     // For uploaded images, use the full API URL
-    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${imagePath}`;
+    return `${import.meta.env.VITE_API_URL || 'https://leapon.onrender.com'}${imagePath}`;
   }
   if (imagePath.startsWith('/api/uploads')) {
     // Handle legacy paths that incorrectly include /api
-    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${imagePath.replace('/api', '')}`;
+    return `${import.meta.env.VITE_API_URL || 'https://leapon.onrender.com'}${imagePath.replace('/api', '')}`;
   }
   // For static images in the public directory
   return imagePath;
