@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GlobalContext } from '@/component/GlobalStore/GlobalState';
 import NavBarDashboard from '../NavBarDashboard';
 import NavRes from '../NavRes';
 import MenteeProfile from './MenteeProfile';
-import Setting from '../MeentoDashboard/MenteePages/Setting';
 import { useAuth } from '../../lib/AuthContext';
+import Overview from '../MeentoDashboard/MenteePages/Overview';
+import Booking from '../MeentoDashboard/MentorPages/Booking';
+import Explore from '../MeentoDashboard/MentorPages/Explore';
+import Message from '../MeentoDashboard/MentorPages/Message';
 
 const MenteeDashboard = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const [activeComponent, setActiveComponent] = useState('Profile');
+  const [activeComponent, setActiveComponent] = useState('Overview');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -26,16 +28,16 @@ const MenteeDashboard = () => {
     switch (activeComponent) {
       case 'Profile':
         return <MenteeProfile />;
-      case 'Message':
-        return <div>Messages Component</div>;
+      case 'Overview':
+        return <Overview/>;
       case 'Setting':
-        return <Setting />;
-      case 'Mentors':
-        return <div>Mentors List Component</div>;
-      case 'Sessions':
-        return <div>Sessions Component</div>;
-      case 'Resources':
-        return <div>Resources Component</div>;
+        return <Setting/>;
+      case 'Bookings':
+        return <Booking/>;
+      case 'Explore':
+        return <Explore/>;
+      case 'Messages':
+        return  <Message/> ;
       case 'Progress':
         return <div>Progress Component</div>;
       default:
@@ -58,4 +60,4 @@ const MenteeDashboard = () => {
   );
 };
 
-export default MenteeDashboard; 
+export default MenteeDashboard;

@@ -50,7 +50,7 @@ function SignIn() {
           navigate('/mentee-dashboard');
           break;
         case 'admin':
-          navigate('/mentor-dashboard');
+          navigate('/admin-dashboard'); // Redirect admin to their dashboard
           break;
         default:
           console.error('Invalid user role:', response.role);
