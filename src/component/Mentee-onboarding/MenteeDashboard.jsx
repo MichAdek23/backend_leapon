@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import { GlobalContext } from '@/component/GlobalStore/GlobalState';
-// import NavBarDashboard from '../NavBarDashboard';
+import { GlobalContext } from '@/component/GlobalStore/GlobalState';
+import NavBarDashboard from '../NavBarDashboard';
 import NavRes from '../NavRes';
 import MenteeProfile from './MenteeProfile';
 import Setting from '../MeentoDashboard/MenteePages/Setting';
@@ -46,7 +46,7 @@ const MenteeDashboard = () => {
   return (
     <div className="flex">
       <div className="hidden lg:block">
-        {/* <NavBarDashboard activeComponent={activeComponent} setActiveComponent={setActiveComponent} /> */}
+        <NavBarDashboard activeComponent={activeComponent} setActiveComponent={setActiveComponent} />
       </div>
       <div className="lg:hidden">
         <NavRes activeComponent={activeComponent} setActiveComponent={setActiveComponent} />

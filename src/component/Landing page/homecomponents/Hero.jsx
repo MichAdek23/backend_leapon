@@ -21,8 +21,7 @@ const Hero = () => {
             Mentorship</h1>
         <p className='mb-5 mt-4 p-3 text-md'>Experience life-changing mentorship, your path to <br/> extraordinary growth starts here.</p>
         <div className=' flex justify-center items-center'>
-        <button onClick={()=> navigate('/sign-up')} className='border font-bold bg-customOrange text-neutral-50 rounded-xl w-[220px] py-3 text-sm flex items-center justify-center'> Get Started </button>
-      
+        <button onClick={()=> navigate('/sign-up')} className='border font-bold bg-customOrange text-neutral-50 rounded-xl w-[220px] py-3 text-lg flex items-center justify-center'> Get Started Now </button>
         </div>
        
       </div>
