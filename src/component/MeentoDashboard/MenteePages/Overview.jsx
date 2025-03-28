@@ -80,7 +80,7 @@ function Overview() {
       <header className="flex justify-between">
         <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
           <div className="flex flex-col gap-4">
-            <h1 className="text-[32px] font-medium">Welcome, {user?.firstName || 'Mentee'} hi</h1>
+            <h1 className="text-[32px] font-medium">Welcome, {user?.firstName || 'Mentee'} hiii</h1>
             <p className="text-base font-medium text-slate-600">
               {stats?.upcomingSessions > 0 
                 ? `You have ${stats.upcomingSessions} upcoming session${stats.upcomingSessions > 1 ? 's' : ''}`
