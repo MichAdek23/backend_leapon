@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import User from '../models/User.js';
 import { sendVerificationEmail } from '../services/emailService.js';
 
+
 // Send verification email
 export const sendVerificationEmailController = async (req, res) => {
   try {

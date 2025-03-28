@@ -20,6 +20,9 @@ const CreateSession = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const dropdownRef = useRef(null);
+  const jitsiContainerRef = useRef(null);
+  const [jitsiApi, setJitsiApi] = useState(null);
+
   const [formData, setFormData] = useState({
     participant: '',
     date: '',
@@ -30,6 +33,53 @@ const CreateSession = () => {
     description: '',
     notes: ''
   });
+
+  const startJitsiMeeting = () => {
+    try {
+      if (jitsiApi) {
+        jitsiApi.dispose();
+      }
+
+      const domain = "meet.jit.si";
+      const options = {
+        roomName: `session-${formData.topic}-${Date.now()}`,
+        parentNode: jitsiContainerRef.current,
+        width: "100%",
+        height: "600px",
+        configOverwrite: {
+          disableDeepLinking: true,
+        },
+        interfaceConfigOverwrite: {
+          SHOW_JITSI_WATERMARK: false,
+        },
+        userInfo: {
+          displayName: selectedUser ? selectedUser.name : "Guest",
+        },
+      };
+
+      const api = new window.JitsiMeetExternalAPI(domain, options);
+      setJitsiApi(api);
+
+      api.addListener("readyToClose", () => {
+        console.log("Jitsi meeting closed");
+        setJitsiApi(null);
+      });
+
+      return api;
+    } catch (error) {
+      console.error("Failed to initialize Jitsi meeting:", error);
+      setError("Failed to start the meeting. Please try again.");
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (jitsiApi) {
+        jitsiApi.dispose();
+      }
+    };
+  }, [jitsiApi]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -44,7 +94,7 @@ const CreateSession = () => {
         setFilteredUsers(response.data);
       } catch (error) {
         console.error(`Error fetching ${userRole === 'mentor' ? 'mentees' : 'mentors'}:`, error);
-        setError(`Failed to fetch ${userRole === 'mentor' ? 'mentees' : 'mentors'}`);
+        setError(`Failed to fetch ${userRole === 'mentor' ? 'mentees' : 'mentors'}. Please try again later.`);
       } finally {
         setLoading(false);
       }
@@ -111,6 +161,13 @@ const CreateSession = () => {
       setError('Duration must be between 30 and 180 minutes');
       return false;
     }
+    
+    const selectedDateTime = new Date(`${formData.date}T${formData.time}`);
+    if (selectedDateTime < new Date()) {
+      setError('Please select a future date and time');
+      return false;
+    }
+    
     return true;
   };
 
@@ -140,12 +197,16 @@ const CreateSession = () => {
       
       if (response.data) {
         setSuccessMessage('Session created successfully!');
+        // Start Jitsi meeting after successful creation
+        startJitsiMeeting();
         setTimeout(() => {
           navigate(userRole === 'mentor' ? '/mentor/sessions' : '/mentee/sessions');
         }, 2000);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create session');
+      console.error("Error creating session:", err);
+      setError(err.response?.data?.message || 'Failed to create session. Please try again.');
+    } finally {
       setSubmitting(false);
     }
   };
@@ -161,8 +222,14 @@ const CreateSession = () => {
       description: '',
       notes: ''
     });
+    setSelectedUser(null);
+    setSearchQuery('');
     setError(null);
     setSuccessMessage(null);
+    if (jitsiApi) {
+      jitsiApi.dispose();
+      setJitsiApi(null);
+    }
   };
 
   if (loading) {
@@ -182,6 +249,7 @@ const CreateSession = () => {
         <button
           onClick={handleToggleState}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          aria-label="Toggle menu"
         >
           <FontAwesomeIcon icon={faBars} className="w-6 h-6" />
         </button>
@@ -216,6 +284,8 @@ const CreateSession = () => {
               onChange={handleSearchChange}
               onClick={() => setIsDropdownOpen(true)}
               className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:border-gray-600"
+              aria-haspopup="listbox"
+              aria-expanded={isDropdownOpen}
             />
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <ChevronDown className="h-5 w-5 text-gray-400" />
@@ -223,7 +293,10 @@ const CreateSession = () => {
           </div>
           
           {isDropdownOpen && (
-            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div 
+              className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              role="listbox"
+            >
               {filteredUsers.length === 0 ? (
                 <div className="px-4 py-2 text-gray-500 dark:text-gray-400">
                   No {userRole === 'mentor' ? 'mentees' : 'mentors'} found
@@ -234,6 +307,8 @@ const CreateSession = () => {
                     key={user._id}
                     onClick={() => handleUserSelect(user)}
                     className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
+                    role="option"
+                    aria-selected={selectedUser?._id === user._id}
                   >
                     {user.name}
                   </div>
@@ -334,7 +409,7 @@ const CreateSession = () => {
             name="description"
             value={formData.description}
             onChange={handleChange}
-            rows="4"
+            rows={4}
             placeholder="Provide more details about what you want to discuss..."
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:border-gray-600"
           />
@@ -349,11 +424,19 @@ const CreateSession = () => {
             name="notes"
             value={formData.notes}
             onChange={handleChange}
-            rows="3"
+            rows={3}
             placeholder="Any additional information..."
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:border-gray-600"
           />
         </div>
+
+        {/* Jitsi Meeting Container */}
+        {jitsiApi && (
+          <div className="mt-6">
+            <h2 className="text-lg font-medium mb-2">Live Session</h2>
+            <div id="jitsi-container" ref={jitsiContainerRef} />
+          </div>
+        )}
 
         {/* Submit Button */}
         <div className="flex justify-end gap-4">
