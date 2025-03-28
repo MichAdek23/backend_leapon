@@ -110,7 +110,7 @@ function SignUp() {
           <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
         </div>
         <div className="w-full px-6 lg:px-0 md:w-[400px]">
-          <h1 className="text-2xl font-bold lg:text-[40px] text-customDarkBlue">Sign </h1>
+          <h1 className="text-2xl font-bold lg:text-[40px] text-customDarkBlue">Sign Up</h1>
           <p className="text-slate-400 text-sm mt-2">Let's Create an Account for you</p>
 
           {error && (
