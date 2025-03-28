@@ -242,7 +242,7 @@ const CreateSession = () => {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      {/* <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
           {userRole === 'mentor' ? 'Create Session with Mentee' : 'Request Mentor Session'}
         </h1>
@@ -253,7 +253,7 @@ const CreateSession = () => {
         >
           <FontAwesomeIcon icon={faBars} className="w-6 h-6" />
         </button>
-      </div> */}
+      </div>
 
       {error && (
         <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
@@ -269,6 +269,7 @@ const CreateSession = () => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Participant Selection */}
+        {/* 
         <div className="relative" ref={dropdownRef}>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {userRole === 'mentor' ? 'Select a Mentee' : 'Select a Mentor'}
@@ -317,6 +318,7 @@ const CreateSession = () => {
             </div>
           )}
         </div>
+        */}
 
         {/* Date and Time */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
