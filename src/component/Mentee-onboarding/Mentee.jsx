@@ -25,7 +25,7 @@ function Mentee() {
                 <NavBarDashboard/>
             </section>
             <section className='h-fit sidebar md:px-10 lg:px-[34px] bg-slate-100 py-10 w-full'>
-                {/* <ComponentToRender/>  */}
+                <ComponentToRender/>
             </section> 
          </main>
     );
