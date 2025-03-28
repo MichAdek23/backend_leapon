@@ -41,9 +41,6 @@ function ModeOfSignUp() {
 
 
   const onSubmit = (data) => {
-    // Save selected role to localStorage
-    localStorage.setItem('userData', JSON.stringify({ ...JSON.parse(localStorage.getItem('userData') || '{}'), role: selectedRole }));
-
     if (selectedRole === 'mentee') {
       navigate('/mentee-form');
     } else {
