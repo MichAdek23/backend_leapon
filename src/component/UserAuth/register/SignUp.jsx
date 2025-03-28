@@ -125,7 +125,7 @@ function SignUp() {
                       }
                     })}
                     className="outline-none w-full"
-                    placeholder="First Name"
+                    placeholder="Full Name"
                   />
                 </div>
                 {errors.FirstName && <p className="text-red-600">{errors.FirstName.message}</p>}
