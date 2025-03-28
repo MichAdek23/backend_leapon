@@ -7,10 +7,10 @@ import { asset } from '@/assets/assets'
 
 const MatchingSystem = () => {
   return (
-    <div className='grid grid-cols-1 sm:grid-cols-2 px-10 sm:px-20 py-15 gap-32'>
+    <div className='grid grid-cols-1 sm:grid-cols-2 px-6 sm:px-20 py-15 gap-32'>
       <div className='bg-white w-full'>
         <h1 className='text-orange-500 font-bold text-xl'>MATCHING SYSTEM</h1>
-        <div className='font-bold text-2xl sm:text-3xl text-left mt-8'>
+        <div className='font-bold text-xl sm:text-3xl text-left mt-8'>
         Matches mentees and mentors based on their interests, goals, expertise, and availability.
         </div>
         <div className='bg-gray-200 mt-8 py-2 px-5 text-sm rounded-md'>
@@ -20,7 +20,7 @@ const MatchingSystem = () => {
       </div>
                
 
-      <div className='bg-gray-200 w-full border border-r-0 border-b-0 rounded-l-md pl-5 pt-5'>
+      <div className='bg-gray-200 w-full border border-r-0 border-b-0 rounded-tl-xl pl-5 pt-5'>
           <div className=' flex bg-gray-50 border sm:px-5 px-2 pt-5 rounded-tl-xl border-gray-400 border-r-0 border-b-0 mb-5'>
             <div className='bg-gray-50 border pt-3 border w-1/2 border-t-0 border-t-0 border-l-0'>
                 <div className=" pr-10 sm:pr-5 hidden sm:block">
@@ -54,7 +54,6 @@ const MatchingSystem = () => {
               </p>
                  <MatchingDate className=""/>
             </div>
-           
            </div>
         </div>
     </div>

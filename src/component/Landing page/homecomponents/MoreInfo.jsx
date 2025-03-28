@@ -31,8 +31,8 @@ const now = new Date();
 
   return (
     <>
-    <div className='px-10 sm:px-20 py-10 w-[100%]'>
-      <h1 className='text-center font-bold text-3xl py-10'>More features on Mentorship</h1>
+    <div className='px-6 sm:px-20 py-10 w-[100%]'>
+      <h1 className='text-center font-bold text-2xl py-10'>More features on Mentorship</h1>
         <div className='sm:flex flex-wrap items-center justify-between'>
             <div className='sm:w-[55%] w-[100%] mb-10 border rounded-xl pb-4'>
                 <div>
@@ -46,7 +46,7 @@ const now = new Date();
             <div className='border rounded-xl pb-4'>
                <div className=' bg-gray-50 pl-5 pt-5 rounded-tl-md'>
                     <div className='border-t border-l rounded-tl-xl bg-white py-6 px-5'>
-                            <h1 className='font-semibold text-3xl'>My Quick overview</h1>
+                            <h1 className='font-semibold text-xl sm:text-2xl'>My Quick overview</h1>
                             <p className='py-4 text-sm'>View your monthly mentoring activities <br />and overall performance</p>
                             <p className='font-semibold flex'>
                                <CircleCheck className='bg-orange-500 text-white rounded-full mr-3'/> Well done
@@ -61,19 +61,19 @@ const now = new Date();
         </div> 
     </div>
 
-    <div className='px-10 sm:px-20 pb-10 w-[100%]'>
+    <div className='px-6 sm:px-20 pb-10 w-[100%]'>
         <div className='sm:flex flex-wrap items-center justify-between'>
             <div className='border mb-10 rounded-xl pb-4'>
                <div className=' bg-gray-50 pl-5  pt-5 rounded-tl-md'>
                     <div className='border-t border-l rounded-tl-xl bg-white py-6 px-5'>
-                        <div className='flex items-center justify-between'>
+                        <div className='flex text-sm items-center justify-between'>
                             <h1>#1TipsforSuccess</h1>
                             <p className='flex gap-5'>
                                 <MoveLeft className='bg-orange-50 p-1 text-orange-500 rounded-full'/> 
                                 <MoveRight className='bg-orange-50 p-1 rounded-full'/>
                             </p>
                         </div>
-                            <h1 className='font-semibold text-xl py-2'>How to prepare for your first <br /> meeting?</h1>
+                            <h1 className='font-semibold text-sm py-2'>How to prepare for your first <br /> meeting?</h1>
                             <p className=' text-sm'>Plan an agenda! Plan out the questions and topics
                                 you'd  <br />like to discuss. If you'd like to work together on 
                                 long-term  <br /> goals, set some time to discuss 

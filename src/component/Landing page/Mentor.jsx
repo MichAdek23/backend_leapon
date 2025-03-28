@@ -5,7 +5,7 @@ import { Zap } from 'lucide-react';
 
 const Mentor = () => {
   return (
-    <div className='grid grid-cols-1 sm:grid-cols-2 px-10 sm:px-20 py-40 gap-32'>
+    <div className='grid grid-cols-1 sm:grid-cols-2 px-6 sm:px-20 py-40 gap-32'>
 
         <div className='bg-gray-200 w-full border border-l-0 border-b-0  rounded-r-md pr-5 pt-5'>
            <div className='bg-gray-50 border px-5 pt-5 rounded-tr-xl  border-l-0 border-b-0'>
@@ -50,7 +50,7 @@ const Mentor = () => {
 
       <div className='bg-white w-full'>
         <h1 className='text-orange-500 font-bold text-xl'>MENTOR PROFILE</h1>
-        <div className='font-bold text-2xl sm:text-3xl text-left mt-8'>
+        <div className='font-bold text-xl sm:text-3xl text-left mt-8'>
         Detailed information about the <br/> mentor's expertise, experience, <br />and areas of mentorship.
         </div>
         <div className='bg-gray-200 mt-8 py-2 px-5 text-sm rounded-md'>

@@ -14,9 +14,9 @@ const MatchingDate = () => {
       mode="single"
       selected={date}
       onSelect={setDate}
-      className="w-[250px]"
+      className="w-[280px]"
     />
-    <Button className='w-full text-orange-100 bg-orange-500 rounded-none rounded-l-md my-3'>Continue</Button>
+    <Button className='w-[270px] text-orange-100 bg-orange-500 rounded-none rounded-l-xl my-3'>Continue</Button>
    </>
   )
 }
