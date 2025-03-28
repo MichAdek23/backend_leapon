@@ -40,7 +40,7 @@ function ModeOfSignUp() {
   console.log(selectedRole)
 
 
-  const onSubmit = (data) => {
+  const onSubmit = () => {
     if (selectedRole === 'mentee') {
       navigate('/mentee-form');
     } else {
