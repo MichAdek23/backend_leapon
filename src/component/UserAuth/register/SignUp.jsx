@@ -52,7 +52,14 @@ function SignUp() {
       }));
       
       // Send verification email
-      await userApi.sendVerificationEmail(userData.email);
+      try {
+        console.log('Attempting to send verification email to:', userData.email);
+        const emailResponse = await userApi.sendVerificationEmail(userData.email);
+        console.log('Verification email response:', emailResponse);
+      } catch (emailError) {
+        console.error('Error sending verification email:', emailError);
+        setError('Account created, but there was an issue sending the verification email. Please try again later.');
+      }
 
       // Show success modal
       setShowModal(true);

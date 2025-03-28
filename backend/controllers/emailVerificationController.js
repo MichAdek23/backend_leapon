@@ -23,7 +23,15 @@ export const sendVerificationEmailController = async (req, res) => {
     await user.save();
 
     // Send verification email
-    await sendVerificationEmail(email, verificationToken);
+    try {
+      console.log('Sending verification email to:', email);
+      console.log('Verification token:', verificationToken);
+      await sendVerificationEmail(email, verificationToken);
+      console.log('Verification email sent successfully');
+    } catch (error) {
+      console.error('Error sending verification email:', error);
+      throw new Error('Failed to send verification email');
+    }
 
     res.json({ message: 'Verification email sent successfully' });
   } catch (error) {
@@ -86,4 +94,4 @@ export const checkVerificationStatusController = async (req, res) => {
     console.error('Error checking verification status:', error);
     res.status(500).json({ message: 'Failed to check verification status' });
   }
-}; 
+};
