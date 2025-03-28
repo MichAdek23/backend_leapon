@@ -13,7 +13,7 @@ function NavRes() {
     <section className=' z-50 h-full w-full pb-3  pt-10 '>
       <div className=' w-full flex justify-between px-3 items-center '>
         <img src="/image/logo.png.png" className=' h-8' alt ="" />
-        <div onClick={handleToggleState}>
+        <div className=' cursor-pointer' onClick={handleToggleState}>
             <FontAwesomeIcon className=' text-2xl' icon={faRemove}/>
         </div>
       </div>
@@ -32,7 +32,7 @@ function NavRes() {
         </div>
         <div onClick={() => upDatePage('Booking')} className={`${activeComponent === 'Booking' ? 'text-customOrange' : 'text-gray-500'} flex gap-4 cursor-pointer font-medium items-center`}>
           <span><img src="/image/BookingIcon.png" className='h-7' alt="" /></span>
-          Booking
+          Bookings
         </div>
       </div>
 

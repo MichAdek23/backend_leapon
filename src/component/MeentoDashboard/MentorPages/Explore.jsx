@@ -1,72 +1,119 @@
 import React, { useContext, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faSearch, faUserGraduate, faUserTie, faStar } from "@fortawesome/free-solid-svg-icons";
 import { GlobalContext } from "@/component/GlobalStore/GlobalState";
-import axios from "axios";
+import { useAuth } from '../../../lib/AuthContext';
+import { userApi } from '../../../lib/api';
 
 function Explore() {
-  const { upDatePage, handleToggleState, setSelectedMentee, AddMentees, acceptedMentees  } = useContext(GlobalContext);
-  const [mentees, setMentees] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [inputSearch, setInputSearch] = useState("");
-  const [applySearch, setApplySearch] = useState(false);
+  const { upDatePage, handleToggleState, setSelectedMentee, AddMentees, acceptedMentees, setSelectedChatUser } =
+    useContext(GlobalContext);
+  const { user } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const fetchMentee = async () => {
+    const fetchUsers = async () => {
       setLoading(true);
       try {
-        const res = await axios.get("https://reqres.in/api/users");
-        localStorage.setItem('mentee', JSON.stringify(res.data.data));
-        setMentees(res.data.data);
+        // If user is a mentor, fetch mentees, if user is a mentee, fetch mentors
+        const response = await (user?.role === 'mentor' ? userApi.getMentees() : userApi.getMentors());
+        setUsers(response.data);
       } catch (error) {
-        console.error("Error fetching mentees:", error);
+        console.error("Error fetching users:", error);
+        setError(error.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMentee();
-  }, []);
+    if (user?.role) {
+      fetchUsers();
+    }
+  }, [user?.role]);
 
-  const filteredData = mentees.filter((item) => 
-    !acceptedMentees.some((mentee) => mentee.id === item.id)
-  ).filter((item) =>
-    applySearch
-      ? inputSearch
-        ? item.first_name.toLowerCase().includes(inputSearch.toLowerCase()) ||
-          item.last_name.toLowerCase().includes(inputSearch.toLowerCase()) ||
-          item.email.toLowerCase().includes(inputSearch.toLowerCase())
+  // Filter users based on search query and acceptedMentees
+  const filteredUsers = users
+    .filter((item) => !acceptedMentees.some((mentee) => mentee.id === item._id))
+    .filter((item) =>
+      searchQuery
+        ? item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (item.expertise && item.expertise.some(skill => 
+            skill.toLowerCase().includes(searchQuery.toLowerCase())
+          ))
         : true
-      : true
-  );
+    );
 
-  const handleSearch = () => {
-    setApplySearch(true);
-  };
+  const handleStartChat = async (selectedUser) => {
+    try {
+      // Create a new conversation
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/messages/conversations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          participantId: selectedUser._id
+        })
+      });
 
-  const handleBookingNavigation = (mentee) => {
-    localStorage.setItem('mentee', JSON.stringify(mentee));
-    setSelectedMentee(mentee);
-    AddMentees(mentee);
-    upDatePage('Message');
+      if (!response.ok) {
+        throw new Error('Failed to create conversation');
+      }
+
+      // Store the selected user and update state
+      setSelectedMentee(selectedUser);
+      AddMentees(selectedUser);
+      
+      // Set the selected chat user in GlobalContext
+      setSelectedChatUser(selectedUser);
+
+      // Navigate to messages
+      upDatePage('Message');
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      // Show error to user
+      setError('Failed to start chat. Please try again.');
+      // Clear error after 3 seconds
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      </div>
+    );
   }
 
-  if (!mentees || mentees.length === 0) {
-    return <div className="text-4xl flex justify-center items-center h-96">No mentees available</div>;
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-red-500 text-center p-4">
+          <p className="text-lg font-medium">Error loading users</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <section className="p-3 md:p-0">
-      {/* Header Section */}
-      <header className="flex justify-between">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+      {/* Header */}
+      <header className="flex justify-between mb-8">
         <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
           <div className="flex flex-col gap-4">
-            <h1 className="text-[32px] font-medium">Mentees</h1>
-            <p className="text-base font-meduim text-slate-600">Accept Mentee </p>
+            <h1 className="text-[32px] font-medium">
+              {user?.role === 'mentor' ? 'Find Mentees' : 'Find Mentors'}
+            </h1>
+            <p className="text-base font-medium text-slate-600">
+              {user?.role === 'mentor' ? 'Connect with potential mentees' : 'Find your perfect mentor'}
+            </p>
           </div>
 
           <div className="flex justify-center gap-4">
@@ -74,93 +121,134 @@ function Explore() {
               onClick={() => upDatePage("Message")}
               src="/image/messageIcon.png"
               className="md:w-12 h-9 md:h-12 cursor-pointer"
-              alt=""
+              alt="Message Icon"
+              loading="lazy"
             />
             <img
               onClick={() => upDatePage("Setting")}
               src="/image/settingIcon.png"
               className="md:w-12 h-9 md:h-12 cursor-pointer"
-              alt=""
+              alt="Setting Icon"
+              loading="lazy"
             />
           </div>
         </div>
 
         <div onClick={handleToggleState} className="block lg:hidden mt-3">
-          <button>
+          <button aria-label="Toggle menu">
             <FontAwesomeIcon icon={faBars} />
           </button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="relative z-20 h-fit">
-        <section className="mt-11 w-full flex flex-col md:flex-row lg:flex-nowrap gap-5 h-14 justify-center">
-          <p className="absolute z-20 left-9 hidden md:block md:bottom-11 text-slate-400 bg-slate-100">
-            search
-          </p>
-          <div className="md:w-[89%] md:h-full rounded-lg md:rounded-3xl px-3 py-3 md:py-0 md:px-6 border-2">
-            <input
-              type="text"
-              placeholder="Search by name, role, specific area of mentorship"
-              className="w-full outline-none h-full bg-transparent"
-              value={inputSearch}
-              onChange={(e) => setInputSearch(e.target.value)}
-            />
-          </div>
-          <div onClick={handleSearch} className="  h-full cursor-pointer flex justify-center items-center rounded-2xl bg-customOrange py-6 md:py-2 md:w-[12%]">
-            <button className="text-base font-bold text-white">Find Mentor</button>
-          </div>
-        </section>
+      {/* Search Section */}
+      <div className="max-w-4xl mx-auto mb-8">
+        <div className="relative">
+          <FontAwesomeIcon
+            icon={faSearch}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+          />
+          <input
+            type="text"
+            placeholder={`Search by name, ${user?.role === 'student' ? 'department, year' : 'expertise, experience'}`}
+            className="w-full pl-12 pr-4 py-3 border rounded-lg dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
 
-      {/* Mentee Cards */}
-      <section className="h-fit cursor-pointer mt-24 md:mt-10 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-8 md:gap-4">
-        {filteredData.map((mentee) => (
-          <div
-            key={mentee.id}
-            className="border-2 rounded-lg w-full h-[400px] lg:w-fit  md:h-fit bg-white"
-          >
-            <div className=" h-1/2 w-full md:h-3/5">
-              <img
-                src={mentee.avatar}
-                className=" h-full w-full object-cover"
-                alt={mentee.first_name}
-              />
-            </div>
-            <div className="h-1/2   md:h-2/5 p-6">
-              <h3 className="text-lg font-bold text-customDarkBlue">
-                {mentee.first_name} {mentee.last_name}
-              </h3>
-              <p className="flex items-center text-xs text-customDarkBlue font-normal">
-                <span>
-                  <img
-                    src="/image/tick.png"
-                    className="object-cover h-4 w-4"
-                    alt=""
+      {/* User Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filteredUsers.length === 0 ? (
+          <div className="col-span-full text-center py-12">
+            <p className="text-xl text-gray-600 dark:text-gray-400">
+              No {user?.role === 'mentor' ? 'mentees' : 'mentors'} found matching your search
+            </p>
+          </div>
+        ) : (
+          filteredUsers.map((userData) => (
+            <div
+              key={userData._id}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+            >
+              {/* User Image */}
+              <div className="relative h-48">
+                <img
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=random`}
+                  alt={userData.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-white dark:bg-gray-800 rounded-full p-2">
+                  <FontAwesomeIcon
+                    icon={userData.role === 'student' ? faUserGraduate : faUserTie}
+                    className="text-orange-500"
                   />
-                </span>
-                {mentee.email}
-              </p>
-              <p>4.0/5 (15 Testimonials)</p>
-
-              <div className="flex justify-between items-center flex-wrap gap-2">
-                <div className="flex gap-1">
-                  <p className="text-xs p-2 rounded-lg bg-slate-200">
-                    Experience: 3 Years
-                  </p>
-                  <p className="text-xs p-2 rounded-lg bg-slate-200">
-                    Sessions: 21
-                  </p>
-                </div>
-                <div onClick={() => handleBookingNavigation(mentee)} className="px-8 bg-customOrange py-3 cursor-pointer rounded-xl text-base font-medium text-white">
-                  <button>Accept Mentee</button>
                 </div>
               </div>
+
+              {/* User Info */}
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {userData.name}
+                  </h3>
+                  <div className="flex items-center text-yellow-400">
+                    <FontAwesomeIcon icon={faStar} className="mr-1" />
+                    <span className="text-sm">5.0</span>
+                  </div>
+                </div>
+
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  {userData.email}
+                </p>
+
+                {/* Role-specific information */}
+                <div className="space-y-2 mb-6">
+                  {userData.role === 'student' ? (
+                    <>
+                      <div className="flex items-center text-sm">
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Department:</span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">{userData.department}</span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Year:</span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">{userData.yearOfStudy}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center text-sm">
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Experience:</span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">{userData.experience} years</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {userData.expertise?.map((skill, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-300 text-xs rounded-full"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Action Button */}
+                <button
+                  onClick={() => handleStartChat(userData)}
+                  className="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition-colors"
+                >
+                  Start Chat
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-      </section>
-    </section>
+          ))
+        )}
+      </div>
+    </div>
   );
 }
 

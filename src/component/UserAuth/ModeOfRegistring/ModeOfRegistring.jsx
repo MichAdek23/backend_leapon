@@ -6,8 +6,7 @@ function ModeOfSignUp() {
   const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState(null); 
 
-  const {
-    register,
+  const { 
     handleSubmit,
     watch,
     setValue,
@@ -37,33 +36,41 @@ function ModeOfSignUp() {
     setValue('role', role); 
   };
 
+  console.log(selectedRole)
 
-  const onSubmit = (data) => {
-    console.log('Form Data:', data);
-    navigate('/Login'); 
-    console.log(selectedRole)
+
+  const onSubmit = () => {
+    if (selectedRole === 'mentee') {
+      navigate('/mentee-form');
+    } else {
+      navigate('/mentor-form');
+    }
   };
 
   return (
     <section className="relative flex h-full">
       {/* Left Side Image */}
       <div className="hidden lg:block h-full w-3/5">
-        <img src="/image/people-office-work-day-1.png" className="h-full w-full object-cover" alt="" />
+        <img src="/image/close-up-people-learning-together-office 1.png" className="h-full w-full object-cover" alt="" />
         <div onClick={() => navigate('/')} className="absolute top-4">
-          <img src="/image/LogoAyth.png" className="w-40" alt="" />
+          <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
         </div>
       </div>
 
       {/* Right Side Form */}
-      <div className="flex items-center w-full lg:w-2/5 justify-center">
+      <div className="flex flex-col lg:flex-row  items-center w-full lg:w-2/5 justify-center">
+      <div onClick={() => navigate('/')} className=" block lg:hidden bg-black py-2 px-2">
+                    <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
+     </div>
         <div className="w-full px-6 lg:px-0 md:w-[400px]">
-          <h1 className="text-2xl font-bold lg:text-[30px] text-customDarkBlue">Welcome to Mentorship</h1>
+          <h1 className=" text-xl  md:text-2xl font-bold lg:text-[30px]  text-customDarkBlue">Welcome to LEAP </h1>
+          <h1  className=" text-xl  md:text-2xl font-bold lg:text-[30px]  text-customDarkBlue mt-2">PROGRAMME</h1>
 
           <form className="mt-5" onSubmit={handleSubmit(onSubmit)}>
             {/* Role Selection */}
             <div className="flex flex-col gap-4 mt-4">
           
-              <div className="flex justify-between border-2 rounded-lg p-4 items-center">
+              <div className="flex justify-between border-2 rounded-lg p-2 lg:p-4 items-center">
                 <div className="flex items-center gap-4">
                   <img src="/image/iconmode.png" className="w-9" alt="" />
                   <p className="text-base font-medium">Join as Mentee</p>
@@ -77,11 +84,12 @@ function ModeOfSignUp() {
               </div>
 
             
-              <div className="flex justify-between border-2 rounded-lg p-4 items-center gap-2">
+              <div className="flex justify-between border-2 rounded-lg p-2 lg:p-4 items-center gap-2">
                 <div className="flex items-center gap-4">
                   <img src="/image/iconmode.png" className="w-9" alt="" />
                   <p className="text-base font-medium">Join as Mentor</p>
                 </div>
+
                 <input
                   type="checkbox"
                   checked={selectedRole === 'mentor'}
@@ -94,7 +102,7 @@ function ModeOfSignUp() {
 
             {/* Submit Button */}
             <div className="mt-4">
-              <button type="submit" className="text-white bg-customOrange w-full h-14 rounded-lg cursor-pointer">
+              <button type="submit" className="text-white bg-customOrange w-full h-11 lg:h-14 rounded-lg cursor-pointer">
                 Continue
               </button>
             </div>

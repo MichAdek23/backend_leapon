@@ -3,34 +3,100 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faLongArrowRight, faBars } from "@fortawesome/free-solid-svg-icons";
 import { Calendar } from "@/components/ui/calendar";
 import { GlobalContext } from "@/component/GlobalStore/GlobalState";
-import axios from "axios";
+import { userApi } from '../../../lib/api';
+import { useAuth } from '../../../lib/AuthContext';
 
-
-
+// Function to get full image URL
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return "/image/default-profile.png";
+  
+  // For Cloudinary URLs
+  if (imagePath.includes('cloudinary.com')) {
+    console.log('Using Cloudinary URL:', imagePath);
+    return imagePath;
+  }
+  
+  // For uploaded images from the database
+  if (imagePath.startsWith('/uploads/')) {
+    const url = `${import.meta.env.VITE_API_URL || 'https://leapon.onrender.com'}${imagePath}`;
+    console.log('Using local server URL:', url);
+    return url;
+  }
+  
+  // For static images in the public directory
+  console.log('Using static image:', imagePath);
+  return imagePath;
+};
 
 function Overview() {
-  const [mentees, setMentees] = useState([]);
-  const [loading, setLoading] = useState(false);
-
+  const [stats, setStats] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const { user } = useAuth();
+  const { upDatePage, handleToggleState, acceptedMentees } = useContext(GlobalContext);
 
   useEffect(() => {
-    const fetchMentee = async () => {
-      setLoading(true);
+    const fetchData = async () => {
       try {
-        const res = await axios.get("https://reqres.in/api/users");
-        console.log(res.data);
-        setMentees(res.data.data);
+        // Fetch user profile data
+        const profileResponse = await userApi.getProfile();
+        setUserData(profileResponse.data);
+        console.log('Fetched user data:', profileResponse.data);
+
+        // Fetch user stats
+        const statsResponse = await userApi.getStats();
+        setStats(statsResponse.data);
+        console.log('Fetched stats:', statsResponse.data);
       } catch (error) {
-        console.error("Error fetching mentees:", error);
-      } finally {
-        setLoading(false);
+        console.error("Error fetching data:", error);
       }
     };
 
-    fetchMentee();
-  }, []);
+    if (user?.role === 'mentor') {
+      fetchData();
+    }
+  }, [user?.role]);
 
-  const { upDatePage, handleToggleState } = useContext(GlobalContext)
+  // Calculate profile completion percentage based on User model fields
+  const calculateProfileStrength = () => {
+    if (!userData) return 0;
+
+    const requiredFields = {
+      firstName: 1,
+      lastName: 1,
+      email: 1,
+      bio: 1,
+      interests: 1,
+      title: 1,
+      department: 1,
+      expertise: 1,
+      experience: 1,
+      profilePicture: 1,
+      gender: 1,
+      social: {
+        linkedIn: 1,
+        twitter: 1,
+        instagram: 1,
+        website: 1
+      }
+    };
+
+    const totalFields = Object.keys(requiredFields).length;
+    let completedFields = 0;
+
+    // Count completed fields
+    Object.keys(requiredFields).forEach(field => {
+      if (field === 'social') {
+        // Check if any social media links are filled
+        const hasSocialLinks = Object.values(userData[field] || {}).some(link => link && link.trim() !== '');
+        if (hasSocialLinks) completedFields++;
+      } else if (userData[field] && (Array.isArray(userData[field]) ? userData[field].length > 0 : true)) {
+        completedFields++;
+      }
+    });
+
+    return Math.round((completedFields / totalFields) * 100);
+  };
+
   const Title = [
     "#1 Tips for Success",
     "#2 Tips for Success",
@@ -39,7 +105,7 @@ function Overview() {
   ];
   const Heading = [
     "How to prepare for your first meeting",
-    "What should we talk   about during our meeting?",
+    "What should we talk about during our meeting?",
     "Be on time!",
     "After the session, stay connected!",
   ];
@@ -50,11 +116,9 @@ function Overview() {
     "After your session, don't be a stranger! Keep your mentor updated on your progress - they are more invested in your success than you think!",
   ];
 
-
   const [index, setIndex] = useState(0);
   const [date, setDate] = useState(new Date());
   
-
 
   const nextMessage = () => {
     setIndex((prevIndex) => (prevIndex + 1) % Title.length);
@@ -65,15 +129,18 @@ function Overview() {
   };
 
   return (
-    <section className=" p-3 md:p-0">
+    <section className="p-3 md:p-0">
       {/* Header Section */}
-      <header className="flex justify-between  ">
-        <div className=" flex flex-col  w-full lg:flex-row justify-start  items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
-          <div className="flex flex-col  gap-4">
-            <h1 className="text-[32px] font-medium">Welcome</h1>
-            <p className="text-base font-meduim text-slate-600">You have no upcoming sessions</p>
+      <header className="flex justify-between">
+        <div className="flex flex-col w-full lg:flex-row justify-start items-start lg:items-center gap-4 lg:gap-0 lg:justify-between">
+          <div className="flex flex-col gap-4">
+            <h1 className="text-[32px] font-medium">Welcome, {user?.firstName || 'Mentor'}</h1>
+            <p className="text-base font-medium text-slate-600">
+              {stats?.upcomingSessions > 0 
+                ? `You have ${stats.upcomingSessions} upcoming session${stats.upcomingSessions > 1 ? 's' : ''}`
+                : 'You have no upcoming sessions'}
+            </p>
           </div>
-
 
           <div className="flex justify-center gap-4">
             <img
@@ -81,18 +148,19 @@ function Overview() {
               src="/image/messageIcon.png"
               className="md:w-12 h-9 md:h-12 cursor-pointer"
               alt=""
+              loading="lazy"
             />
             <img
               onClick={() => upDatePage("Setting")}
               src="/image/settingIcon.png"
               className="md:w-12 h-9 md:h-12 cursor-pointer"
               alt=""
+              loading="lazy"
             />
           </div>
         </div>
 
-
-        <div onClick={handleToggleState} className=" block lg:hidden mt-3 ">
+        <div onClick={handleToggleState} className="block lg:hidden mt-3">
           <button>
             <FontAwesomeIcon icon={faBars} />
           </button>
@@ -102,26 +170,33 @@ function Overview() {
       {/* Main Content */}
       <section className="mt-11 flex flex-wrap lg:flex-nowrap gap-5 justify-center">
         {/* Profile Strength Section */}
-        <div className="py-4 px-2 md:px-4 lg:px-5 rounded-lg bg-white shadow-2xl  md:w-[40%] lg:w-[33%]">
+        <div className="py-4 px-2 md:px-4 lg:px-5 rounded-lg bg-white shadow-2xl lg:w-[33%]">
           <div className="flex justify-between">
-            <h1 className=" md:text-lg lg:text-2xl font-medium">Your profile strength</h1>
+            <h1 className="md:text-lg lg:text-2xl font-medium">Your profile strength</h1>
 
-            <button className="h-[30px] w-[30px] flex justify-center items-center bg-slate-200 rounded-full">
+            <button 
+              onClick={() => upDatePage("MyProfile")}
+              className="h-[30px] w-[30px] flex justify-center items-center bg-slate-200 rounded-full hover:bg-slate-300 transition-colors"
+            >
               <FontAwesomeIcon icon={faLongArrowRight} />
             </button>
           </div>
 
-          <p className="mt-3 text-gray-400 text-base lg:text-lg font-medium">
-            Emmanuella Bernard
-          </p>
-
           <div className="mt-3">
-            <progress className="h-2 w-full" value="80" max="100"></progress>
+            <div className="flex justify-between mb-2">
+              <span className="text-sm text-gray-600">Profile Completion</span>
+              <span className="text-sm font-medium">{calculateProfileStrength()}%</span>
+            </div>
+            <progress 
+              className="h-2 w-full" 
+              value={calculateProfileStrength()} 
+              max="100"
+            ></progress>
           </div>
 
           <div className="mt-5 border-2 border-gray-100 w-full"></div>
           <div className="mt-5 flex justify-between">
-            <h1 className=" text-base lg:text-lg text-gray-500 font-medium">
+            <h1 className="text-base lg:text-lg text-gray-500 font-medium">
               Complete your 1st Mentorship Sessions Milestone
             </h1>
 
@@ -131,26 +206,24 @@ function Overview() {
           </div>
 
           <div className="mt-3">
-            <progress className="h-2 w-full" value="30" max="100"></progress>
+            <progress className="h-2 w-full" value={stats?.totalSessions || 0} max="100"></progress>
           </div>
         </div>
 
-
-        <div className="bg-white shadow-2xl  rounded-lg md:w-[40%] lg:w-[33%]">
+        <div className="bg-white shadow-2xl rounded-lg md:w-[40%] lg:w-[33%]">
           <Calendar
             mode="single"
             selected={date}
             onSelect={setDate}
-            className="rounded-lg w-full h-full -z-50"
+            className="rounded-lg w-full h-full"
           />
         </div>
 
-
         <div className="bg-white p-5 shadow-2xl rounded-lg md:w-[40%] lg:w-[33%] flex flex-col justify-between">
           <div>
-            <div className="flex justify-between ">
+            <div className="flex justify-between">
               <div>
-                <h1 className=" md:text-lg font-medium text-gray-600">{Title[index]}</h1>
+                <h1 className="md:text-lg font-medium text-gray-600">{Title[index]}</h1>
               </div>
 
               <div className="flex gap-3">
@@ -170,80 +243,57 @@ function Overview() {
               </div>
             </div>
 
-
             <h2 className="text-xl font-semibold mt-2">{Heading[index]}</h2>
-            <p className=" text-sm md:text-lg text-gray-500 mt-2">{Message[index]}</p>
+            <p className="text-sm md:text-lg text-gray-500 mt-2">{Message[index]}</p>
           </div>
-
-
         </div>
       </section>
 
-      <section className=" mt-9">
-
-        {/*  when the api is ready i will be getting the main data for just doing the demo design */}
-
-
-        <div className=" flex justify-between">
-          <h1 className="  text-base md:text-[22px] font-medium text-customDarkBlue">Your top matches </h1>
-          <button onClick={() => upDatePage('Explore')} className=" p-2 md:p-0 h-10 rounded-xl md:w-40 text-white bg-customOrange  flex justify-center items-center">Explore Mentors</button>
-        </div>
-      </section>
-
-
-      <section className="  rounded-lg   grid  grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-y-5 gap-x-5  mt-12 ">
-        {loading ? (
-          <div>Loading...</div>
-        ) : (
-          mentees.map((mentee) => (
-            <div
-              onClick={() => upDatePage("Explore")}
-              key={mentee.id}
-              className="border-2 rounded-lg  overflow-hidden cursor-pointer w-[99%] h-[420px] bg-white"
-            >
-              <div className="h-3/5">
-                <img
-                  src={mentee.avatar} // Use the avatar from the API
-                  className="h-full w-full object-cover"
-                  alt={mentee.first_name}
-                />
+      {/* Statistics Section */}
+      <section className="mt-9">
+        <h1 className="text-base md:text-[22px] font-medium text-customDarkBlue mb-6">Your Statistics</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Connected Mentees Card */}
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm">Connected Mentees</p>
+                <h3 className="text-2xl font-bold mt-1">{acceptedMentees?.length || 0}</h3>
               </div>
-              <div className="h-2/5 flex flex-col gap-2 p-6">
-                <h3 className="text-lg font-bold text-customDarkBlue">
-                  {mentee.first_name} {mentee.last_name}
-                </h3>
-                <p className="flex items-center text-xs text-customDarkBlue font-normal">
-                  <span>
-                    <img
-                      src="/image/tick.png"
-                      className="object-cover h-4 w-4"
-                      alt=""
-                    />
-                  </span>
-                  {mentee.email}
-                </p>
-                <p>4.0/5 (15 Testimonials)</p>
-
-                <div className="flex justify-between items-center flex-wrap gap-2">
-                  <div className="flex gap-1">
-                    <p className="text-xs p-2 rounded-lg bg-slate-200">
-                      Mentee
-                    </p>
-                    <p className="text-xs p-2 rounded-lg bg-slate-200">
-                      Sessions: 21
-                    </p>
-                  </div>
-                </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <img src="/image/mentee-icon.png" alt="Mentees" className="w-8 h-8" />
               </div>
             </div>
-          ))
-        )}
+          </div>
+
+          {/* Completed Sessions Card */}
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm">Completed Sessions</p>
+                <h3 className="text-2xl font-bold mt-1">{stats?.totalSessions || 0}</h3>
+              </div>
+              <div className="bg-green-100 p-3 rounded-full">
+                <img src="/image/session-icon.png" alt="Sessions" className="w-8 h-8" />
+              </div>
+            </div>
+          </div>
+
+          {/* Upcoming Sessions Card */}
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm">Upcoming Sessions</p>
+                <h3 className="text-2xl font-bold mt-1">{stats?.upcomingSessions || 0}</h3>
+              </div>
+              <div className="bg-orange-100 p-3 rounded-full">
+                <img src="/image/calendar-icon.png" alt="Calendar" className="w-8 h-8" />
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
-      <div></div>
-      <div></div>
     </section>
-
-
   );
 }
 

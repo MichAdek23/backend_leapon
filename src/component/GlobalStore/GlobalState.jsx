@@ -1,4 +1,4 @@
-import React, { createContext,  useState } from "react";
+import React, { createContext, useMemo, useState } from "react";
 import Overview from "../MeentoDashboard/MentorPages/Overview";
 import Explore from "../MeentoDashboard/MentorPages/Explore";
 import Message from "../MeentoDashboard/MentorPages/Message";
@@ -6,10 +6,11 @@ import Booking from "../MeentoDashboard/MentorPages/Booking";
 import MyProfile from "../MeentoDashboard/MentorPages/MyProfile";
 import Setting from "../MeentoDashboard/MentorPages/Setting";
 import ProfileId from "../MeentoDashboard/MentorPages/profileId";
-import StepOne from "../UserAuth/Mentee-Form/stepOne";
-import StepTwo from "../UserAuth/Mentee-Form/StepTwo";
-import StepThree from "../UserAuth/Mentee-Form/StepThree";
-import StepFour from "../UserAuth/Mentee-Form/StepFour";
+import UserList from '../MeentoDashboard/MentorPages/UserList';
+import Messages from '../MeentoDashboard/MentorPages/Message';
+import Settings from '../MeentoDashboard/MentorPages/Setting';
+import UsersList from '../MeentoDashboard/MentorPages/UsersList';
+import MenteeOverview from '../MeentoDashboard/MenteePages/Overview';
 
 export const GlobalContext = createContext();
 
@@ -20,7 +21,32 @@ const components = {
   Booking,
   Profile: MyProfile,
   Setting,
-  ProfileId 
+  ProfileId,
+  UserList,
+  Messages,
+  Settings,
+  UsersList,
+  MenteeOverview
+};
+
+const defaultProfile = {
+  firstName: '',
+  lastName: '',
+  role: '',
+  email: '',
+  mentorshipStatus: '',
+  gender: '',
+  modeOfContact: '',
+  availability: '',
+  bio: '',
+  overview: '',
+  profilePicture: '',
+  social: {
+    twitter: '',
+    facebook: '',
+    whatsapp: '',
+    instagram: ''
+  }
 };
 
 function GlobalState({ children }) {
@@ -37,14 +63,41 @@ function GlobalState({ children }) {
     return "Overview"; 
   });
 
-  const [otpshow , setOtpShow] = useState(false)
+  const [profile, setProfile] = useState(() => {
+    const storedProfile = localStorage.getItem('profile');
+    if (storedProfile) {
+      try {
+        return JSON.parse(storedProfile);
+      } catch (error) {
+        console.error("Error parsing stored profile:", error);
+        return defaultProfile;
+      }
+    }
+    return defaultProfile;
+  });
 
+  const [formData, setFormData] = useState(() => {
+    const storedFormData = localStorage.getItem('formData');
+    if (storedFormData) {
+      try {
+        return JSON.parse(storedFormData);
+      } catch (error) {
+        console.error("Error parsing stored form data:", error);
+        return {};
+      }
+    }
+    return {};
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('formData', JSON.stringify(formData));
+  }, [formData]);
+
+  const [otpshow , setOtpShow] = useState(false)
 
   const ShowResetConfirmation = ()=>{
        setOtpShow(!otpshow)
   }
-
-  
 
   const [toggleState, setToggleState] = useState(false);
 
@@ -61,6 +114,16 @@ function GlobalState({ children }) {
     return null;
   });
 
+  const [acceptedMentors, setAcceptedMentors] = useState(() => {
+    const AcceptedMentor = localStorage.getItem('AddMentor');
+    try {
+      return AcceptedMentor ? JSON.parse(AcceptedMentor) : [];
+    } catch (error) {
+      console.error("Error parsing accepted mentors:", error);
+      return [];
+    }
+  });
+
   const [acceptedMentees, setAcceptedMentees] = useState(() => {
     const AcceptedMentee = localStorage.getItem('Add');
     try {
@@ -71,28 +134,19 @@ function GlobalState({ children }) {
     }
   });
 
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const steps = [1,2,3,4]
+  const memoizedAcceptedMentees = useMemo(() => acceptedMentees, [acceptedMentees]);
+
+  const [currentIndex, setCurrentIndex] = useState(1);
+    
+  const steps = [1,2,3,4,3]
  
   const handleIncreament = ()=>{
      setCurrentIndex((index)=> (index + 1 ) % steps.length)
   }
-
-  const DisplaySteps = ()=>{
-      if (currentIndex === 1) {
-         return <StepOne/>
-      } else if (currentIndex === 2) {
-         return <StepTwo/>
-      } else if ( currentIndex === 3) {
-         return <StepThree/>
-      } else if (currentIndex === 4) {
-        return <StepFour/>
-      }
+  
+  const handleDecreament = ()=>{
+    setCurrentIndex((index)=> (index - 1 ) % steps.length)
   }
- 
-  console.log(currentIndex)
-
-  console.log(acceptedMentees)
 
   const handleToggleState = () => {
     setToggleState(!toggleState);
@@ -113,10 +167,86 @@ function GlobalState({ children }) {
     }
   };
 
+  const AddMentors = (mentor) => {
+    setAcceptedMentors(prev => [...prev, mentor]);
+  };
+
   const ActiveComponent = components[activeComponent] || Overview;
 
+  const [selectedChatUser, setSelectedChatUser] = useState(() => {
+    const storedChatUser = localStorage.getItem('selectedChatUser');
+    if (storedChatUser) {
+      try {
+        return JSON.parse(storedChatUser);
+      } catch (error) {
+        console.error("Error parsing stored chat user:", error);
+        return null;
+      }
+    }
+    return null;
+  });
+
+  // Add effect to save selectedChatUser to localStorage
+  React.useEffect(() => {
+    if (selectedChatUser) {
+      localStorage.setItem('selectedChatUser', JSON.stringify(selectedChatUser));
+    } else {
+      localStorage.removeItem('selectedChatUser');
+    }
+  }, [selectedChatUser]);
+
+  const value = useMemo(() => ({
+    ActiveComponent, 
+    handleDecreament, 
+    handleIncreament, 
+    currentIndex, 
+    acceptedMentees: memoizedAcceptedMentees, 
+    AddMentees, 
+    upDatePage, 
+    ShowResetConfirmation, 
+    otpshow, 
+    setOtpShow, 
+    activeComponent, 
+    handleToggleState, 
+    toggleState, 
+    setSelectedMentee, 
+    selectedMentee,
+    profile,
+    setProfile,
+    formData,
+    setFormData,
+    acceptedMentors,
+    AddMentors,
+    selectedChatUser,
+    setSelectedChatUser
+  }), [
+    ActiveComponent, 
+    handleDecreament, 
+    handleIncreament, 
+    currentIndex, 
+    memoizedAcceptedMentees, 
+    AddMentees, 
+    upDatePage, 
+    ShowResetConfirmation, 
+    otpshow, 
+    setOtpShow, 
+    activeComponent, 
+    handleToggleState, 
+    toggleState, 
+    setSelectedMentee, 
+    selectedMentee,
+    profile,
+    setProfile,
+    formData,
+    setFormData,
+    acceptedMentors,
+    AddMentors,
+    selectedChatUser,
+    setSelectedChatUser
+  ]);
+
   return (
-    <GlobalContext.Provider value={{ ActiveComponent, handleIncreament , currentIndex, DisplaySteps , acceptedMentees, AddMentees, upDatePage, ShowResetConfirmation , otpshow , setOtpShow, activeComponent, handleToggleState, toggleState, setSelectedMentee, selectedMentee }}>
+    <GlobalContext.Provider value={value}>
       {children}
     </GlobalContext.Provider>
   );

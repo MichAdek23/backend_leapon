@@ -1,126 +1,163 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {  faLock, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
-
+import { useAuth } from '../../../lib/AuthContext';
 
 function ChangePassword() {
-  const [passwordType, setPasswordType] = useState(false);
-  const [confirmPasswordType, setConfirmPasswordType] = useState(false);
-
-  const navigate = useNavigate()
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [passwordType, setPasswordType] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
+  const navigate = useNavigate();
+  const { changePassword } = useAuth();
 
   const {
     register,
     handleSubmit,
     watch,
-    setValue,
     formState: { errors },
   } = useForm();
 
-  const formData = watch();
+  const newPassword = watch('newPassword');
 
-  useEffect(() => {
-    localStorage.setItem('passwordFormData', JSON.stringify(formData));
-  }, [formData]);
-
-
-  useEffect(() => {
-    const savedFormData = localStorage.getItem('passwordFormData');
-    if (savedFormData) {
-      const parsedFormData = JSON.parse(savedFormData);
-      setValue('email', parsedFormData.email);
-      setValue('password', parsedFormData.password);
-      setValue('confirmPassword', parsedFormData.confirmPassword);
-    }
-  }, [setValue]);
-
-
-  const handlePasswordType = () => {
-    setPasswordType(!passwordType);
+  const togglePasswordVisibility = (field) => {
+    setPasswordType(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
   };
 
-
-  const handleConfirmPasswordType = () => {
-    setConfirmPasswordType(!confirmPasswordType);
-  };
-
-
-  const onSubmit = (data) => {
-    if (data.password !== data.confirmPassword) {
-      alert('Passwords do not match');
-      return;
-    } else{
-        navigate('/Login')
+  const onSubmit = async (data) => {
+    try {
+      setError('');
+      setSuccess('');
+      await changePassword(data.currentPassword, data.newPassword);
+      setSuccess('Password changed successfully');
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+    } catch (err) {
+      setError(err.message || 'Failed to change password. Please try again.');
     }
-    console.log('Form Data:', data);
-   
   };
 
   return (
     <section className="relative flex h-full">
-      {/* Left Side Image */}
       <div className="hidden lg:block h-full w-3/5">
-        <img src="/image/people-office-work-day-1.png" className="h-full w-full object-cover" alt="" />
-        <div onClick={()=> navigate('/')} className="absolute top-4">
-          <img src="/image/LogoAyth.png" className=" w-40" alt="" />
+        <img src="/image/close-up-people-learning-together-office 1.png" loading="lazy" className="h-full w-full object-cover" alt="" />
+        <div onClick={() => navigate('/')} className="absolute top-4">
+          <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
         </div>
       </div>
 
       {/* Right Side Form */}
-      <div className="flex items-center w-full lg:w-2/5 justify-center">
+      <div className="flex flex-col lg:flex-row items-center w-full lg:w-2/5 justify-center">
+        <div onClick={() => navigate('/')} className="block lg:hidden bg-black py-2 px-2">
+          <img src="/image/LogoAyth.png" loading="lazy" className="w-40" alt="" />
+        </div>
         <div className="w-full px-6 lg:px-0 md:w-[400px]">
-          <h1 className=" text-2xl font-bold lg:text-[40px] text-customDarkBlue">Change Password</h1>
-          <p className="text-slate-400 text-sm mt-2">Welcome back! Please enter your details</p>
+          <h1 className="text-2xl font-bold lg:text-[40px] text-customDarkBlue">Change Password</h1>
+          <p className="text-slate-400 text-sm mt-2">Enter your current and new password</p>
+
+          {error && (
+            <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-lg">
+              {success}
+            </div>
+          )}
 
           <form className="mt-5" onSubmit={handleSubmit(onSubmit)}>
-          
-
-            {/* Password Field */}
-            <div>
-              <div className="mt-4 flex items-center p-2 md:p-4 justify-between gap-3 w-full rounded-xl border-2">
+            {/* Current Password */}
+            <div className="mt-4">
+              <div className="flex items-center p-2 md:p-4 justify-between gap-3 w-full rounded-xl border-2">
                 <div className="flex items-center justify-center gap-3">
                   <span>
                     <FontAwesomeIcon className="text-gray-400 text-xl" icon={faLock} />
                   </span>
                   <input
-                    type={passwordType ? 'text' : 'password'}
-                    {...register('password', { required: 'This field is required' })}
+                    type={passwordType.current ? 'text' : 'password'}
+                    {...register('currentPassword', {
+                      required: 'Current password is required',
+                      minLength: {
+                        value: 6,
+                        message: 'Password must be at least 6 characters long',
+                      },
+                    })}
                     className="outline-none w-full"
-                    placeholder="Enter New Password"
+                    placeholder="Current Password"
                   />
                 </div>
-                <span onClick={handlePasswordType} className="cursor-pointer">
-                  {passwordType ? (
+                <span onClick={() => togglePasswordVisibility('current')} className="cursor-pointer">
+                  {passwordType.current ? (
                     <FontAwesomeIcon className="text-gray-400 text-lg" icon={faEye} />
                   ) : (
                     <FontAwesomeIcon className="text-gray-400 text-lg" icon={faEyeSlash} />
                   )}
                 </span>
               </div>
-              {errors.password && <p className="text-red-600">{errors.password.message}</p>}
+              {errors.currentPassword && <p className="text-red-600">{errors.currentPassword.message}</p>}
             </div>
 
-           
-            <div>
-              <div className="mt-4 flex items-center p-2 md:p-4 justify-between gap-3 w-full rounded-xl border-2">
+            {/* New Password */}
+            <div className="mt-4">
+              <div className="flex items-center p-2 md:p-4 justify-between gap-3 w-full rounded-xl border-2">
                 <div className="flex items-center justify-center gap-3">
                   <span>
                     <FontAwesomeIcon className="text-gray-400 text-xl" icon={faLock} />
                   </span>
                   <input
-                    type={confirmPasswordType ? 'text' : 'password'}
+                    type={passwordType.new ? 'text' : 'password'}
+                    {...register('newPassword', {
+                      required: 'New password is required',
+                      minLength: {
+                        value: 6,
+                        message: 'Password must be at least 6 characters long',
+                      },
+                    })}
+                    className="outline-none w-full"
+                    placeholder="New Password"
+                  />
+                </div>
+                <span onClick={() => togglePasswordVisibility('new')} className="cursor-pointer">
+                  {passwordType.new ? (
+                    <FontAwesomeIcon className="text-gray-400 text-lg" icon={faEye} />
+                  ) : (
+                    <FontAwesomeIcon className="text-gray-400 text-lg" icon={faEyeSlash} />
+                  )}
+                </span>
+              </div>
+              {errors.newPassword && <p className="text-red-600">{errors.newPassword.message}</p>}
+            </div>
+
+            {/* Confirm New Password */}
+            <div className="mt-4">
+              <div className="flex items-center p-2 md:p-4 justify-between gap-3 w-full rounded-xl border-2">
+                <div className="flex items-center justify-center gap-3">
+                  <span>
+                    <FontAwesomeIcon className="text-gray-400 text-xl" icon={faLock} />
+                  </span>
+                  <input
+                    type={passwordType.confirm ? 'text' : 'password'}
                     {...register('confirmPassword', {
-                      required: 'This field is required',
-                      validate: (value) => value === watch('password') || 'Passwords do not match',
+                      required: 'Please confirm your new password',
+                      validate: value => value === newPassword || 'Passwords do not match',
                     })}
                     className="outline-none w-full"
                     placeholder="Confirm New Password"
                   />
                 </div>
-                <span onClick={handleConfirmPasswordType} className="cursor-pointer">
-                  {confirmPasswordType ? (
+                <span onClick={() => togglePasswordVisibility('confirm')} className="cursor-pointer">
+                  {passwordType.confirm ? (
                     <FontAwesomeIcon className="text-gray-400 text-lg" icon={faEye} />
                   ) : (
                     <FontAwesomeIcon className="text-gray-400 text-lg" icon={faEyeSlash} />
@@ -130,15 +167,15 @@ function ChangePassword() {
               {errors.confirmPassword && <p className="text-red-600">{errors.confirmPassword.message}</p>}
             </div>
 
-            {/* Submit Button */}
             <div className="mt-4">
-              <button type="submit" className="text-white bg-customOrange w-full h-14 rounded-lg cursor-pointer">
+              <button 
+                type="submit" 
+                className="text-white bg-customOrange w-full h-11 lg:h-14 rounded-lg cursor-pointer hover:bg-orange-600 transition-colors"
+              >
                 Change Password
               </button>
             </div>
           </form>
-
-   
         </div>
       </div>
     </section>
