@@ -7,7 +7,7 @@ const Overview = () => {
 
   return (
     <div className='w-full sm:h-[100vh]'> 
-      <div className="relative mb-12 bg-[url('/Section5.png')] bg-center bg-cover w-full h-[40vh] sm:h-[90%]">
+      <div className="relative mb-12 bg-[url('/Section5.png')] bg-center bg-cover w-full h-[30vh] sm:h-[90%]">
         <div className='grid grid-cols-1 text-center pt-5 sm:pt-16 gap-y-1 sm:gap-y-3'>
           <h1 className='text-xl text-orange-50 font-bold sm:text-4xl'>Your Path to Success, Starts Here</h1>
           <h5 className='text-orange-50 font-semibold text-[12px] sm:text-md'>Connect with Industry Leaders, Accelerate Your Career.</h5>
