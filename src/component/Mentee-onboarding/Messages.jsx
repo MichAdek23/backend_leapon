@@ -151,7 +151,7 @@ const Messages = () => {
               {user?.role === 'mentor' ? 'Mentees' : 'Mentors'}
             </h1>
             <p className="text-base font-medium text-slate-600">
-              {user?.role === 'mentor' ? 'Connect with Mentees' : 'Find a Mentor'}
+              Message
             </p>
           </div>
 
