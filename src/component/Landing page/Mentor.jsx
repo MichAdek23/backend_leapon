@@ -16,7 +16,7 @@ const Mentor = () => {
                       <div className='border border-gray-400 rounded-full p-2 w-8 h-8'>
                       <Clock3 className='text-red-500 w-4 h-4'/>
                       </div>
-                      <div className='text-sm text-gray-400'>
+                      <div className='text-[10px] sm:text-sm text-gray-400'>
                       <p>4207 mins</p>
                       <p>Total mentoring time</p>
                       </div>
@@ -25,7 +25,7 @@ const Mentor = () => {
                       <div className='border border-gray-400 rounded-full p-2 w-8 h-8'>
                       <Zap className='text-red-500 w-4 h-4'/>
                       </div>
-                      <div className='text-sm text-gray-400'>
+                      <div className='text-[10px] sm:text-sm text-gray-400'>
                       <p>21</p>
                       <p>Sessions completed</p>
                       </div>
