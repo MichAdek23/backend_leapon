@@ -41,15 +41,14 @@ function ModeOfSignUp() {
 
 
   const onSubmit = (data) => {
-    console.log('Form Data:', data);
-      if (selectedRole === 'mentee') {
-         navigate('/mentee-form')
-     
-      } else{
-         navigate('/mentor-form')
-      
-      }
-    console.log(selectedRole)
+    // Save selected role to localStorage
+    localStorage.setItem('userData', JSON.stringify({ ...JSON.parse(localStorage.getItem('userData') || '{}'), role: selectedRole }));
+
+    if (selectedRole === 'mentee') {
+      navigate('/mentee-form');
+    } else {
+      navigate('/mentor-form');
+    }
   };
 
   return (

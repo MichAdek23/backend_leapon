@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faLock, faEye, faEyeSlash, faUser } from '@fortawesome/free-solid-svg-icons';
@@ -13,6 +13,13 @@ function SignUp() {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const { register: registerUser } = useAuth();
+
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    if (!userData.role) {
+      navigate('/mode-of-registering'); // Redirect to ModeOfRegistration if role is not selected
+    }
+  }, [navigate]);
 
   const {
     register,
