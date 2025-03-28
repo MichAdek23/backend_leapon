@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faLock, faEye, faEyeSlash, faUser } from '@fortawesome/free-solid-svg-icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../lib/AuthContext';
+import { userApi } from '../../../lib/api'; // Ensure this import exists for sending the email
 
 function SignUp() {
   const [passwordType, setPasswordType] = useState(false);
@@ -50,6 +51,9 @@ function SignUp() {
         token: localStorage.getItem('token')
       }));
       
+      // Send verification email
+      await userApi.sendVerificationEmail(userData.email);
+
       // Show success modal
       setShowModal(true);
 
