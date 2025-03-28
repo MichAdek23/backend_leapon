@@ -16,7 +16,7 @@ const MatchingDate = () => {
       onSelect={setDate}
       className="sm:w-[280px]"
     />
-    <Button className='sm:w-[270px] w-[250px] text-orange-100 bg-orange-500 rounded-none rounded-l-xl my-3'>Continue</Button>
+    <Button className='sm:w-[100%] w-[100%] text-orange-100 bg-orange-500 rounded-none rounded-l-xl my-3'>Continue</Button>
    </>
   )
 }

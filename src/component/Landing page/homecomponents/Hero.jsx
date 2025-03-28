@@ -7,13 +7,15 @@ const Hero = () => {
   const navigate = useNavigate()
   return (
     <div className='flex items-center justify-center md:justify-between px-1 py-8'>
-      <div className='hidden md:block'>
+      <div className=' relative hidden md:block'>
           <ul className='grid grid-cols-2 gap-2'>
            <img className='rounded-xl' src={asset.blackman1} alt="" />
            <img className='rounded-xl' src={asset.people} alt="" />
            <img className='rounded-xl' src={asset.closeup} alt="" />
            <img className='rounded-xl' src={asset.frame17} alt="" />
           </ul>
+          <div className="absolute inset-x-0  left-0 top-0 h-full w-1/2 bg-gradient-to-l from-orange-50 to-orange-500 opacity-70"></div>
+
       </div>
       <div className='text-center px-4'>
          <h1 className='  text-5xl lg:text-6xl font-bold text-center'>  1-on-1 <br/>
@@ -25,13 +27,14 @@ const Hero = () => {
         </div>
        
       </div>
-      <div className='hidden md:block'>
+      <div className=' relative hidden md:block'>
           <ul className='grid grid-cols-2 gap-2'>
            <img className='rounded-xl' src={asset.young} alt="" />
            <img className='rounded-xl' src={asset.confident} alt="" />
            <img className='rounded-xl' src={asset.portrait} alt="" />
            <img className='rounded-xl' src={asset.couple } alt="" />
           </ul>
+
       </div>
     </div>
   )
