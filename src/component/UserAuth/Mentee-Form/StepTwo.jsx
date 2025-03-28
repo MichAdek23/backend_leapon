@@ -22,7 +22,6 @@ function StepTwo() {
     const stepTwoData = {
       Title: detailsForm.Title,
       department: detailsForm.department,
-      yearOfStudy: detailsForm.yearOfStudy,
       linkedIn: detailsForm.linkedIn,
       twitter: detailsForm.twitter,
       instagram: detailsForm.instagram,
@@ -37,7 +36,6 @@ function StepTwo() {
       const parsedFormData = JSON.parse(savedFormData);
       setValue('Title', parsedFormData.Title);
       setValue('department', parsedFormData.department);
-      setValue('yearOfStudy', parsedFormData.yearOfStudy);
       setValue('linkedIn', parsedFormData.linkedIn);
       setValue('twitter', parsedFormData.twitter);
       setValue('instagram', parsedFormData.instagram);
@@ -47,7 +45,7 @@ function StepTwo() {
   // Handle form submission
   const onSubmit = (data) => {
     // Validate required fields
-    if (!data.Title || !data.department || !data.yearOfStudy) {
+    if (!data.Title || !data.department) {
       return;
     }
     handleIncreament();
@@ -104,9 +102,6 @@ function StepTwo() {
           </div>
           {errors.department && <p className="text-red-600">{errors.department.message}</p>}
         </div>
-
-        {/* Year of Study Field */}
-     
 
         {/* Social Media Links */}
         <div>
