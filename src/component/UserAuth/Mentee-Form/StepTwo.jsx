@@ -26,7 +26,6 @@ function StepTwo() {
       linkedIn: detailsForm.linkedIn,
       twitter: detailsForm.twitter,
       instagram: detailsForm.instagram,
-      website: detailsForm.website
     };
     localStorage.setItem('stepTwoData', JSON.stringify(stepTwoData));
   }, [detailsForm]);
@@ -42,7 +41,6 @@ function StepTwo() {
       setValue('linkedIn', parsedFormData.linkedIn);
       setValue('twitter', parsedFormData.twitter);
       setValue('instagram', parsedFormData.instagram);
-      setValue('website', parsedFormData.website);
     }
   }, [setValue]);
 
@@ -82,10 +80,10 @@ function StepTwo() {
               type="text"
               {...register('Title', { required: 'Title is required' })}
               className="outline-none w-full"
-              placeholder="E.G Doctor"
+              placeholder="E.G Doctor or student"
             />
             <p className="absolute -top-3 left-4 bg-white px-1 text-base font-bold text-slate-400">
-              Your Title
+              Your profession
             </p>
           </div>
           {errors.Title && <p className="text-red-600">{errors.Title.message}</p>}
@@ -101,27 +99,14 @@ function StepTwo() {
               placeholder="E.G Computer Science"
             />
             <p className="absolute -top-3 left-4 bg-white px-1 text-base font-bold text-slate-400">
-              Department
+              Education
             </p>
           </div>
           {errors.department && <p className="text-red-600">{errors.department.message}</p>}
         </div>
 
         {/* Year of Study Field */}
-        <div>
-          <div className="flex relative items-center p-2 md:p-4 gap-3 w-full rounded-xl border-2">
-            <input
-              type="text"
-              {...register('yearOfStudy', { required: 'Year of study is required' })}
-              className="outline-none w-full"
-              placeholder="E.G 2nd Year"
-            />
-            <p className="absolute -top-3 left-4 bg-white px-1 text-base font-bold text-slate-400">
-              Year of Study
-            </p>
-          </div>
-          {errors.yearOfStudy && <p className="text-red-600">{errors.yearOfStudy.message}</p>}
-        </div>
+     
 
         {/* Social Media Links */}
         <div>
@@ -154,16 +139,6 @@ function StepTwo() {
               {...register('instagram')}
               className="outline-none w-full"
               placeholder="Instagram URL"
-            />
-          </div>
-
-          {/* Website */}
-          <div className="flex relative items-center p-2 md:p-4 gap-3 w-full rounded-xl border-2">
-            <input
-              type="url"
-              {...register('website')}
-              className="outline-none w-full"
-              placeholder="Personal Website URL"
             />
           </div>
         </div>

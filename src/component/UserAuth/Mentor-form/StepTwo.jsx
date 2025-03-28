@@ -26,7 +26,6 @@ function Step2() {
       linkedIn: detailsForm.linkedIn,
       twitter: detailsForm.twitter,
       instagram: detailsForm.instagram,
-      website: detailsForm.website
     };
     localStorage.setItem('stepTwoData', JSON.stringify(stepTwoData));
   }, [detailsForm]);
@@ -42,7 +41,6 @@ function Step2() {
       setValue('linkedIn', parsedFormData.linkedIn);
       setValue('twitter', parsedFormData.twitter);
       setValue('instagram', parsedFormData.instagram);
-      setValue('website', parsedFormData.website);
     }
   }, [setValue]);
 
@@ -153,16 +151,6 @@ function Step2() {
               {...register('instagram')}
               className="outline-none w-full"
               placeholder="Instagram URL"
-            />
-          </div>
-
-          {/* Website */}
-          <div className="flex relative items-center p-2 md:p-4 gap-3 w-full rounded-xl border-2">
-            <input
-              type="url"
-              {...register('website')}
-              className="outline-none w-full"
-              placeholder="Personal Website URL"
             />
           </div>
         </div>
