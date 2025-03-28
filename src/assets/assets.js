@@ -8,7 +8,11 @@ import people from '../assets/people-office.png'
 import portrait from '../assets/portrait.png'
 import section from '../assets/Section8.png'
 import young from '../assets/young.png'
-
+import mentee1 from '../assets/mentee1.png'
+import mentee2 from '../assets/mentee2.png'
+import volunteer from '../assets/portraitVolunteer.png'
+import Views from '../assets/views.png'
+import Overview from '../assets/Overview.png'
 
 
 
@@ -23,4 +27,9 @@ export const asset = {
     portrait,
     section,
     young,
+    mentee2,
+    mentee1,
+    volunteer,
+    Views,
+    Overview,
 }
