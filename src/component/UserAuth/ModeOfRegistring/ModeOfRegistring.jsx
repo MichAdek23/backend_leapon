@@ -6,8 +6,7 @@ function ModeOfSignUp() {
   const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState(null); 
 
-  const {
-  
+  const { 
     handleSubmit,
     watch,
     setValue,
