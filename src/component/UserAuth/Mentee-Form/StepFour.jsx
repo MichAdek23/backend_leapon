@@ -169,7 +169,7 @@ function StepFour() {
             <textarea
               {...register('overview')}
               className="outline-none w-full min-h-[120px] resize-none"
-              placeholder="Provide a brief overview of your academic background and achievements..."
+              placeholder="Provide a brief overview of your  background and achievements..."
             />
           </div>
         </div>
