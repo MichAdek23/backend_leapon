@@ -18,10 +18,10 @@ const Mentee = () => {
       <div className='bg-gray-200 w-full border border-r-0 border-b-0 rounded-tl-xl pl-5 pt-5'>
         <div className='bg-white border border-b-0 border-r-0  rounded-tl-xl pl-2 py-2'>
           <div className='bg-white'>
-            <img src={asset.mentee2} alt=""  className='w-[70%] h-[100px] sm:w-[75vh] sm:h-[120px] absolute rounded-l-xl' />
-            <div className=' relative top-20 left-5 flex items-center justify-left sm:gap-x-10 gap-x-5'>
+            <img src={asset.mentee2} alt=""  className=' w-[70%] h-[100px] sm:w-[75vh] sm:h-[120px] absolute rounded-l-xl' />
+            <div className=' relative top-20 left-5 flex items-center justify-left sm:gap-x-10 gap-x-2'>
               <img src={asset.mentee1} alt="" className='w-[100px] sm:w-[149px] border-4 border-gray-100 rounded-full' />
-              <div className='font-bold sm:text-xl text-left'>
+              <div className='font-bold sm:text-xl  text-left'>
                 <h1>Emmanuella Bernard </h1>
                 <p>Registered Nurse</p>
               </div>

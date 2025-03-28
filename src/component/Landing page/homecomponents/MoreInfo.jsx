@@ -90,25 +90,25 @@ const now = new Date();
             </div>
 
             <div className='sm:w-[55%] w-[100%] -mt-0 sm:-mt-9 border rounded-xl pb-4'>
-                <div className='flex p-5 gap-5 justify-center items-center'>
-                    <h1 className='border rounded-lg bg-orange-500 text-orange-100 px-4 py-1'>Upcoming</h1>
-                    <h1 className='border rounded-lg bg-gray-200 px-4 py-1'>Pending</h1>
-                    <h1 className='border rounded-lg bg-gray-200 px-4 py-1'>History</h1>
+                <div className='flex p-5 gap-5 text-[10px] justify-center items-center'>
+                    <h1 className='border rounded-xl bg-orange-500 text-orange-100 px-4 py-1'>Upcoming</h1>
+                    <h1 className='border rounded-xl bg-gray-200 px-4 py-1'>Pending</h1>
+                    <h1 className='border rounded-xl bg-gray-200 px-4 py-1'>History</h1>
                 </div>
-                <div className='flex items-center justify-center'>
-                    <div className='p-5 px-10 mx-10 border border-b-0 rounded-t-xl sm:border sm:border-b-0'>
-                        <div className='flex items-center justify-between'>
+                <div className='flex items-center justify-center text-[10px] sm:text-sm'>
+                    <div className=' rounded-t-xl pt-5 sm:border sm:border-b-0 '>
+                        <div className='flex items-center sm:gap-x-5 px-10'>
                             <h1 className='flex'>Mentorship session with <span className='font-bold'>Braide Shekinah</span></h1>
                             <ChevronDown/>
                         </div>
-                        <div className='flex gap-x-5 py-5 text-left'>
+                        <div className='flex gap-x-5 py-5 text-left px-10'>
                             {formattedDateTime}
                         </div>
-                        <div className='flex gap-5 text-[10px] '>
-                            <h1 className='border rounded-lg bg-orange-500 text-orange-100 px-4 py-1'>Join Meeting</h1>
-                            <h1 className='border rounded-lg bg-gray-200 px-4 py-1'>Send Message</h1>
-                            <h1 className='border rounded-lg bg-gray-200 px-4 py-1'>Reschedule</h1>
-                            <h1 className='border rounded-lg bg-orange-50 text-orange-500 px-4 py-1'>Cancel</h1>
+                        <div className='flex px-2 iems-center justify-between sm:justify-center sm:gap-x-5 text-[6px]'>
+                            <h1 className='border rounded-xl bg-orange-500 text-orange-100 px-2 py-1'>Join Meeting</h1>
+                            <h1 className='border rounded-xl bg-gray-200 px-4 py-1'>Send Message</h1>
+                            <h1 className='border rounded-xl bg-gray-200 px-4 py-1'>Reschedule</h1>
+                            <h1 className='border rounded-xl bg-orange-50 text-orange-500 px-4 py-1'>Cancel</h1>
                         </div>
                     </div>
                 </div>

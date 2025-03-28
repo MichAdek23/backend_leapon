@@ -23,7 +23,7 @@ const MatchingSystem = () => {
       <div className='bg-gray-200 w-full border border-r-0 border-b-0 rounded-l-md pl-5 pt-5'>
           <div className=' flex bg-gray-50 border sm:px-5 px-2 pt-5 rounded-tl-xl border-gray-400 border-r-0 border-b-0 mb-5'>
             <div className='bg-gray-50 border pt-3 border w-1/2 border-t-0 border-t-0 border-l-0'>
-                <div className=" pr-10 sm:pr-5">
+                <div className=" pr-10 sm:pr-5 hidden sm:block">
                   <div className='flex items-center'>
                       <img src={asset.volunteer} alt="" className='rounded-full w-[40px] mr-2'/>
                       <div>
@@ -40,8 +40,8 @@ const MatchingSystem = () => {
                  </div>
 
                  <div className='text-sm font-bold py-5'>
-                 <p className='text-gray-500 sm:text-[13px] text-[10px]'> About</p> 
-                 <p className='text-gray-600 text-[13px] sm:text-sm font-bold'>Mentorship Session</p> 
+                  <p className='text-gray-500 sm:text-[13px] text-[10px]'> About</p> 
+                  <p className='text-gray-600 text-[13px] sm:text-sm font-bold'>Mentorship Session</p> 
                  </div>
             
                 </div>
