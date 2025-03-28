@@ -96,7 +96,7 @@ function StepThree() {
         {/* Business/Entrepreneurship Checkbox */}
         <div className="flex justify-between border-2 rounded-lg p-4 items-center gap-2">
           <div className="flex items-center gap-4">
-            <p className="text-base font-medium">Business/Entrepreneurshi</p>
+            <p className="text-base font-medium">Business/Entrepreneurship</p>
           </div>
           <input
             type="checkbox"
