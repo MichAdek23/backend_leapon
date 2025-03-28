@@ -242,7 +242,7 @@ const CreateSession = () => {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
+      {/* <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
           {userRole === 'mentor' ? 'Create Session with Mentee' : 'Request Mentor Session'}
         </h1>
@@ -253,7 +253,7 @@ const CreateSession = () => {
         >
           <FontAwesomeIcon icon={faBars} className="w-6 h-6" />
         </button>
-      </div>
+      </div> */}
 
       {error && (
         <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
