@@ -3,10 +3,10 @@ import React from 'react'
 
 const Mentee = () => {
   return (
-    <div className='grid grid-cols-1 sm:grid-cols-2 px-6 sm:px-20 gap-32'>
+    <div className='grid grid-cols-1 sm:grid-cols-2 px-6 sm:gap-20 sm:px-10 lg:px-20 gap-32'>
       <div className='bg-white w-full'>
         <h1 className='text-orange-500 font-bold text-xl'>MENTEE PROFILE</h1>
-        <div className='font-bold text-xl sm:text-3xl text-left mt-8'>
+        <div className='font-bold text-xl sm:text-lg lg:text-3xl text-left mt-8'>
         Detailed information about the <br/> mentee's background, goals, <br/>interests, and areas they seek <br /> mentorship in.
         </div>
         <div className='bg-gray-200 mt-8 py-2 px-5 text-sm rounded-md'>
@@ -17,17 +17,17 @@ const Mentee = () => {
       <div className='bg-gray-200 w-full border border-r-0 border-b-0 rounded-tl-xl pl-5 pt-5'>
         <div className='bg-white border border-b-0 border-r-0  rounded-tl-xl pl-2 py-2'>
           <div className='bg-white relative'>
-            <img src={asset.mentee2} alt=""  className=' w-[120%] h-[90px] sm:w-[35%] sm:h-[120px] rounded-l-xl' />
-            <div className='absolute  top-20 left-5 flex items-center justify-left sm:gap-x-10 gap-x-2'>
-              <img src={asset.mentee1} alt="" className=' w-[100px] sm:w-[149px] border-4 border-gray-100 rounded-full' />
-              <div className='font-bold text-[10px] sm:text-xl  text-left'>
+            <img src={asset.mentee2} alt=""  className=' w-[120%] h-[90px] sm:w-[100%] lg:h-[100%] sm:h-[80px] md:w-[120%] rounded-l-xl' />
+            <div className='absolute  top-20 left-5 sm:top-14 flex items-center justify-left sm:gap-x-2 gap-x-2'>
+              <img src={asset.mentee1} alt="" className=' w-[100px] sm:w-[50%] lg:w-[40%] border-4 border-gray-100 rounded-full' />
+              <div className='font-bold text-[15px] sm:text-[10px] text-left lg:text-xl lg:pt-7'>
                 <h1>Emmanuella Bernard </h1>
                 <p>Registered Nurse</p>
               </div>
             </div>
           </div>
         
-        <div className='mt-28 rounded-xl bg-white mr-8 py-2 px-5'>
+        <div className='mt-28 rounded-xl bg-white mr-4 py-2 px-5 sm:mr-0 sm:px-1 lg:pt-9'>
           <h1 className='text-gray-900 font-bold text-xl'>Overview</h1>
           <hr className='border-orange-500 w-[90px] border-2'/>
           <hr className='pb-3'/>

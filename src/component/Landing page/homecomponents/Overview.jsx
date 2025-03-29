@@ -6,7 +6,7 @@ const Overview = () => {
   const navigate = useNavigate();
 
   return (
-    <div className='w-full sm:h-[100vh]'> 
+    <div className='w-full sm:h-[45vh] lg:h-[100vh]'> 
       <div className="relative mb-12 bg-[url('/Section5.png')] bg-center bg-cover w-full h-[30vh] sm:h-[90%]">
         <div className='grid grid-cols-1 text-center pt-2 sm:pt-16 gap-y-0.5 sm:gap-y-3'>
           <h1 className='text-lg text-orange-50 font-bold sm:text-4xl'>Your Path to Success, Starts Here</h1>
