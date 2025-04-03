@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './lib/AuthContext';
 import Login from './component/UserAuth/Login/Login';
 import SignUp from './component/UserAuth/register/SignUp';
@@ -25,75 +25,78 @@ import CreateSession from './component/Mentee-onboarding/CreateSession';
 
 function App() {
   return (
-    <AuthProvider>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/sign-up" element={<SignUp />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ResetPassWord />} />
-        <Route path="/get-otp" element={<GetOtp />} />
-        <Route path="/change-password" element={<ChangePassword />} />
-        <Route path="/mode-of-registering" element={<ModeOfSignUp />} />
-        <Route path="/mentee-form" element={<MenteeForm />} />
-        <Route path="/mentor-form" element={<MentorForm />} />
-        <Route path="/payment" element={<Payment />} />
-        <Route path="/payment/verify" element={<PaymentVerify />} />
-        <Route path="/terms" element={<TermsAndConditions />} />
-        <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/verify-email" element={<EmailVerification />} />
+    <Router>
+      <AuthProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/sign-up" element={<SignUp />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ResetPassWord />} />
+          <Route path="/get-otp" element={<GetOtp />} />
+          <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/mode-of-registering" element={<ModeOfSignUp />} />
+          <Route path="/mentee-form" element={<MenteeForm />} />
+          <Route path="/mentor-form" element={<MentorForm />} />
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/payment/verify" element={<PaymentVerify />} />
+          <Route path="/terms" element={<TermsAndConditions />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
+          <Route path="/verify-email/:token" element={<EmailVerification />} />
 
-        {/* Protected routes */}
-        <Route
-          path="/mentor-dashboard"
-          element={
-            <PrivateRoute allowedRoles={['mentor', 'admin']}>
-              <MentorDashBoard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/mentee-dashboard"
-          element={
-            <PrivateRoute allowedRoles={['mentee', 'admin']}>
-              <Mentee />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/mentee/create-session"
-          element={
-            <PrivateRoute allowedRoles={['mentee', 'admin']}>
-              <CreateSession />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/profile/:userId"
-          element={
-            <PrivateRoute>
-              <UserProfile />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/messages"
-          element={
-            <PrivateRoute>
-              <Messages />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/mentor/messages"
-          element={
-            <PrivateRoute>
-              <MentorMessages />
-            </PrivateRoute>
-          }
-        />
-      </Routes>
-    </AuthProvider>
+          {/* Protected routes */}
+          <Route
+            path="/mentor-dashboard"
+            element={
+              <PrivateRoute allowedRoles={['mentor', 'admin']}>
+                <MentorDashBoard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/mentee-dashboard"
+            element={
+              <PrivateRoute allowedRoles={['mentee', 'admin']}>
+                <Mentee />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/mentee/create-session"
+            element={
+              <PrivateRoute allowedRoles={['mentee', 'admin']}>
+                <CreateSession />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/profile/:userId"
+            element={
+              <PrivateRoute>
+                <UserProfile />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/messages"
+            element={
+              <PrivateRoute>
+                <Messages />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/mentor/messages"
+            element={
+              <PrivateRoute>
+                <MentorMessages />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 }
 

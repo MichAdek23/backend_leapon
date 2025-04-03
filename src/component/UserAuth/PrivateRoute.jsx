@@ -1,28 +1,19 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
 
-const PrivateRoute = ({ children, allowedRoles = [] }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+function PrivateRoute({ allowedRoles, children }) {
+  const { user } = useAuth();
 
   if (!user) {
     return <Navigate to="/login" />;
   }
 
-  // Check if payment is required
-  if (!user.paymentCompleted) {
-    return <Navigate to="/payment" />;
-  }
-
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to="/" />;
   }
 
-  return children;
-};
+  return children || <Outlet />;
+}
 
-export default PrivateRoute; 
+export default PrivateRoute;

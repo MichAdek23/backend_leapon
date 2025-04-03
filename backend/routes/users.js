@@ -54,9 +54,8 @@ const upload = multer({
 // @desc    Register a user (Step 1: Basic Info)
 // @access  Public
 router.post('/register', async (req, res) => {
+  const { firstName, lastName, email, password } = req.body; // Email is extracted from the request body
   try {
-    const { firstName, lastName, email, password } = req.body;
-
     // Validate required fields
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({ message: 'All fields are required' });
@@ -85,8 +84,26 @@ router.post('/register', async (req, res) => {
       { expiresIn: '30d' }
     );
 
+    // Generate email verification token
+    const verificationToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    // Save verification token to user
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    await user.save();
+
+    // Construct the verification URL using the frontend URL
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
+
+    // Send verification email
+    await sendVerificationEmail(email, verificationUrl);
+
     res.status(201).json({
-      message: 'User registered successfully',
+      message: 'User registered successfully. Verification email sent.',
       token,
       user: {
         id: user._id,
@@ -188,6 +205,11 @@ router.post('/login', [
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // Check if email is verified
+    if (!user.emailVerified) {
+      return res.status(403).json({ message: 'Email not verified. Please verify your email.' });
+    }
+
     // Validate password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
@@ -208,8 +230,10 @@ router.post('/login', [
       { expiresIn: '24h' },
       (err, token) => {
         if (err) throw err;
+
         // Return both token and user object
-        res.json({ 
+        res.json({
+          success: true,
           token,
           user: {
             id: user.id,
@@ -226,57 +250,152 @@ router.post('/login', [
     );
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ 
+    res.status(500).json({
+      success: false,
       message: 'Server error during login',
       error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
 });
 
-// @route   GET api/users/me
-// @desc    Get current user
-// @access  Private
-router.get('/me', auth, async (req, res) => {
+// @route   POST api/users/verify-email
+// @desc    Verify email using the token
+// @access  Public
+router.post('/verify-email', async (req, res) => {
+  const { token } = req.body;
+
   try {
-    const user = await User.findById(req.user.id).select('-password');
-    res.json(user);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.emailVerified) {
+      return res.status(200).json({ message: 'Email is already verified', user });
+    }
+
+    user.emailVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Email verified successfully', user });
+  } catch (error) {
+    console.error('Email verification error:', error);
+    res.status(400).json({ message: 'Invalid or expired token' });
   }
 });
 
-// @route   PUT api/users/me
+// @route   POST api/users/resend-verification
+// @desc    Resend email verification link
+// @access  Public
+router.post('/resend-verification', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.emailVerified) {
+      return res.status(400).json({ message: 'Email is already verified' });
+    }
+
+    // Generate a new verification token
+    const verificationToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    await user.save();
+
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
+    await sendVerificationEmail(email, verificationUrl);
+
+    res.status(200).json({ message: 'Verification email sent successfully' });
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({ message: 'Failed to resend verification email' });
+  }
+});
+
+// @route   GET api/users/profile
+// @desc    Get the current user's profile
+// @access  Private
+router.get('/profile', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PUT api/users/profile
 // @desc    Update user profile
 // @access  Private
-router.put('/me', auth, async (req, res) => {
+router.put('/profile', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    // Fields that can be updated
+    // Define updatable fields based on EditProfile
     const updatableFields = [
-      'name', 'fullName', 'firstName', 'lastName',
-      'department', 'yearOfStudy', 'expertise', 'experience',
-      'overview', 'interests', 'linkedIn', 'twitter',
-      'instagram', 'website', 'availability', 'modeOfContact',
-      'relationshipStatus'
+      'firstName', 'lastName', 'email', 'title', 
+      'department', 'overview', 'expertise', 'experience',
+      'interests', 'gender', 'modeOfContact', 'availability',
+      'profilePicture', 'bio', 'social'
     ];
-
     // Update all provided fields
     updatableFields.forEach(field => {
-      if (req.body[field] !== undefined) {
+      if (field === 'social' && req.body[field]) {
+        user.social = {
+          ...user.social,
+          linkedIn: req.body.social.linkedIn || user.social?.linkedIn || '',
+          twitter: req.body.social.twitter || user.social?.twitter || '',
+          instagram: req.body.social.instagram || user.social?.instagram || '',
+          website: req.body.social.website || user.social?.website || '',
+          facebook: req.body.social.facebook || user.social?.facebook || '',
+          whatsapp: req.body.social.whatsapp || user.social?.whatsapp || ''
+        };
+      } else if (field === 'expertise' && req.body[field]) {
+        // Handle expertise array
+        user.expertise = Array.isArray(req.body.expertise) 
+          ? req.body.expertise 
+          : req.body.expertise.split(',').map(item => item.trim());
+      } else if (field === 'interests' && req.body[field]) {
+        // Handle interests array
+        user.interests = Array.isArray(req.body.interests)
+          ? req.body.interests
+          : req.body.interests.split(',').map(item => item.trim());
+      } else if (req.body[field] !== undefined) {
         user[field] = req.body[field];
       }
     });
-
+    // Update the timestamp
+    user.updatedAt = Date.now();
     await user.save();
-    res.json(user);
+    res.json({
+      message: 'Profile updated successfully',
+      user
+    });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error updating profile:', err);
+    res.status(500).json({ 
+      message: 'Server error',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
@@ -290,16 +409,13 @@ router.post('/profile-picture', auth, upload.single('profilePicture'), async (re
       file: req.file,
       user: req.user
     });
-
     if (req.fileValidationError) {
       return res.status(400).json({ message: req.fileValidationError });
     }
-
     if (!req.file) {
       console.log('No file received in the request');
       return res.status(400).json({ message: 'Please select an image file to upload' });
     }
-
     // Get the URL for the uploaded file
     const imageUrl = `/uploads/profiles/${req.file.filename}`;
     console.log('File uploaded successfully:', {
@@ -308,18 +424,15 @@ router.post('/profile-picture', auth, upload.single('profilePicture'), async (re
       path: req.file.path,
       imageUrl
     });
-
     // Update user's profile picture URL in database
     const user = await User.findById(req.user.id);
     if (!user) {
       console.log('User not found:', req.user.id);
       return res.status(404).json({ message: 'User not found' });
     }
-
     user.profilePicture = imageUrl;
     await user.save();
     console.log('User profile updated with new image:', imageUrl);
-
     res.json({ imageUrl });
   } catch (err) {
     console.error('Error uploading profile picture:', {
@@ -328,15 +441,146 @@ router.post('/profile-picture', auth, upload.single('profilePicture'), async (re
       code: err.code,
       message: err.message
     });
-    
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ message: 'File size cannot exceed 12MB' });
     }
-
     res.status(500).json({ 
       message: 'Error uploading file', 
       error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
     });
+  }
+});
+
+// @route   PUT api/users/update-profile-picture-and-gender
+// @desc    Update user's profile picture and gender
+// @access  Private
+router.put('/update-profile-picture-and-gender', auth, upload.single('profilePicture'), async (req, res) => {
+  try {
+    const { gender } = req.body;
+    // Validate gender
+    if (gender && !['male', 'female', 'other'].includes(gender)) {
+      return res.status(400).json({ message: 'Invalid gender selected' });
+    }
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    // Update gender
+    if (gender) user.gender = gender;
+    // Update profile picture if a file is uploaded
+    if (req.file) {
+      const imageUrl = `/uploads/profiles/${req.file.filename}`;
+      user.profilePicture = imageUrl;
+    }
+    await user.save();
+    res.json({ message: 'Profile updated successfully', user });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PUT api/users/update-step-2
+// @desc    Update user profile step 2 data
+// @access  Private
+router.put('/update-step-2', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const {
+      title,
+      expertise,
+      experience,
+      department,
+      social,
+      role
+    } = req.body;
+    // Update based on role
+    if (role === 'mentor') {
+      user.title = title || user.title;
+      user.expertise = expertise || user.expertise;
+      user.experience = experience || user.experience;
+    } else {
+      user.title = title || user.title;
+      user.department = department || user.department;
+    }
+    // Update social links
+    if (social) {
+      user.social = {
+        ...user.social,
+        linkedIn: social.linkedIn || user.social?.linkedIn || '',
+        twitter: social.twitter || user.social?.twitter || '',
+        instagram: social.instagram || user.social?.instagram || ''
+      };
+    }
+    // Update completion status
+    user.partialProfileStep = 2;
+    await user.save();
+    res.json({
+      message: 'Profile updated successfully',
+      user
+    });
+  } catch (error) {
+    console.error('Error updating profile step 2:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PUT api/users/update-step-3
+// @desc    Update user profile step 3 data
+// @access  Private
+router.put('/update-step-3', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const { interests, role } = req.body;
+    // Validate interests array
+    if (!Array.isArray(interests) || interests.length !== 3) {
+      return res.status(400).json({ 
+        message: 'Please provide exactly 3 areas of interest' 
+      });
+    }
+    // Update user fields
+    user.interests = interests;
+    user.partialProfileStep = 3;
+    await user.save();
+    res.json({
+      message: 'Profile step 3 updated successfully',
+      user
+    });
+  } catch (error) {
+    console.error('Error updating profile step 3:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PUT api/users/update-step-4
+// @desc    Update user profile step 4 data
+// @access  Private
+router.put('/update-step-4', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const { bio, overview } = req.body;
+    // Update user fields
+    user.bio = bio || user.bio;
+    user.overview = overview || user.overview;
+    user.profileCompleted = true; // Mark profile as completed
+    user.partialProfileStep = 4;
+    await user.save();
+    res.json({
+      message: 'Profile completed successfully',
+      user
+    });
+  } catch (error) {
+    console.error('Error updating profile step 4:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -345,11 +589,9 @@ router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
-
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
     user.resetPasswordToken = crypto
@@ -357,11 +599,8 @@ router.post('/forgot-password', async (req, res) => {
       .update(resetToken)
       .digest('hex');
     user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
-
     await user.save();
-
     // TODO: Send email with reset token
-    // For now, we'll just return the token in development
     if (process.env.NODE_ENV === 'development') {
       res.json({ resetToken });
     } else {
@@ -376,28 +615,23 @@ router.post('/forgot-password', async (req, res) => {
 router.post('/reset-password', async (req, res) => {
   try {
     const { token, password } = req.body;
-
     // Hash token
     const resetPasswordToken = crypto
       .createHash('sha256')
       .update(token)
       .digest('hex');
-
     const user = await User.findOne({
       resetPasswordToken,
       resetPasswordExpire: { $gt: Date.now() }
     });
-
     if (!user) {
       return res.status(400).json({ message: 'Invalid or expired reset token' });
     }
-
     // Set new password
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save();
-
     res.json({ message: 'Password has been reset' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -409,14 +643,11 @@ router.post('/change-password', auth, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const user = await User.findById(req.user._id);
-
     if (!(await user.comparePassword(currentPassword))) {
       return res.status(401).json({ message: 'Current password is incorrect' });
     }
-
     user.password = newPassword;
     await user.save();
-
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -465,10 +696,8 @@ router.get('/stats', auth, async (req, res) => {
         { mentee: req.user.id }
       ]
     });
-
     // Get total hours (assuming each session is 1 hour)
     const totalHours = totalSessions;
-
     // Get total messages
     const totalMessages = await Message.countDocuments({
       $or: [
@@ -476,7 +705,6 @@ router.get('/stats', auth, async (req, res) => {
         { recipient: req.user.id }
       ]
     });
-
     // Get upcoming sessions
     const upcomingSessions = await Session.countDocuments({
       $or: [
@@ -486,7 +714,6 @@ router.get('/stats', auth, async (req, res) => {
       status: 'scheduled',
       date: { $gte: new Date() }
     });
-
     res.json({
       totalSessions,
       totalHours,
@@ -503,17 +730,19 @@ router.get('/stats', auth, async (req, res) => {
 router.get('/verify-email/:token', async (req, res) => {
   try {
     const { token } = req.params;
-    
-    // Find user with this verification token
-    const user = await User.findOne({ 
+
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Find the user with the token
+    const user = await User.findOne({
+      _id: decoded.userId,
       verificationToken: token,
-      verificationTokenExpires: { $gt: Date.now() }
+      verificationTokenExpires: { $gt: Date.now() } // Ensure token is not expired
     });
 
     if (!user) {
-      return res.status(400).json({ 
-        message: 'Invalid or expired verification token' 
-      });
+      return res.status(400).json({ message: 'Invalid or expired verification token' });
     }
 
     // Update user's verification status
@@ -522,50 +751,54 @@ router.get('/verify-email/:token', async (req, res) => {
     user.verificationTokenExpires = undefined;
     await user.save();
 
-    // Redirect to frontend with success message
-    res.redirect(`${process.env.FRONTEND_URL}/verify-email?status=success`);
+    // Generate a new auth token for the user
+    const authToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+
+    res.status(200).json({ message: 'Email verified successfully', token: authToken });
   } catch (error) {
     console.error('Email verification error:', error);
-    res.redirect(`${process.env.FRONTEND_URL}/verify-email?status=error`);
+    res.status(400).json({ message: 'Invalid or expired token' });
   }
 });
 
-// Resend verification email route
-router.post('/resend-verification', async (req, res) => {
+// @route   PUT api/users/update-role
+// @desc    Update the user's role
+// @access  Private
+router.put('/update-role', auth, async (req, res) => {
   try {
-    const { email } = req.body;
-    
-    // Find user
-    const user = await User.findOne({ email });
-    
+    const { role } = req.body;
+    // Validate role
+    if (!['mentor', 'mentee'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role selected' });
+    }
+    // Update the user's role
+    const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    if (user.emailVerified) {
-      return res.status(400).json({ message: 'Email is already verified' });
-    }
-
-    // Generate new verification token
-    const verificationToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    // Update user with new token
-    user.verificationToken = verificationToken;
-    user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    user.role = role;
     await user.save();
-
-    // Send new verification email
-    await sendVerificationEmail(email, verificationToken);
-
-    res.json({ message: 'Verification email sent successfully' });
+    res.json({ message: 'Role updated successfully', user });
   } catch (error) {
-    console.error('Resend verification error:', error);
-    res.status(500).json({ message: 'Failed to resend verification email' });
+    console.error('Error updating role:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-export default router; 
+// @route   GET api/users/payment-status
+// @desc    Get user's payment status
+// @access  Private
+router.get('/payment-status', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('paymentCompleted');
+    res.json({ 
+      success: true,
+      paymentCompleted: user.paymentCompleted
+    });
+  } catch (error) {
+    console.error('Error fetching payment status:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+export default router;

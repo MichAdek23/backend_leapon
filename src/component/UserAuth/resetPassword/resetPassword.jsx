@@ -21,7 +21,16 @@ function ResetPassword() {
     try {
       setError('');
       setSuccess('');
-      await forgotPassword(data.email);
+      const response = await fetch('/api/users/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: data.email }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to send reset instructions. Please try again.');
+      }
       setSuccess('Password reset instructions have been sent to your email');
     } catch (err) {
       setError(err.message || 'Failed to send reset instructions. Please try again.');

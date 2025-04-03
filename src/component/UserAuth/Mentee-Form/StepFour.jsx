@@ -42,75 +42,20 @@ function StepFour() {
       setLoading(true);
       setError('');
 
-      // Get all form data from localStorage
-      const stepOneData = JSON.parse(localStorage.getItem('stepOneData') || '{}');
-      const stepTwoData = JSON.parse(localStorage.getItem('stepTwoData') || '{}');
-      const stepThreeData = JSON.parse(localStorage.getItem('stepThreeData') || '{}');
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-
-      if (!userData.email) {
-        throw new Error('No user data found. Please sign up again.');
-      }
-
-      // Format social media links
-      const socialLinks = {
-        linkedIn: stepTwoData.linkedIn || '',
-        twitter: stepTwoData.twitter || '',
-        instagram: stepTwoData.instagram || '',
-        website: stepTwoData.website || ''
-      };
-
-      // Combine all form data
-      const profileData = {
-        // Basic user data
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        role: 'mentee',
-        password: userData.password,
-
-        // Step One Data - Use the local server URL
-        profilePicture: stepOneData.profilePicture || '',
-        gender: stepOneData.gender || '',
-
-        // Step Two Data
-        title: stepTwoData.Title || '',
-        department: stepTwoData.department || '',
-        yearOfStudy: stepTwoData.yearOfStudy || '',
-        social: socialLinks,
-
-        // Step Three Data
-        interests: stepThreeData.selectedInterests || [],
-
-        // Step Four Data
+      // Send step four data to the backend
+      await userApi.updateProfileStep4({
         bio: data.bio || '',
         overview: data.overview || '',
-        profileCompleted: true,
-        mentorshipStatus: 'available'
-      };
+      });
 
-      // Log the data being sent
-      console.log('Submitting profile data:', profileData);
+      // Clear all stored data after successful update
+      localStorage.removeItem('stepFourData');
 
-      // Use the api instance to complete profile
-      const response = await userApi.completeProfile(profileData);
-
-      if (response.success) {
-        // Clear all stored data after successful update
-        localStorage.removeItem('userData');
-        localStorage.removeItem('stepOneData');
-        localStorage.removeItem('stepTwoData');
-        localStorage.removeItem('stepThreeData');
-        localStorage.removeItem('stepFourData');
-
-        // Navigate to payment page
-        navigate('/payment');
-      } else {
-        setError(response.message || 'Failed to complete profile. Please try again.');
-      }
+      // Navigate to payment page
+      navigate('/payment');
     } catch (error) {
       console.error('Profile completion error:', error);
-      setError(error.message || 'Failed to complete profile. Please try again.');
+      setError(error.response?.data?.message || 'Failed to complete profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -131,7 +76,7 @@ function StepFour() {
       {/* Progress Bar */}
       <progress className="bg-customOrange h-2" value="80" max="100"></progress>
 
-      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-semibold w-full sm:w-auto lg:w-[490px] text-customDarkBlue">Complete Your Profile</h1>
+      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] w-full sm:w-auto lg:w-[490px] font-semibold text-customDarkBlue">Complete Your Profile</h1>
       <p className="text-slate-400 text-sm mt-5">Please provide your bio information</p>
 
       {error && (
@@ -157,7 +102,7 @@ function StepFour() {
                 }
               })}
               className="outline-none w-full min-h-[120px] resize-none"
-              placeholder="Tell us about yourself, your academic goals, and what you hope to gain from mentorship..."
+              placeholder="Tell us about yourself, your experience, and what you can offer as a mentee..."
             />
           </div>
           {errors.bio && <p className="text-red-600">{errors.bio.message}</p>}
@@ -169,7 +114,7 @@ function StepFour() {
             <textarea
               {...register('overview')}
               className="outline-none w-full min-h-[120px] resize-none"
-              placeholder="Provide a brief overview of your  background and achievements..."
+              placeholder="Provide a brief overview of your goals and expectations as a mentee..."
             />
           </div>
         </div>

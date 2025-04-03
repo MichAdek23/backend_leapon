@@ -3,14 +3,13 @@ import { useForm } from 'react-hook-form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faLock, faEye, faEyeSlash, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../lib/AuthContext';
+import { API_URL } from '../../../lib/api';
 
 function SignIn() {
   const [passwordType, setPasswordType] = useState(false);
   const [error, setError] = useState('');
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const {
     register,
@@ -27,22 +26,54 @@ function SignIn() {
   const onSubmit = async (data) => {
     try {
       setError('');
-      const response = await login(data.email, data.password);
-      
-      // Check email verification status from the backend response
-      if (!response.emailVerified) {
+      const response = await fetch(`${API_URL}/users/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: data.email.toLowerCase(),
+          password: data.password,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to login. Please try again.');
+      }
+
+      // Store user data in localStorage
+      localStorage.setItem('userData', JSON.stringify({
+        id: result.user.id,
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+        email: result.user.email,
+        role: result.user.role,
+        profileCompleted: result.user.profileCompleted,
+        paymentCompleted: result.user.paymentCompleted,
+        token: result.token,
+      }));
+
+      // Check email verification status
+      if (!result.user.emailVerified) {
         setShowVerificationModal(true);
         return;
       }
 
-      // Check payment status
-      if (!response.paymentCompleted) {
+      // Redirect based on profile and payment status
+      if (!result.user.profileCompleted) {
+        navigate('/complete-profile');
+        return;
+      }
+
+      if (!result.user.paymentCompleted) {
         navigate('/payment');
         return;
       }
 
       // Navigate based on user role
-      switch (response.role?.toLowerCase()) {
+      switch (result.user.role?.toLowerCase()) {
         case 'mentor':
           navigate('/mentor-dashboard');
           break;
@@ -50,10 +81,10 @@ function SignIn() {
           navigate('/mentee-dashboard');
           break;
         case 'admin':
-          navigate('/admin-dashboard'); // Redirect admin to their dashboard
+          navigate('/admin-dashboard');
           break;
         default:
-          console.error('Invalid user role:', response.role);
+          console.error('Invalid user role:', result.user.role);
           setError('Invalid user role. Please contact support.');
           break;
       }

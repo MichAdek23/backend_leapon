@@ -42,80 +42,20 @@ function StepFour() {
       setLoading(true);
       setError('');
 
-      // Get all form data from localStorage
-      const stepOneData = JSON.parse(localStorage.getItem('stepOneData') || '{}');
-      const stepTwoData = JSON.parse(localStorage.getItem('stepTwoData') || '{}');
-      const stepThreeData = JSON.parse(localStorage.getItem('stepThreeData') || '{}');
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-
-      if (!userData.email) {
-        throw new Error('No user data found. Please sign up again.');
-      }
-
-      // Format social media links
-      const socialLinks = {
-        linkedIn: stepTwoData.linkedIn || '',
-        twitter: stepTwoData.twitter || '',
-        instagram: stepTwoData.instagram || '',
-        website: stepTwoData.website || ''
-      };
-
-      // Format expertise array
-      const expertiseArray = stepTwoData.expertise ? 
-        (Array.isArray(stepTwoData.expertise) ? stepTwoData.expertise : [stepTwoData.expertise]) : 
-        [];
-
-      // Combine all form data
-      const profileData = {
-        // Basic user data
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        role: 'mentor',
-        password: userData.password,
-
-        // Step One Data - Use the local server URL
-        profilePicture: stepOneData.profilePicture || '',
-        gender: stepOneData.gender || '',
-
-        // Step Two Data
-        title: stepTwoData.Title || '',
-        expertise: stepTwoData.expertise || [],
-        experience: stepTwoData.experience || '',
-        social: socialLinks,
-
-        // Step Three Data
-        interests: stepThreeData.selectedInterests || [],
-
-        // Step Four Data
+      // Send step four data to the backend
+      await userApi.updateProfileStep4({
         bio: data.bio || '',
         overview: data.overview || '',
-        profileCompleted: true,
-        mentorshipStatus: 'available'
-      };
+      });
 
-      // Log the data being sent
-      console.log('Submitting profile data:', profileData);
+      // Clear all stored data after successful update
+      localStorage.removeItem('stepFourData');
 
-      // Use the api instance to complete profile
-      const response = await userApi.completeProfile(profileData);
-
-      if (response.success) {
-        // Clear all stored data after successful update
-        localStorage.removeItem('userData');
-        localStorage.removeItem('stepOneData');
-        localStorage.removeItem('stepTwoData');
-        localStorage.removeItem('stepThreeData');
-        localStorage.removeItem('stepFourData');
-
-        // Navigate to payment page
-        navigate('/payment');
-      } else {
-        setError(response.message || 'Failed to complete profile. Please try again.');
-      }
+      // Navigate to payment page
+      navigate('/payment');
     } catch (error) {
       console.error('Profile completion error:', error);
-      setError(error.message || 'Failed to complete profile. Please try again.');
+      setError(error.response?.data?.message || 'Failed to complete profile. Please try again.');
     } finally {
       setLoading(false);
     }

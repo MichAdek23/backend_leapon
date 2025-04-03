@@ -2,7 +2,6 @@ import crypto from 'crypto';
 import User from '../models/User.js';
 import { sendVerificationEmail } from '../services/emailService.js';
 
-
 // Send verification email
 export const sendVerificationEmailController = async (req, res) => {
   try {
@@ -24,15 +23,7 @@ export const sendVerificationEmailController = async (req, res) => {
     await user.save();
 
     // Send verification email
-    try {
-      console.log('Sending verification email to:', email);
-      console.log('Verification token:', verificationToken);
-      await sendVerificationEmail(email, verificationToken);
-      console.log('Verification email sent successfully');
-    } catch (error) {
-      console.error('Error sending verification email:', error);
-      throw new Error('Failed to send verification email');
-    }
+    await sendVerificationEmail(email, verificationToken);
 
     res.json({ message: 'Verification email sent successfully' });
   } catch (error) {
@@ -95,4 +86,4 @@ export const checkVerificationStatusController = async (req, res) => {
     console.error('Error checking verification status:', error);
     res.status(500).json({ message: 'Failed to check verification status' });
   }
-};
+}; 

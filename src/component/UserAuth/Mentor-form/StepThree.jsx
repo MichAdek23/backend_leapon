@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { useForm } from 'react-hook-form';
+import { userApi } from '@/lib/api';
 
 function StepThree() {
   const { handleIncreament, handleDecreament } = useContext(GlobalContext);
@@ -52,9 +53,20 @@ function StepThree() {
   };
 
   // Handle form submission
-  const onSubmit = () => {
+  const onSubmit = async () => {
     if (selectedInterests.length === 3) {
-      handleIncreament();
+      try {
+        // Send data to the backend
+        await userApi.updateProfileStep3({
+          interests: selectedInterests,
+          role: 'mentor',
+        });
+
+        handleIncreament();
+      } catch (error) {
+        console.error('Error updating profile step 3:', error);
+        alert(error.response?.data?.message || 'Failed to update profile. Please try again.');
+      }
     } else {
       setErrorMessage('Please select exactly 3 areas of interest.');
     }

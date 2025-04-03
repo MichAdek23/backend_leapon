@@ -49,16 +49,13 @@ export const AuthProvider = ({ children }) => {
 
       // Then try to validate with server in the background
       try {
-        const response = await userApi.getProfile();
+        const response = await userApi.getProfile(); // Use updated route
         setUser(response.data);
       } catch (error) {
-        // If server validation fails, don't clear storage or log out
-        // Just log the error and keep using the local data
         console.error('Server validation failed:', error);
       }
     } catch (error) {
       console.error('Auth status check failed:', error);
-      // Don't clear storage on error, just set user to null
       setUser(null);
     } finally {
       setLoading(false);
@@ -69,26 +66,26 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await userApi.login(email, password);
       const { token, user } = response.data;
-      
+
       if (!token) {
         throw new Error('No token received from server');
       }
-      
+
       // Calculate token expiration (24 hours from now)
       const tokenExpiry = new Date();
       tokenExpiry.setHours(tokenExpiry.getHours() + 24);
-      
+
       // Store user data with token expiration
       const userData = {
         ...user,
         token,
-        tokenExpiry: tokenExpiry.toISOString()
+        tokenExpiry: tokenExpiry.toISOString(),
       };
-      
+
       localStorage.setItem('userData', JSON.stringify(userData));
       localStorage.setItem('token', token);
       setUser(user);
-      
+
       return userData;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Login failed');
@@ -99,22 +96,22 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await userApi.register(userData);
       const { token, user } = response.data;
-      
+
       // Calculate token expiration (24 hours from now)
       const tokenExpiry = new Date();
       tokenExpiry.setHours(tokenExpiry.getHours() + 24);
-      
+
       // Store user data with token expiration
       const userDataWithExpiry = {
         ...user,
         token,
-        tokenExpiry: tokenExpiry.toISOString()
+        tokenExpiry: tokenExpiry.toISOString(),
       };
-      
+
       localStorage.setItem('userData', JSON.stringify(userDataWithExpiry));
       localStorage.setItem('token', token);
       setUser(user);
-      
+
       return user;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Registration failed');
@@ -132,7 +129,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     register,
-    logout
+    logout,
   };
 
   return (
@@ -140,4 +137,4 @@ export const AuthProvider = ({ children }) => {
       {!loading && children}
     </AuthContext.Provider>
   );
-}; 
+};

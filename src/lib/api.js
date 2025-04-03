@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://leapon.onrender.com/api';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance with base URL
 const api = axios.create({
@@ -62,9 +62,9 @@ export const userApi = {
   register: (data) => api.post('/users/register', data),
   getMentors: () => api.get('/users/mentors'),
   getMentees: () => api.get('/users/mentees'),
-  getProfile: () => api.get('/users/me'),
-  getCurrentUser: () => api.get('/users/me'),
-  updateProfile: (data) => api.put('/users/me', data),
+  getProfile: () => api.get('/users/profile'), // Updated route
+  getCurrentUser: () => api.get('/users/profile'), // Updated route
+  updateProfile: (data) => api.put('/users/update-profile-picture-and-gender', data), // Updated route
   updatePassword: (data) => api.put('/users/password', data),
   completeProfile: async (profileData) => {
     try {
@@ -112,6 +112,11 @@ export const userApi = {
   initializePayment: (paymentData) => api.post('/payments/initialize', paymentData),
   verifyPayment: (reference) => api.post('/payments/verify', { reference }),
   getPaymentHistory: () => api.get('/payments/history'),
+  updateRole: (data) => api.put('/users/update-role', data), // Token is automatically added via interceptors
+  updateProfileStep2: (data) => api.put('/users/update-step-2', data), // Add this method
+  updateProfileStep3: (data) => api.put('/users/update-step-3', data), // Add this method
+  updateProfileStep4: (data) => api.put('/users/update-step-4', data), // Add this method
+  applyCoupon: (couponCode) => api.post('/payments/apply-coupon', { couponCode }),
 };
 
 // API methods for sessions

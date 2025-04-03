@@ -3,8 +3,7 @@ import { useForm } from 'react-hook-form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faLock, faEye, faEyeSlash, faUser } from '@fortawesome/free-solid-svg-icons';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../lib/AuthContext';
-import { userApi } from '../../../lib/api'; // Ensure this import exists for sending the email
+import { API_URL } from '../../../lib/api'; // Import the backend URL
 
 function SignUp() {
   const [passwordType, setPasswordType] = useState(false);
@@ -12,7 +11,6 @@ function SignUp() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
-  const { register: registerUser } = useAuth();
 
   const {
     register,
@@ -31,35 +29,36 @@ function SignUp() {
       setError('');
       setLoading(true);
 
-      // Only include the data that's filled in the signup form
       const userData = {
-        firstName: data.FirstName,
-        lastName: data.FirstName, // Using FirstName as lastName for now since we only collect one name
-        email: data.email.toLowerCase(),
-        password: data.password
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email.toLowerCase(), // Email is converted to lowercase
+        password: data.password,
       };
-      
-      // Register the user
-      const response = await registerUser(userData);
-      
-      // Store the user data in localStorage for later use in profile completion
-      localStorage.setItem('userData', JSON.stringify({
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        emailVerified: response.emailVerified || false,
-        token: localStorage.getItem('token')
-      }));
-      
-      // Send verification email
-      try {
-        console.log('Attempting to send verification email to:', userData.email);
-        const emailResponse = await userApi.sendVerificationEmail(userData.email);
-        console.log('Verification email response:', emailResponse);
-      } catch (emailError) {
-        console.error('Error sending verification email:', emailError);
-        setError('Account created, but there was an issue sending the verification email. Please try again later.');
+
+      const response = await fetch(`${API_URL}/users/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData), // Email is included in the request body
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to register. Please try again.');
       }
+
+      // Store user data in localStorage
+      localStorage.setItem('userData', JSON.stringify({
+        id: result.user.id,
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+        email: result.user.email,
+        emailVerified: result.user.emailVerified || false,
+        token: result.token,
+      }));
 
       // Show success modal
       setShowModal(true);
@@ -67,29 +66,14 @@ function SignUp() {
       // Redirect based on verification status
       setTimeout(() => {
         setShowModal(false);
-        if (response.emailVerified) {
+        if (result.user.emailVerified) {
           navigate('/mode-of-registering');
         } else {
           navigate('/verify-email');
         }
       }, 2000);
-
     } catch (err) {
-      console.error('Registration error:', err);
-      // Handle specific error messages
-      if (err.message.includes('already exists')) {
-        setError('This email is already registered. Please use a different email or login.');
-      } else if (err.message.includes('validation failed')) {
-        setError('Please check your input and try again.');
-      } else {
-        setError('Registration was successful but there was an issue sending the verification email. You can request a new verification email on the next page.');
-        // Still show success modal and redirect
-        setShowModal(true);
-        setTimeout(() => {
-          setShowModal(false);
-          navigate('/verify-email');
-        }, 2000);
-      }
+      setError(err.message || 'Failed to register. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -128,18 +112,38 @@ function SignUp() {
                   </span>
                   <input
                     type="text"
-                    {...register('FirstName', { 
+                    {...register('firstName', { 
                       required: 'This field is required',
                       minLength: {
                         value: 2,
-                        message: 'Name must be at least 2 characters long'
-                      }
+                        message: 'First name must be at least 2 characters long',
+                      },
                     })}
                     className="outline-none w-full"
-                    placeholder="Full Name"
+                    placeholder="First Name"
                   />
                 </div>
-                {errors.FirstName && <p className="text-red-600">{errors.FirstName.message}</p>}
+                {errors.firstName && <p className="text-red-600">{errors.firstName.message}</p>}
+              </div>
+              <div className="w-full">
+                <div className="flex items-center p-2 md:p-4 gap-3 w-full rounded-xl border-2">
+                  <span>
+                    <FontAwesomeIcon className="text-gray-400 text-xl" icon={faUser} />
+                  </span>
+                  <input
+                    type="text"
+                    {...register('lastName', { 
+                      required: 'This field is required',
+                      minLength: {
+                        value: 2,
+                        message: 'Last name must be at least 2 characters long',
+                      },
+                    })}
+                    className="outline-none w-full"
+                    placeholder="Last Name"
+                  />
+                </div>
+                {errors.lastName && <p className="text-red-600">{errors.lastName.message}</p>}
               </div>
             </div>
 

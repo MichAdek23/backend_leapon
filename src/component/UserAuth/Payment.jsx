@@ -7,6 +7,11 @@ function Payment() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState('');
+    const [showCouponModal, setShowCouponModal] = useState(false);
+    const [couponCode, setCouponCode] = useState('');
+    const [couponMessage, setCouponMessage] = useState('');
+    const [appliedDiscount, setAppliedDiscount] = useState(0);
+    const [finalAmount, setFinalAmount] = useState(5000);
 
     // Check if user is logged in and has a valid token
     useEffect(() => {
@@ -126,6 +131,36 @@ function Payment() {
         }
     };
 
+    // Handle coupon submission
+    const handleCouponSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/payments/apply-coupon`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ couponCode })
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                setAppliedDiscount(data.discount);
+                setFinalAmount(5000 * (1 - data.discount / 100));
+                setCouponMessage(data.message);
+                setTimeout(() => setShowCouponModal(false), 2000);
+            } else {
+                setCouponMessage(data.message || 'Failed to apply coupon');
+            }
+        } catch (err) {
+            setCouponMessage('Error applying coupon');
+            console.error('Coupon application error:', err);
+        }
+    };
+
     // Handle payment initialization
     const handlePayment = async () => {
         try {
@@ -165,7 +200,8 @@ function Payment() {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    email: userData.email
+                    email: userData.email,
+                    couponCode: couponCode || undefined
                 })
             });
 
@@ -260,16 +296,22 @@ function Payment() {
                     <div className='flex justify-between mt-8'>
                         <h1 className='text-slate-500'>Price/Amount</h1>
                         <p className='text-slate-800 font-semibold'>
-                            ₦5,000
+                            {appliedDiscount > 0 ? (
+                                <>
+                                    <del>₦5,000</del> ₦{finalAmount}
+                                </>
+                            ) : (
+                                `₦5,000`
+                            )}
                         </p>
                     </div>
 
-                    <div className='flex justify-between mt-8'>
-                        <h1 className='text-slate-500'>Use 90% Discount code</h1>
-                        <p className='text-slate-800 font-semibold'>
-                            <del> ₦5,000</del> ₦500
-                        </p>
-                    </div>
+                    <button
+                        onClick={() => setShowCouponModal(true)}
+                        className="mt-4 w-full h-10 lg:h-14 rounded-lg cursor-pointer text-customOrange border border-customOrange hover:bg-orange-50 transition-colors"
+                    >
+                        Have a Coupon Code?
+                    </button>
 
                     <button
                         onClick={handlePayment}
@@ -282,6 +324,44 @@ function Payment() {
                     >
                         {loading ? 'Processing...' : 'Continue to Payment'}
                     </button>
+
+                    {/* Coupon Modal */}
+                    {showCouponModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                            <div className="bg-white p-6 rounded-lg w-[90%] max-w-md">
+                                <h2 className="text-xl font-semibold mb-4">Enter Coupon Code</h2>
+                                <form onSubmit={handleCouponSubmit}>
+                                    <input
+                                        type="text"
+                                        value={couponCode}
+                                        onChange={(e) => setCouponCode(e.target.value)}
+                                        className="w-full p-2 border border-gray-300 rounded-lg mb-4"
+                                        placeholder="Enter your coupon code"
+                                    />
+                                    {couponMessage && (
+                                        <p className={`mb-4 ${couponMessage.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
+                                            {couponMessage}
+                                        </p>
+                                    )}
+                                    <div className="flex justify-end gap-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowCouponModal(false)}
+                                            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="px-4 py-2 bg-customOrange text-white rounded-lg hover:bg-orange-600"
+                                        >
+                                            Apply Coupon
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </section>

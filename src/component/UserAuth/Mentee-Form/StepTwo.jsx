@@ -3,6 +3,7 @@ import React, { useContext, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { useForm } from 'react-hook-form';
+import { userApi } from '@/lib/api';
 
 function StepTwo() {
   const { handleIncreament, handleDecreament } = useContext(GlobalContext);
@@ -43,12 +44,31 @@ function StepTwo() {
   }, [setValue]);
 
   // Handle form submission
-  const onSubmit = (data) => {
-    // Validate required fields
-    if (!data.Title || !data.department) {
-      return;
+  const onSubmit = async (data) => {
+    try {
+      // Validate required fields
+      if (!data.Title || !data.department) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+
+      // Send data to the backend
+      await userApi.updateProfileStep2({
+        title: data.Title,
+        department: data.department,
+        social: {
+          linkedIn: data.linkedIn,
+          twitter: data.twitter,
+          instagram: data.instagram,
+        },
+        role: 'mentee',
+      });
+
+      handleIncreament();
+    } catch (error) {
+      console.error('Error updating profile step 2:', error);
+      alert(error.response?.data?.message || 'Failed to update profile. Please try again.');
     }
-    handleIncreament();
   };
 
   return (

@@ -37,9 +37,9 @@ app.set('io', io);
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'https://leap-on-mentorship-program-xkjq.vercel.app',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  origin: 'http://localhost:5173', // Allow requests from the frontend
+  credentials: true, // Allow cookies and credentials
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
   allowedHeaders: ['Authorization', 'Content-Type']
 }));
 app.use(express.json());
@@ -60,7 +60,7 @@ try {
 const connectDB = async () => {
   try {
     console.log('Attempting to connect to MongoDB...');
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://Michadek23:Michadek23@leap-on.6hskc.mongodb.net/?retryWrites=true&w=majority&appName=Leap-ON', {
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://Michadek23:Michadek23@leap-on-shard-00-00.6hskc.mongodb.net:27017,leap-on-shard-00-01.6hskc.mongodb.net:27017,leap-on-shard-00-02.6hskc.mongodb.net:27017/?replicaSet=atlas-11k2m6-shard-0&ssl=true&authSource=admin&retryWrites=true&w=majority&appName=Leap-ON', {
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
       family: 4,
@@ -140,4 +140,4 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-}); 
+});

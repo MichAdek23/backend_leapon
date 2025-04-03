@@ -76,6 +76,14 @@ const userSchema = new mongoose.Schema({
     website: {
       type: String,
       default: ''
+    },
+    facebook: {
+      type: String,
+      default: ''
+    },
+    whatsapp: {
+      type: String,
+      default: ''
     }
   },
   interests: {
@@ -110,6 +118,27 @@ const userSchema = new mongoose.Schema({
   verificationToken: String,
   verificationTokenExpires: Date,
   paymentReference: String,
+  paymentDate: {
+    type: Date
+  },
+  paymentAmount: {
+    type: Number
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'completed', 'failed'],
+    default: 'pending'
+  },
+  modeOfContact: {
+    type: String,
+    enum: ['Virtual', 'Chat', 'Physical'],
+    default: 'Virtual'
+  },
+  availability: {
+    type: String,
+    enum: ['Available ASAP', 'In a few weeks'],
+    default: 'Available ASAP'
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -151,4 +180,4 @@ userSchema.methods.generateAuthToken = function() {
 const User = mongoose.model('User', userSchema);
 
 export { userSchema };
-export default User; 
+export default User;

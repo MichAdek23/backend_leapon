@@ -24,13 +24,6 @@ function StepOne() {
         const response = await userApi.uploadProfilePicture(formData);
         const uploadedUrl = response.data.imageUrl;
         setImageUrl(uploadedUrl);
-        
-        // Save step one data to localStorage
-        const stepOneData = {
-          profilePicture: uploadedUrl,
-          gender: gender
-        };
-        localStorage.setItem('stepOneData', JSON.stringify(stepOneData));
       } catch (error) {
         console.error('Error uploading image:', error);
         alert(error.message || 'Failed to upload image. Please try again.');
@@ -42,20 +35,27 @@ function StepOne() {
 
   const handleGenderSelect = (selectedGender) => {
     setGender(selectedGender);
-    // Update localStorage with new gender
-    const existingData = JSON.parse(localStorage.getItem('stepOneData') || '{}');
-    localStorage.setItem('stepOneData', JSON.stringify({
-      ...existingData,
-      gender: selectedGender
-    }));
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!imageUrl || !gender) {
       alert('Please upload a profile picture and select your gender');
       return;
     }
-    handleIncreament();
+
+    try {
+      // Update the backend with profile picture and gender
+      const formData = new FormData();
+      formData.append('gender', gender);
+      formData.append('profilePicture', imageUrl);
+
+      await userApi.updateProfile(formData);
+
+      handleIncreament();
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert(error.response?.data?.message || 'Failed to update profile. Please try again.');
+    }
   };
 
   return (

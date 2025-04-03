@@ -1,4 +1,4 @@
-import https from 'https';
+import axios from 'axios';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -17,97 +17,53 @@ if (!FRONTEND_URL) {
 }
 
 const paystack = {
-    // Initialize transaction
-    initializeTransaction: async (email, amount, reference) => {
-        return new Promise((resolve, reject) => {
-            const options = {
-                hostname: 'api.paystack.co',
-                port: 443,
-                path: '/transaction/initialize',
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-                    'Content-Type': 'application/json'
-                }
-            };
+  initializeTransaction: async (email, amount, reference) => {
+    try {
+      console.log('Initializing transaction with Paystack:', { email, amount, reference });
 
-            const params = JSON.stringify({
-                email,
-                amount: amount * 100, // Convert to kobo
-                reference,
-                callback_url: `${FRONTEND_URL}/payment?reference=${reference}`
-            });
+      const response = await axios.post(
+        'https://api.paystack.co/transaction/initialize',
+        {
+          email,
+          amount: amount * 100, // Convert to kobo
+          reference,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-            const req = https.request(options, res => {
-                let data = '';
-
-                res.on('data', (chunk) => { data += chunk });
-                res.on('end', () => {
-                    try {
-                        const response = JSON.parse(data);
-                        if (!response.status) {
-                            reject(new Error(response.message || 'Failed to initialize transaction'));
-                        } else {
-                            resolve(response);
-                        }
-                    } catch (parseError) {
-                        console.error('Failed to parse Paystack response:', parseError);
-                        reject(new Error('Failed to parse Paystack response'));
-                    }
-                });
-            });
-
-            req.on('error', (error) => {
-                console.error('Failed to connect to Paystack API:', error);
-                reject(new Error('Failed to connect to Paystack API'));
-            });
-
-            req.write(params);
-            req.end();
-        });
-    },
-
-    // Verify transaction
-    verifyTransaction: async (reference) => {
-        return new Promise((resolve, reject) => {
-            const options = {
-                hostname: 'api.paystack.co',
-                port: 443,
-                path: `/transaction/verify/${reference}`,
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-                    'Content-Type': 'application/json'
-                }
-            };
-
-            const req = https.request(options, res => {
-                let data = '';
-
-                res.on('data', (chunk) => { data += chunk });
-                res.on('end', () => {
-                    try {
-                        const response = JSON.parse(data);
-                        if (!response.status) {
-                            reject(new Error(response.message || 'Failed to verify transaction'));
-                        } else {
-                            resolve(response);
-                        }
-                    } catch (parseError) {
-                        console.error('Failed to parse Paystack response:', parseError);
-                        reject(new Error('Failed to parse Paystack response'));
-                    }
-                });
-            });
-
-            req.on('error', (error) => {
-                console.error('Failed to connect to Paystack API:', error);
-                reject(new Error('Failed to connect to Paystack API'));
-            });
-
-            req.end();
-        });
+      console.log('Paystack transaction initialized:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error initializing transaction with Paystack:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to initialize transaction with Paystack');
     }
+  },
+
+  verifyTransaction: async (reference) => {
+    try {
+      console.log('Verifying transaction with Paystack:', { reference });
+
+      const response = await axios.get(
+        `https://api.paystack.co/transaction/verify/${reference}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          },
+        }
+      );
+
+      console.log('Paystack transaction verified:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error verifying transaction with Paystack:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to verify transaction with Paystack');
+    }
+  },
 };
 
-export default paystack; 
+export default paystack;
