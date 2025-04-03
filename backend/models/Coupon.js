@@ -5,7 +5,7 @@ const couponSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    index: true, // Add index for faster lookups
+    index: true, // Ensure index for faster lookups
   },
   discount: {
     type: Number,
