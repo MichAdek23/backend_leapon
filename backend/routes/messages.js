@@ -51,7 +51,7 @@ router.get('/conversations', auth, async (req, res) => {
 router.get('/conversations/:conversationId', auth, async (req, res) => {
   try {
     const conversation = await Conversation.findById(req.params.conversationId);
-    
+
     if (!conversation) {
       return res.status(404).json({ message: 'Conversation not found' });
     }
@@ -62,27 +62,17 @@ router.get('/conversations/:conversationId', auth, async (req, res) => {
 
     const messages = await Message.find({
       conversationId: req.params.conversationId,
-      deleted: false
+      deleted: false,
     })
-    .populate('sender', 'name email avatar')
-    .populate('recipient', 'name email avatar')
-    .populate('replyTo')
-    .sort({ createdAt: 1 });
-
-    // Mark messages as read
-    await Promise.all(
-      messages
-        .filter(msg => !msg.read && msg.recipient._id.toString() === req.user.id)
-        .map(msg => msg.markAsRead())
-    );
-
-    // Reset unread count
-    await conversation.resetUnreadCount(req.user.id);
+      .populate('sender', 'name email avatar')
+      .populate('recipient', 'name email avatar')
+      .populate('replyTo')
+      .sort({ createdAt: 1 });
 
     res.json(messages);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error('Error fetching messages:', err.message);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -93,6 +83,11 @@ router.post('/conversations', auth, async (req, res) => {
   try {
     const { participantId } = req.body;
 
+    // Validate participantId
+    if (!participantId) {
+      return res.status(400).json({ message: 'Participant ID is required' });
+    }
+
     // Check if participant exists
     const participant = await User.findById(participantId);
     if (!participant) {
@@ -102,23 +97,30 @@ router.post('/conversations', auth, async (req, res) => {
     // Check if conversation already exists
     const existingConversation = await Conversation.findOne({
       participants: { $all: [req.user.id, participantId] },
-      'metadata.isGroup': false
     });
 
     if (existingConversation) {
-      return res.json(existingConversation);
+      return res.status(200).json(existingConversation); // Return existing conversation
     }
 
+    // Create a new conversation
     const conversation = new Conversation({
-      participants: [req.user.id, participantId]
+      participants: [req.user.id, participantId],
     });
 
     await conversation.save();
 
-    res.json(conversation);
+    // Populate participants for the response
+    await conversation.populate('participants', 'name email profilePicture');
+
+    res.status(201).json(conversation);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    if (err.code === 11000) {
+      console.error('Duplicate conversation error:', err.message);
+      return res.status(400).json({ message: 'Conversation already exists' });
+    }
+    console.error('Error creating conversation:', err.message);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -306,4 +308,4 @@ router.put('/conversations/:conversationId/unblock', auth, async (req, res) => {
   }
 });
 
-export default router; 
+export default router;

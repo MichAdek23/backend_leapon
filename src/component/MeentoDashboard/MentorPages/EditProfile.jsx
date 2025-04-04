@@ -80,7 +80,7 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
 
       try {
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('profilePicture', file); // Use 'profilePicture' as the field name
 
         const response = await userApi.uploadProfilePicture(formData);
         
@@ -106,22 +106,27 @@ const EditProfile = ({ profile, onUpdate, setIsEditProfileVisible }) => {
     setError(null);
 
     try {
-      // Remove undefined or empty string values
-      const profileData = Object.fromEntries(
-        Object.entries(updatedProfile).filter(([, value]) => {
-          if (typeof value === 'object') {
-            return Object.values(value).some(v => v !== undefined && v !== '');
-          }
-          return value !== undefined && value !== '';
-        })
-      );
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/update-profile`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedProfile),
+      });
 
-      // Update profile using /api/users/me endpoint
-      const response = await userApi.updateProfile(profileData);
-      onUpdate(response.data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update profile');
+      }
+
+      const data = await response.json();
+      onUpdate(data.user); // Update the parent component with the new profile data
       setIsEditProfileVisible(false);
-    } catch (error) {
-      setError(error.message || 'Error updating profile');
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      setError(err.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }

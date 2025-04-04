@@ -63,7 +63,7 @@ function SignIn() {
 
       // Redirect based on profile and payment status
       if (!result.user.profileCompleted) {
-        navigate('/complete-profile');
+        navigate('/mode-of-registering');
         return;
       }
 

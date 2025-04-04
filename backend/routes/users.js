@@ -404,50 +404,31 @@ router.put('/profile', auth, async (req, res) => {
 // @access  Private
 router.post('/profile-picture', auth, upload.single('profilePicture'), async (req, res) => {
   try {
-    console.log('Profile picture upload request received:', {
-      body: req.body,
-      file: req.file,
-      user: req.user
-    });
     if (req.fileValidationError) {
       return res.status(400).json({ message: req.fileValidationError });
     }
     if (!req.file) {
-      console.log('No file received in the request');
       return res.status(400).json({ message: 'Please select an image file to upload' });
     }
+
     // Get the URL for the uploaded file
     const imageUrl = `/uploads/profiles/${req.file.filename}`;
-    console.log('File uploaded successfully:', {
-      originalname: req.file.originalname,
-      filename: req.file.filename,
-      path: req.file.path,
-      imageUrl
-    });
+
     // Update user's profile picture URL in database
     const user = await User.findById(req.user.id);
     if (!user) {
-      console.log('User not found:', req.user.id);
       return res.status(404).json({ message: 'User not found' });
     }
     user.profilePicture = imageUrl;
     await user.save();
-    console.log('User profile updated with new image:', imageUrl);
-    res.json({ imageUrl });
+
+    res.json({ profilePicture: imageUrl });
   } catch (err) {
-    console.error('Error uploading profile picture:', {
-      error: err,
-      stack: err.stack,
-      code: err.code,
-      message: err.message
-    });
+    console.error('Error uploading profile picture:', err);
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ message: 'File size cannot exceed 12MB' });
     }
-    res.status(500).json({ 
-      message: 'Error uploading file', 
-      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
-    });
+    res.status(500).json({ message: 'Error uploading file' });
   }
 });
 
@@ -797,6 +778,73 @@ router.get('/payment-status', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching payment status:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   GET api/users
+// @desc    Get all users
+// @access  Private
+router.get('/', auth, async (req, res) => {
+  try {
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (err) {
+    console.error('Error fetching all users:', err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @route   PUT api/users/update-profile
+// @desc    Update user profile
+// @access  Private
+router.put('/update-profile', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Define updatable fields
+    const updatableFields = [
+      'firstName', 'lastName', 'email', 'title', 
+      'department', 'overview', 'expertise', 'experience',
+      'interests', 'gender', 'modeOfContact', 'availability',
+      'profilePicture', 'bio', 'social'
+    ];
+
+    // Update fields
+    updatableFields.forEach(field => {
+      if (field === 'social' && req.body[field]) {
+        user.social = {
+          ...user.social,
+          linkedIn: req.body.social.linkedIn || user.social?.linkedIn || '',
+          twitter: req.body.social.twitter || user.social?.twitter || '',
+          instagram: req.body.social.instagram || user.social?.instagram || '',
+          website: req.body.social.website || user.social?.website || '',
+        };
+      } else if (field === 'expertise' && req.body[field]) {
+        user.expertise = Array.isArray(req.body.expertise)
+          ? req.body.expertise
+          : req.body.expertise.split(',').map(item => item.trim());
+      } else if (field === 'interests' && req.body[field]) {
+        user.interests = Array.isArray(req.body.interests)
+          ? req.body.interests
+          : req.body.interests.split(',').map(item => item.trim());
+      } else if (req.body[field] !== undefined) {
+        user[field] = req.body[field];
+      }
+    });
+
+    user.updatedAt = Date.now();
+    await user.save();
+
+    res.json({
+      message: 'Profile updated successfully',
+      user,
+    });
+  } catch (err) {
+    console.error('Error updating profile:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });

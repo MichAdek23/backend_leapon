@@ -14,7 +14,7 @@ library.add(faBars, faRemove, faTwitter, faFacebook, faWhatsapp, faInstagram, fa
 // Function to get full image URL
 const getImageUrl = (imagePath) => {
   if (!imagePath) return "/image/default-profile.png";
-  if (imagePath.startsWith('http') || imagePath.startsWith('https')) {
+  if (imagePath.startsWith('http')) {
     return imagePath; // Return the full URL if it's already a valid link
   }
   return `${import.meta.env.VITE_BACKEND_URL}${imagePath}`; // Prepend backend URL for relative paths
@@ -56,30 +56,26 @@ const Profile = () => {
 
   const handleProfileUpdate = async (updatedProfile) => {
     try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/profile`, { // Corrected URL
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedProfile)
+        body: JSON.stringify(updatedProfile),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update profile');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update profile');
       }
 
-      const updatedData = await response.json();
-      setProfile(updatedData.user);
-      setEditProfileVisible(false);
+      const data = await response.json();
+      console.log('Profile updated successfully:', data);
     } catch (err) {
       console.error('Error updating profile:', err);
-      setError(err.message || 'Failed to update profile');
-    } finally {
-      setIsLoading(false);
+      throw err;
     }
   };
 

@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'; // Removed trailing `/api`
+
+// Ensure WebSocket URL is correct
+export const WS_URL = import.meta.env.VITE_API_URL.replace(/^http/, 'ws');
 
 // Create axios instance with base URL
 const api = axios.create({
@@ -64,7 +67,7 @@ export const userApi = {
   getMentees: () => api.get('/users/mentees'),
   getProfile: () => api.get('/users/profile'), // Updated route
   getCurrentUser: () => api.get('/users/profile'), // Updated route
-  updateProfile: (data) => api.put('/users/update-profile-picture-and-gender', data), // Updated route
+  updateProfile: (data) => api.put('/users/profile', data), // Corrected endpoint
   updatePassword: (data) => api.put('/users/password', data),
   completeProfile: async (profileData) => {
     try {
@@ -117,6 +120,7 @@ export const userApi = {
   updateProfileStep3: (data) => api.put('/users/update-step-3', data), // Add this method
   updateProfileStep4: (data) => api.put('/users/update-step-4', data), // Add this method
   applyCoupon: (couponCode) => api.post('/payments/apply-coupon', { couponCode }),
+  getAllUsers: () => api.get('/users'), // Add this method to fetch all users
 };
 
 // API methods for sessions

@@ -59,98 +59,51 @@ const Message = () => {
   };
 
   useEffect(() => {
-    // Initialize socket connection
-    socketRef.current = io(import.meta.env.VITE_API_URL, {
+    // Initialize socket connection to the /messages namespace
+    socketRef.current = io(`${import.meta.env.VITE_API_URL}/messages`, {
       auth: {
-        token: localStorage.getItem('token')
-      }
+        token: localStorage.getItem('token'),
+      },
     });
 
-    // Set online status
-    socketRef.current.emit('setOnlineStatus', true);
+    // Handle connection errors
+    socketRef.current.on('connect_error', (err) => {
+      console.error('WebSocket connection error:', err.message);
+    });
+
+    // Join the selected conversation room
+    if (selectedConversation) {
+      socketRef.current.emit('joinRoom', selectedConversation._id);
+    }
 
     // Listen for new messages
     socketRef.current.on('newMessage', (message) => {
       if (selectedConversation && message.conversationId === selectedConversation._id) {
-        setMessages(prev => [...prev, message]);
+        setMessages((prev) => [...prev, message]);
       }
-      
-      // Update conversations list
-      setConversations(prev => {
-        const existingConv = prev.find(conv => conv._id === message.conversationId);
-        if (existingConv) {
-          return prev.map(conv => 
-            conv._id === message.conversationId 
-              ? { ...conv, lastMessage: message, unreadCounts: { ...conv.unreadCounts, [user._id]: (conv.unreadCounts[user._id] || 0) + 1 } }
-              : conv
-          );
-        }
-        return [...prev, {
-          _id: message.conversationId,
-          participants: [message.sender, message.recipient],
-          lastMessage: message,
-          unreadCounts: { [user._id]: 1 }
-        }];
-      });
     });
 
-    // Listen for message read status
-    socketRef.current.on('messageRead', ({ messageId, conversationId }) => {
-      if (selectedConversation && conversationId === selectedConversation._id) {
-        setMessages(prev => 
-          prev.map(msg => 
-            msg._id === messageId ? { ...msg, read: true } : msg
-          )
-        );
-      }
-      
-      setConversations(prev => 
-        prev.map(conv => 
-          conv._id === conversationId 
-            ? { ...conv, unreadCounts: { ...conv.unreadCounts, [user._id]: 0 } }
-            : conv
-        )
-      );
-    });
-
-    // Listen for typing status
-    socketRef.current.on('userTyping', ({ userId, userName, isTyping }) => {
-      if (selectedConversation && selectedConversation.participants.some(p => p._id === userId)) {
-        setTypingUsers(prev => {
-          const newSet = new Set(prev);
+    // Listen for typing events
+    socketRef.current.on('userTyping', ({ userId, isTyping }) => {
+      if (selectedConversation && selectedConversation.participants.some((p) => p._id === userId)) {
+        setTypingUsers((prev) => {
+          const updated = new Set(prev);
           if (isTyping) {
-            newSet.add(userName);
+            updated.add(userId);
           } else {
-            newSet.delete(userName);
+            updated.delete(userId);
           }
-          return newSet;
+          return updated;
         });
       }
     });
 
-    // Listen for user status changes
-    socketRef.current.on('userStatusChanged', ({ userId, isOnline }) => {
-      setOnlineUsers(prev => {
-        const newSet = new Set(prev);
-        if (isOnline) {
-          newSet.add(userId);
-        } else {
-          newSet.delete(userId);
-        }
-        return newSet;
-      });
-    });
-
-    // Load initial conversations
-    loadConversations();
-
     return () => {
       if (socketRef.current) {
-        socketRef.current.emit('setOnlineStatus', false);
         socketRef.current.disconnect();
       }
     };
-  }, [user, selectedConversation]);
+  }, [selectedConversation]);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -185,7 +138,7 @@ const Message = () => {
       if (conversation) {
         setSelectedConversation(conversation);
       } else {
-        createConversation(selectedChatUser);
+        createConversation(selectedChatUser); // Create a new conversation if it doesn't exist
       }
     }
   }, [selectedChatUser, conversations]);

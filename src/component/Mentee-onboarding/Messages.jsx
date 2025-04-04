@@ -15,6 +15,8 @@ const Messages = () => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
   const messagesEndRef = useRef(null);
   const socketRef = useRef();
 
@@ -108,6 +110,57 @@ const Messages = () => {
     }
   };
 
+  const handleSearch = async () => {
+    try {
+      if (!searchQuery.trim()) {
+        setSearchResults([]);
+        return;
+      }
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to search users');
+      }
+
+      const data = await response.json();
+      const filteredUsers = data.filter((user) =>
+        user.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setSearchResults(filteredUsers);
+    } catch (err) {
+      console.error('Error searching users:', err);
+      setError('Failed to search users.');
+    }
+  };
+
+  const handleStartConversation = async (selectedUser) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/messages/conversations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ participantId: selectedUser._id }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start conversation');
+      }
+
+      const newConversation = await response.json();
+      setConversations((prev) => [...prev, newConversation]);
+      setActiveConversation(newConversation);
+    } catch (err) {
+      console.error('Error starting conversation:', err);
+      setError('Failed to start conversation.');
+    }
+  };
+
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !activeConversation) return;
@@ -191,7 +244,23 @@ const Messages = () => {
                   type="text"
                   placeholder="Search conversations..."
                   className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyUp={handleSearch}
                 />
+                {searchResults.length > 0 && (
+                  <div className="absolute z-10 bg-white dark:bg-gray-800 border rounded-lg mt-2 w-full">
+                    {searchResults.map((user) => (
+                      <div
+                        key={user._id}
+                        className="p-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                        onClick={() => handleStartConversation(user)}
+                      >
+                        {user.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <div className="overflow-y-auto h-[calc(100%-4rem)]">
@@ -308,4 +377,4 @@ const Messages = () => {
   );
 };
 
-export default Messages; 
+export default Messages;

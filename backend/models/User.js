@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
   },
   profilePicture: {
     type: String,
-    default: ''
+    default: '/uploads/profiles/default-profile.png'
   },
   gender: {
     type: String,

@@ -84,24 +84,20 @@ const CreateSession = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        let response;
-        if (userRole === 'mentor') {
-          response = await userApi.getMentees();
-        } else {
-          response = await userApi.getMentors();
-        }
+        setLoading(true);
+        const response = await userApi.getAllUsers(); // Use the endpoint to fetch all users
         setUsers(response.data);
         setFilteredUsers(response.data);
       } catch (error) {
-        console.error(`Error fetching ${userRole === 'mentor' ? 'mentees' : 'mentors'}:`, error);
-        setError(`Failed to fetch ${userRole === 'mentor' ? 'mentees' : 'mentors'}. Please try again later.`);
+        console.error('Error fetching users:', error);
+        setError('Failed to fetch users. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchUsers();
-  }, [userRole]);
+  }, []);
 
   useEffect(() => {
     const filtered = users.filter(user => 
